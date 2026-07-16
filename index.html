@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>滞纳金纯文字计算器</title>
+  <style>
+    :root{--blue:#245785;--light:#eef5fb;--yellow:#fff3c7;--green:#287a4b;--line:#d6e0e8;--text:#17212b}
+    *{box-sizing:border-box} body{margin:0;background:#f4f7f9;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+    main{max-width:780px;margin:32px auto;padding:0 16px}.card{background:white;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #16344d14;overflow:hidden}
+    header{background:var(--blue);color:white;padding:24px 28px}h1{font-size:25px;margin:0 0 7px}header p{margin:0;opacity:.88;font-size:14px}
+    section{padding:24px 28px}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field label{display:block;font-weight:650;margin-bottom:7px;font-size:14px}.field input{width:100%;height:44px;border:1px solid #b8c7d3;border-radius:8px;padding:0 12px;font-size:16px;background:var(--yellow)}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0}.metric{background:var(--light);border-radius:10px;padding:13px;text-align:center}.metric span{display:block;color:#587083;font-size:13px}.metric strong{display:block;margin-top:4px;font-size:20px;color:var(--blue)}
+    .output-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.output-label strong{font-size:16px}.tip{font-size:12px;color:#667985}
+    textarea{width:100%;min-height:310px;resize:vertical;border:1px solid #b8c7d3;border-radius:10px;background:#fafcfd;padding:17px;font:15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#17212b}
+    button{width:100%;height:50px;margin-top:14px;border:0;border-radius:10px;background:var(--green);color:white;font-size:17px;font-weight:700;cursor:pointer}button:hover{filter:brightness(.95)}button:active{transform:translateY(1px)}button.ok{background:#156a3b}
+    .note{margin:12px 0 0;color:#677985;font-size:13px;text-align:center}.warning{background:#fff1eb;color:#8f321f;border-top:1px solid #f0d0c5;padding:13px 28px;font-size:13px}
+    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.summary{grid-template-columns:1fr}section,header{padding-left:18px;padding-right:18px}}
+  </style>
+</head>
+<body>
+<main><div class="card">
+  <header><h1>滞纳金纯文字计算器</h1><p>填写四项，自动计算；点击按钮后粘贴到微信就是纯文字。</p></header>
+  <section>
+    <div class="inputs">
+      <div class="field"><label for="due">应付日期</label><input id="due" type="date" value="2026-06-05"></div>
+      <div class="field"><label for="pay">实际付款日期</label><input id="pay" type="date" value="2026-07-15"></div>
+      <div class="field"><label for="amount">应付金额（元）</label><input id="amount" type="number" min="0" step="0.01" value="8222.50"></div>
+      <div class="field"><label for="rate">日滞纳金比例（%）</label><input id="rate" type="number" min="0" step="0.001" value="0.5"></div>
+    </div>
+    <div class="summary">
+      <div class="metric"><span>逾期天数</span><strong id="days">40 天</strong></div>
+      <div class="metric"><span>滞纳金</span><strong id="fee">1,644.50 元</strong></div>
+      <div class="metric"><span>应付合计</span><strong id="total">9,867.00 元</strong></div>
+    </div>
+    <div class="output-label"><strong>发给客户的话术</strong><span class="tip">也可在框内手动全选复制</span></div>
+    <textarea id="message" readonly aria-label="发给客户的话术"></textarea>
+    <button id="copy" type="button">复制纯文字</button>
+    <p class="note" id="status">复制后直接到微信粘贴，不会带表格或图片格式。</p>
+  </section>
+  <div class="warning">计费口径：逾期天数＝实际付款日期－应付日期，应付日当天不计逾期。请以合同约定为准。</div>
+</div></main>
+<script>
+  const $=id=>document.getElementById(id), ids=['due','pay','amount','rate'];
+  const money=n=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const shortMoney=n=>String(Math.round(Number(n)*100)/100);
+  const cnDate=s=>{const d=new Date(s+'T00:00:00');return `${d.getMonth()+1}月${d.getDate()}日`};
+  function calculate(){
+    const due=$('due').value,pay=$('pay').value,amount=Number($('amount').value),ratePct=Number($('rate').value);
+    if(!due||!pay||!Number.isFinite(amount)||!Number.isFinite(ratePct)){ $('message').value='请先完整填写日期、金额和日滞纳金比例。'; return; }
+    const days=Math.max(0,Math.round((new Date(pay+'T00:00:00')-new Date(due+'T00:00:00'))/86400000));
+    const fee=Math.round(amount*(ratePct/100)*days*100)/100,total=Math.round((amount+fee)*100)/100;
+    $('days').textContent=days+' 天'; $('fee').textContent=money(fee)+' 元'; $('total').textContent=money(total)+' 元';
+    $('message').value=`您好，您本期应付款为 ${shortMoney(amount)}元，原定付款日为 ${cnDate(due)}。\n\n截止到 ${cnDate(pay)}，已逾期 ${days}天。\n按照合同约定，滞纳金按每日 ${ratePct}% 计算：\n\n${shortMoney(amount)}元 × ${ratePct}% × ${days}天 = ${shortMoney(fee)}元\n\n所以您本次应付金额为：\n\n本金：${shortMoney(amount)}元\n滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+    $('copy').classList.remove('ok'); $('copy').textContent='复制纯文字'; $('status').textContent='复制后直接到微信粘贴，不会带表格或图片格式。';
+  }
+  async function copyPlain(){
+    const text=$('message').value; let ok=false;
+    try{await navigator.clipboard.writeText(text);ok=true}catch(e){}
+    if(!ok){const box=$('message');box.focus();box.select();ok=document.execCommand('copy');window.getSelection()?.removeAllRanges()}
+    if(ok){$('copy').classList.add('ok');$('copy').textContent='已复制纯文字';$('status').textContent='现在打开微信粘贴即可。'}
+    else{$('message').focus();$('message').select();$('status').textContent='浏览器阻止了自动复制，请按 Command+C，再粘贴到微信。'}
+  }
+  ids.forEach(id=>$(id).addEventListener('input',calculate));$('copy').addEventListener('click',copyPlain);calculate();
+</script>
+</body></html>
