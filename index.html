@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#245785" />
-  <title>车辆还款计算工具</title>
+  <title>车辆还款管理工具</title>
   <style>
     :root{--blue:#245785;--blue-dark:#183f61;--light:#eef5fb;--yellow:#fff3c7;--green:#287a4b;--line:#d6e0e8;--text:#17212b;--muted:#637786;--danger:#a23a29}
     *{box-sizing:border-box}html{background:#f4f7f9}body{margin:0;background:#f4f7f9;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
     main{max-width:780px;margin:32px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #16344d14;overflow:hidden}
     header{background:var(--blue);color:#fff;padding:24px 28px}h1{font-size:25px;margin:0 0 7px}header p{margin:0;opacity:.88;font-size:14px;line-height:1.55}
-    .nav{display:grid;grid-template-columns:1fr 1fr;background:#edf3f7;border-bottom:1px solid var(--line);padding:8px;gap:8px}.nav button{margin:0;height:46px;background:transparent;color:var(--blue-dark);font-size:15px}.nav button.active{background:#fff;box-shadow:0 2px 8px #16344d17;color:var(--blue)}
+    .nav{display:grid;grid-template-columns:repeat(3,1fr);background:#edf3f7;border-bottom:1px solid var(--line);padding:8px;gap:8px}.nav button{margin:0;height:46px;background:transparent;color:var(--blue-dark);font-size:15px;padding:0 6px}.nav button.active{background:#fff;box-shadow:0 2px 8px #16344d17;color:var(--blue)}
     .panel{display:none}.panel.active{display:block}section{padding:24px 28px}.mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;padding:5px;background:#eef3f6;border-radius:12px}.mode-tabs button{margin:0;height:43px;background:transparent;color:#466175;font-size:15px}.mode-tabs button.active{background:var(--blue);color:#fff;box-shadow:none}
     .section-title{margin:0 0 5px;font-size:20px}.section-help{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.55}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field label{display:block;font-weight:650;margin-bottom:7px;font-size:14px}.field input{width:100%;height:46px;border:1px solid #b8c7d3;border-radius:8px;padding:0 12px;font-size:16px;background:var(--yellow);color:var(--text)}.field input:focus{outline:3px solid #24578522;border-color:var(--blue)}
     .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:22px 0}.metric{background:var(--light);border-radius:10px;padding:14px;text-align:center;min-height:79px}.metric span{display:block;color:#587083;font-size:13px}.metric strong{display:block;margin-top:5px;font-size:20px;color:var(--blue);overflow-wrap:anywhere}.metric.wide{grid-column:1/-1}.metric.wide strong{font-size:23px}
@@ -18,18 +18,61 @@
     textarea{width:100%;min-height:280px;resize:vertical;border:1px solid #b8c7d3;border-radius:10px;background:#fafcfd;padding:17px;font:15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
     button{width:100%;height:50px;margin-top:14px;border:0;border-radius:10px;background:var(--green);color:#fff;font-size:17px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}button:hover{filter:brightness(.96)}button:active{transform:translateY(1px)}button.ok{background:#156a3b}
     .note{margin:12px 0 0;color:var(--muted);font-size:13px;text-align:center;line-height:1.5}.warning{background:#fff1eb;color:#8f321f;border-top:1px solid #f0d0c5;padding:13px 28px;font-size:13px;line-height:1.55}.error{display:none;margin:14px 0 0;color:var(--danger);font-size:13px}.error.show{display:block}
-    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5}.output-label{align-items:flex-start}textarea{min-height:300px}}
+    .reminder-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0 24px}.reminder-summary button{margin:0;height:auto;min-height:72px;background:var(--light);color:var(--blue);padding:10px 5px}.reminder-summary button.overdue{background:#fff0ec;color:var(--danger)}.reminder-summary button.upcoming{background:#fff7e8;color:#9a5b0a}.reminder-summary strong{display:block;font-size:23px}.reminder-summary span{font-size:12px}
+    .reminder-group{margin:24px 0;scroll-margin-top:70px}.group-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:11px}.group-head h3{font-size:17px;margin:0}.count{background:var(--light);color:var(--blue);border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700}.reminder-list,.plans-list{display:grid;gap:11px}.empty{border:1px dashed #b7c8d5;border-radius:11px;padding:17px;text-align:center;color:var(--muted);font-size:13px;background:#fafcfd}
+    .reminder-item,.plan-item{border:1px solid var(--line);border-radius:11px;padding:14px}.reminder-item.today{border-left:5px solid var(--blue)}.reminder-item.overdue{border-left:5px solid var(--danger)}.reminder-item.upcoming{border-left:5px solid #b36a0a}.item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.item-top h4{margin:0;font-size:16px}.item-sub{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.5}.badge{flex:0 0 auto;background:var(--light);color:var(--blue);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700}.overdue .badge{background:#fff0ec;color:var(--danger)}.upcoming .badge{background:#fff7e8;color:#9a5b0a}.item-money{display:flex;flex-wrap:wrap;gap:7px 15px;margin:12px 0;font-size:13px;color:#496172}.item-money strong{color:var(--text)}
+    .item-actions,.plan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item-actions button,.plan-actions button,.form-actions button{margin:0;height:42px;font-size:14px}.secondary{background:#e9f1f6;color:var(--blue)}.danger{background:#fff0ec;color:var(--danger)}
+    .plan-form{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.field.full{grid-column:1/-1}.form-actions{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:15px}.local-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.plan-item .plan-actions{display:flex;margin-top:11px}.plan-actions button{width:auto;padding:0 16px}.plan-actions .danger{margin-left:auto}.plan-meta{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:9px;color:#496172;font-size:13px}.plan-meta strong{color:var(--text)}
+    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full{grid-column:auto}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.output-label{align-items:flex-start}textarea{min-height:300px}.item-actions{grid-template-columns:1fr}.form-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}}
   </style>
 </head>
 <body>
 <main><div class="card">
-  <header><h1>车辆还款计算工具</h1><p>现场快速算方案、算滞纳金，生成纯文字后可直接发给客户。</p></header>
+  <header><h1>车辆还款管理工具</h1><p>管理还款提醒、测算以租代购方案和滞纳金，纯文字可直接发微信。</p></header>
   <nav class="nav" aria-label="工具选择">
-    <button class="active" type="button" data-panel="finance">以租代购方案</button>
+    <button class="active" type="button" data-panel="reminders">还款提醒</button>
+    <button type="button" data-panel="finance">方案测算</button>
     <button type="button" data-panel="late-fee">滞纳金计算</button>
   </nav>
 
-  <div class="panel active" id="finance-panel">
+  <div class="panel active" id="reminders-panel">
+    <section>
+      <h2 class="section-title">今日还款提醒</h2>
+      <p class="section-help" id="today-label">打开页面后，系统按当天日期自动列出需要处理的客户。</p>
+      <div class="reminder-summary">
+        <button type="button" data-scroll="today-group"><strong id="today-total">0</strong><span>今日应还</span></button>
+        <button class="overdue" type="button" data-scroll="overdue-group"><strong id="overdue-total">0</strong><span>已逾期</span></button>
+        <button class="upcoming" type="button" data-scroll="upcoming-group"><strong id="upcoming-total">0</strong><span>未来3天</span></button>
+      </div>
+      <div class="reminder-group" id="today-group"><div class="group-head"><h3>今日应还</h3><span class="count" id="today-count">0</span></div><div class="reminder-list" id="today-list"></div></div>
+      <div class="reminder-group" id="overdue-group"><div class="group-head"><h3>已逾期</h3><span class="count" id="overdue-count">0</span></div><div class="reminder-list" id="overdue-list"></div></div>
+      <div class="reminder-group" id="upcoming-group"><div class="group-head"><h3>未来3天即将到期</h3><span class="count" id="upcoming-count">0</span></div><div class="reminder-list" id="upcoming-list"></div></div>
+    </section>
+    <section id="plan-form-section">
+      <h2 class="section-title" id="plan-form-title">新增客户还款计划</h2>
+      <p class="section-help">录入一次，以后每月自动生成提醒。</p>
+      <form class="plan-form" id="plan-form">
+        <input id="plan-id" type="hidden">
+        <div class="inputs">
+          <div class="field"><label for="customer-name">客户姓名</label><input id="customer-name" required placeholder="例如：张三"></div>
+          <div class="field"><label for="plate">车牌号</label><input id="plate" placeholder="例如：湘A12345"></div>
+          <div class="field"><label for="vehicle">车辆</label><input id="vehicle" placeholder="例如：奔驰E300L"></div>
+          <div class="field"><label for="plan-amount">每期金额（元）</label><input id="plan-amount" type="number" min="0.01" step="0.01" required value="8222.50"></div>
+          <div class="field"><label for="due-day">每月还款日</label><input id="due-day" type="number" min="1" max="31" required value="5"></div>
+          <div class="field"><label for="plan-rate">日滞纳金比例（小数）</label><input id="plan-rate" type="number" min="0" step="0.0001" required value="0.005"></div>
+          <div class="field"><label for="start-date">起始日期（首期月份）</label><input id="start-date" type="date" required></div>
+          <div class="field"><label for="total-terms">总期数</label><input id="total-terms" type="number" min="1" max="360" required value="36"></div>
+          <div class="field"><label for="completed-terms">已完成期数</label><input id="completed-terms" type="number" min="0" max="360" required value="0"></div>
+          <div class="field full"><label for="plan-notes">备注</label><input id="plan-notes" placeholder="微信名、电话或其他说明（选填）"></div>
+        </div>
+        <div class="form-actions"><button type="submit" id="save-plan">保存还款计划</button><button class="secondary" type="button" id="cancel-edit" hidden>取消编辑</button></div>
+      </form>
+      <p class="local-note">数据只保存在当前浏览器。换手机或清除浏览器数据后不会自动同步。</p>
+    </section>
+    <section><h2 class="section-title">客户还款计划</h2><p class="section-help">可编辑、删除或查看下一期应付日期。</p><div class="plans-list" id="plans-list"></div></section>
+  </div>
+
+  <div class="panel" id="finance-panel">
     <section>
       <h2 class="section-title">以租代购方案计算器</h2>
       <p class="section-help">采用等额本息。月利率可直接修改，例如 0.6 代表每月 0.6%。</p>
@@ -89,9 +132,79 @@
   const $=id=>document.getElementById(id);
   const money=n=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
   const shortMoney=n=>String(Math.round(Number(n)*100)/100);
-  const cnDate=s=>{const d=new Date(s+'T00:00:00');return `${d.getMonth()+1}月${d.getDate()}日`};
+  const cnDate=value=>{const d=value instanceof Date?value:parseLocalDate(value);return `${d.getMonth()+1}月${d.getDate()}日`};
   const round2=n=>Math.round((n+Number.EPSILON)*100)/100;
   let financeMode='quote';
+  const PLAN_STORAGE_KEY='lateFeePaymentPlansV1';
+  let plans=loadPlans();
+
+  function parseLocalDate(value){const [y,m,d]=String(value).split('-').map(Number);return new Date(y,m-1,d,12)}
+  function todayNoon(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate(),12)}
+  function dateDiff(later,earlier){return Math.round((later-earlier)/86400000)}
+  function pad(value){return String(value).padStart(2,'0')}
+  function toISO(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`}
+  function fullCnDate(date){return `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日`}
+  function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]))}
+  function loadPlans(){try{const value=JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY)||'[]');return Array.isArray(value)?value:[]}catch(e){return []}}
+  function savePlans(){localStorage.setItem(PLAN_STORAGE_KEY,JSON.stringify(plans))}
+  function getDueDate(plan,termIndex){
+    const start=parseLocalDate(plan.startDate),first=new Date(start.getFullYear(),start.getMonth()+termIndex,1,12);
+    const lastDay=new Date(first.getFullYear(),first.getMonth()+1,0,12).getDate();
+    return new Date(first.getFullYear(),first.getMonth(),Math.min(Number(plan.dueDay),lastDay),12);
+  }
+  function nextInstallment(plan){
+    const termIndex=Number(plan.completedTerms);
+    if(termIndex>=Number(plan.totalTerms))return null;
+    const dueDate=getDueDate(plan,termIndex),delta=dateDiff(dueDate,todayNoon()),daysOverdue=Math.max(0,-delta);
+    const fee=round2(Number(plan.amount)*Number(plan.rate)*daysOverdue);
+    return {plan,termIndex,dueDate,delta,daysOverdue,fee,total:round2(Number(plan.amount)+fee)};
+  }
+  function planIdentity(plan){return [plan.plate,plan.vehicle].filter(Boolean).join(' · ')||'未填写车辆信息'}
+  function reminderMessage(item,type){
+    const {plan,dueDate,daysOverdue,fee,total}=item,name=plan.name?`${plan.name}，`:'';
+    const vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'';
+    if(type==='today')return `您好，${name}提醒您一下，您本期车辆款项今天到期。\n\n本期应付款：${shortMoney(plan.amount)}元\n应付日期：${cnDate(dueDate)}${infoLine}\n\n请您今天安排付款，谢谢。`;
+    if(type==='upcoming')return `您好，${name}提醒您一下，您本期车辆款项将在${cnDate(dueDate)}到期。\n\n本期应付款：${shortMoney(plan.amount)}元${infoLine}\n\n请您提前安排一下，避免逾期产生滞纳金，谢谢。`;
+    const pct=shortMoney(Number(plan.rate)*100),rateLabel=Math.abs(Number(plan.rate)-.005)<.0000001?'每日千分之五（0.5%）':`每日 ${pct}%`;
+    return `您好，${name}您本期应付款为 ${shortMoney(plan.amount)}元，原定付款日为 ${cnDate(dueDate)}。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，已逾期 ${daysOverdue}天。\n按照合同约定，滞纳金按${rateLabel}计算：\n\n${shortMoney(plan.amount)}元 × ${pct}% × ${daysOverdue}天 = ${shortMoney(fee)}元\n\n所以您本次应付金额为：\n\n本金：${shortMoney(plan.amount)}元\n滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+  }
+  function reminderCard(item,type){
+    const {plan,dueDate,termIndex,daysOverdue,fee,total,delta}=item;
+    const status=type==='today'?'今天到期':type==='overdue'?`逾期 ${daysOverdue} 天`:`${delta} 天后到期`;
+    const amounts=type==='overdue'?`<span>本金 <strong>${money(plan.amount)} 元</strong></span><span>滞纳金 <strong>${money(fee)} 元</strong></span><span>合计 <strong>${money(total)} 元</strong></span>`:`<span>本期应付 <strong>${money(plan.amount)} 元</strong></span><span>应付日期 <strong>${cnDate(dueDate)}</strong></span>`;
+    return `<article class="reminder-item ${type}"><div class="item-top"><div><h4>${escapeHtml(plan.name)} · 第 ${termIndex+1}/${plan.totalTerms} 期</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}</div></div><span class="badge">${status}</span></div><div class="item-money">${amounts}</div><div class="item-actions"><button type="button" data-copy-reminder="${plan.id}" data-reminder-type="${type}">复制提醒话术</button><button class="secondary" type="button" data-paid="${plan.id}">标记本期已付款</button></div></article>`;
+  }
+  function renderReminders(){
+    const items=plans.map(nextInstallment).filter(Boolean).sort((a,b)=>a.dueDate-b.dueDate);
+    const groups={today:items.filter(item=>item.delta===0),overdue:items.filter(item=>item.delta<0),upcoming:items.filter(item=>item.delta>0&&item.delta<=3)};
+    const emptyText={today:'今天没有到期客户。',overdue:'目前没有逾期客户。',upcoming:'未来3天没有即将到期客户。'};
+    Object.entries(groups).forEach(([type,list])=>{
+      $(`${type}-list`).innerHTML=list.length?list.map(item=>reminderCard(item,type)).join(''):`<div class="empty">${emptyText[type]}</div>`;
+      $(`${type}-count`).textContent=list.length;$(`${type}-total`).textContent=list.length;
+    });
+    $('today-label').textContent=`今天是 ${fullCnDate(todayNoon())}，系统按每位客户下一期未付款账单自动判断。`;
+  }
+  function renderPlans(){
+    if(!plans.length){$('plans-list').innerHTML='<div class="empty">还没有客户计划，请先在上方录入。</div>';return}
+    $('plans-list').innerHTML=plans.map(plan=>{
+      const item=nextInstallment(plan),next=item?`${cnDate(item.dueDate)} · 第 ${item.termIndex+1} 期`:'已全部完成';
+      return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta"><span>每期 <strong>${money(plan.amount)} 元</strong></span><span>每月 <strong>${plan.dueDay} 日</strong></span><span>下一期 <strong>${next}</strong></span></div><div class="plan-actions"><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑</button><button class="danger" type="button" data-delete-plan="${plan.id}">删除</button></div></article>`;
+    }).join('');
+  }
+  function renderPlanModule(){renderReminders();renderPlans()}
+  function resetPlanForm(){
+    $('plan-form').reset();$('plan-id').value='';$('start-date').value=toISO(todayNoon());$('plan-form-title').textContent='新增客户还款计划';$('save-plan').textContent='保存还款计划';$('cancel-edit').hidden=true;
+  }
+  function editPlan(id){
+    const plan=plans.find(item=>item.id===id);if(!plan)return;
+    $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('plan-amount').value=plan.amount;$('due-day').value=plan.dueDay;$('plan-rate').value=plan.rate;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';
+    $('plan-form-title').textContent='编辑客户还款计划';$('save-plan').textContent='保存修改';$('cancel-edit').hidden=false;$('plan-form-section').scrollIntoView({behavior:'smooth'});
+  }
+  async function copyReminderText(text,button){
+    let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch(e){}
+    if(!ok){const box=document.createElement('textarea');box.value=text;box.style.position='fixed';box.style.opacity='0';document.body.appendChild(box);box.focus();box.select();try{ok=document.execCommand('copy')}catch(e){}box.remove()}
+    if(ok){const old=button.textContent;button.classList.add('ok');button.textContent='已复制';setTimeout(()=>{button.classList.remove('ok');button.textContent=old},1600)}else{window.prompt('请手动复制下面的文字：',text)}
+  }
 
   function monthlyPayment(principal,rate,term){
     if(rate===0)return principal/term;
@@ -169,10 +282,29 @@
     financeMode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item===button));
     document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');calculateFinance();
   }));
+  $('plan-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    const totalTerms=Number($('total-terms').value),completedTerms=Number($('completed-terms').value),dueDay=Number($('due-day').value);
+    if(completedTerms>totalTerms){alert('已完成期数不能大于总期数。');return}
+    const id=$('plan-id').value||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const plan={id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),amount:Number($('plan-amount').value),dueDay,rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,notes:$('plan-notes').value.trim()};
+    const index=plans.findIndex(item=>item.id===id);if(index>=0)plans[index]=plan;else plans.push(plan);
+    savePlans();renderPlanModule();resetPlanForm();
+  });
+  $('cancel-edit').addEventListener('click',resetPlanForm);
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('button');if(!button)return;
+    if(button.dataset.scroll)$(button.dataset.scroll).scrollIntoView({behavior:'smooth'});
+    if(button.dataset.editPlan)editPlan(button.dataset.editPlan);
+    if(button.dataset.deletePlan){const plan=plans.find(item=>item.id===button.dataset.deletePlan);if(plan&&confirm(`确定删除“${plan.name}”的还款计划吗？`)){plans=plans.filter(item=>item.id!==plan.id);savePlans();renderPlanModule()}}
+    if(button.dataset.paid){const plan=plans.find(item=>item.id===button.dataset.paid);if(plan&&Number(plan.completedTerms)<Number(plan.totalTerms)){plan.completedTerms=Number(plan.completedTerms)+1;savePlans();renderPlanModule()}}
+    if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&nextInstallment(plan);if(item)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
+  });
   ['car-price','down-payment','target-payment','term','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
   ['due','pay','amount','rate'].forEach(id=>$(id).addEventListener('input',calculateLateFee));
   $('finance-copy').addEventListener('click',()=>copyPlain('finance-message','finance-copy','finance-status'));
   $('late-fee-copy').addEventListener('click',()=>copyPlain('late-fee-message','late-fee-copy','late-fee-status'));
-  calculateFinance();calculateLateFee();
+  $('start-date').value=toISO(todayNoon());renderPlanModule();calculateFinance();calculateLateFee();
+  window.addEventListener('focus',renderReminders);
 </script>
 </body></html>
