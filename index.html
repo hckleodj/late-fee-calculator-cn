@@ -11,7 +11,7 @@
     main{max-width:780px;margin:32px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #16344d14;overflow:hidden}
     header{background:var(--blue);color:#fff;padding:24px 28px}h1{font-size:25px;margin:0 0 7px}header p{margin:0;opacity:.88;font-size:14px;line-height:1.55}
     .nav{display:grid;grid-template-columns:repeat(3,1fr);background:#edf3f7;border-bottom:1px solid var(--line);padding:8px;gap:8px}.nav button{margin:0;height:46px;background:transparent;color:var(--blue-dark);font-size:15px;padding:0 6px}.nav button.active{background:#fff;box-shadow:0 2px 8px #16344d17;color:var(--blue)}
-    .panel{display:none}.panel.active{display:block}section{padding:24px 28px}.mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;padding:5px;background:#eef3f6;border-radius:12px}.mode-tabs button{margin:0;height:43px;background:transparent;color:#466175;font-size:15px}.mode-tabs button.active{background:var(--blue);color:#fff;box-shadow:none}
+    .panel{display:none}.panel.active{display:block}section{padding:24px 28px}.mode-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:22px;padding:5px;background:#eef3f6;border-radius:12px}.mode-tabs button{margin:0;height:43px;background:transparent;color:#466175;font-size:15px}.mode-tabs button.active{background:var(--blue);color:#fff;box-shadow:none}
     .section-title{margin:0 0 5px;font-size:20px}.section-help{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.55}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field label{display:block;font-weight:650;margin-bottom:7px;font-size:14px}.field input{width:100%;height:46px;border:1px solid #b8c7d3;border-radius:8px;padding:0 12px;font-size:16px;background:var(--yellow);color:var(--text)}.field input:focus{outline:3px solid #24578522;border-color:var(--blue)}.field-hint{margin-top:6px;color:var(--muted);font-size:12px}
     .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:22px 0}.metric{background:var(--light);border-radius:10px;padding:14px;text-align:center;min-height:79px}.metric span{display:block;color:#587083;font-size:13px}.metric strong{display:block;margin-top:5px;font-size:20px;color:var(--blue);overflow-wrap:anywhere}.metric.wide{grid-column:1/-1}.metric.wide strong{font-size:23px}
     .output-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.output-label strong{font-size:16px}.tip{font-size:12px;color:var(--muted);text-align:right}
@@ -24,7 +24,7 @@
     .item-actions,.plan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item-actions button,.plan-actions button,.form-actions button{margin:0;height:42px;font-size:14px}.secondary{background:#e9f1f6;color:var(--blue)}.danger{background:#fff0ec;color:var(--danger)}
     .plan-form{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.field.full{grid-column:1/-1}.form-actions{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:15px}.local-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.plan-item .plan-actions{display:flex;margin-top:11px}.plan-actions button{width:auto;padding:0 16px}.plan-actions .danger{margin-left:auto}.plan-meta{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:9px;color:#496172;font-size:13px}.plan-meta strong{color:var(--text)}
     .fee-choice{border:0;padding:0;margin:0;min-width:0}.fee-choice legend{font-weight:650;margin-bottom:7px;font-size:14px}.fee-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fee-options label{min-height:46px;border:1px solid #b8c7d3;border-radius:8px;background:#fff;display:flex;align-items:center;gap:8px;padding:0 11px;font-size:14px;font-weight:650;cursor:pointer}.fee-options label:has(input:checked){border-color:var(--blue);background:var(--light);color:var(--blue)}.fee-options input{width:18px;height:18px;margin:0;accent-color:var(--blue)}
-    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full{grid-column:auto}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.output-label{align-items:flex-start}textarea{min-height:300px}.item-actions{grid-template-columns:1fr}.form-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}}
+    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full{grid-column:auto}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.mode-tabs{gap:4px}.mode-tabs button{font-size:13px;padding:0 4px}.output-label{align-items:flex-start}textarea{min-height:300px}.item-actions{grid-template-columns:1fr}.form-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}}
   </style>
 </head>
 <body>
@@ -77,18 +77,21 @@
   <div class="panel" id="finance-panel">
     <section>
       <h2 class="section-title">以租代购方案计算器</h2>
-      <p class="section-help">采用等额本息。月利率可直接修改，例如 0.6 代表每月 0.6%。</p>
+      <p class="section-help">采用等本等息：每期本金相同，利息始终按原贷款金额计算。月利率可直接修改，例如1.25代表每月1.25%。</p>
       <div class="mode-tabs" aria-label="计算模式">
         <button class="active" type="button" data-mode="quote">客户方案报价</button>
         <button type="button" data-mode="reverse">按月供倒推</button>
+        <button type="button" data-mode="settlement">剩余本金</button>
       </div>
 
       <div class="inputs">
-        <div class="field"><label for="car-price">车辆价格（元）</label><input id="car-price" inputmode="decimal" type="number" min="0" step="100" value="200000"></div>
+        <div class="field quote-reverse-field"><label for="car-price">车辆价格（元）</label><input id="car-price" inputmode="decimal" type="number" min="0" step="100" value="200000"></div>
         <div class="field quote-field"><label for="down-payment-rate">首付比例（%）</label><input id="down-payment-rate" inputmode="decimal" type="number" min="0" max="100" step="0.1" value="25"><div class="field-hint" id="down-payment-preview">自动换算：50,000.00 元</div></div>
         <div class="field reverse-field" hidden><label for="target-payment">可接受月供（元）</label><input id="target-payment" inputmode="decimal" type="number" min="0" step="10" value="4500"></div>
         <div class="field"><label for="term">贷款期限（月）</label><input id="term" inputmode="numeric" type="number" min="1" max="120" step="1" value="36"></div>
-        <div class="field"><label for="monthly-rate">月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"></div>
+        <div class="field quote-reverse-field"><label for="monthly-rate">固定月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"><div class="field-hint">每月利息＝原贷款金额×固定月利率</div></div>
+        <div class="field settlement-field" hidden><label for="settlement-loan">原贷款金额（元）</label><input id="settlement-loan" inputmode="decimal" type="number" min="0" step="100" value="78030"></div>
+        <div class="field settlement-field" hidden><label for="paid-terms">已还期数</label><input id="paid-terms" inputmode="numeric" type="number" min="0" max="120" step="1" value="12"><div class="field-hint">已还清的完整期数，不包含当前尚未支付的一期</div></div>
       </div>
       <p class="error" id="finance-error" role="alert"></p>
 
@@ -99,12 +102,12 @@
         <div class="metric"><span id="tertiary-result-label">总利息</span><strong id="tertiary-result">0.00 元</strong></div>
       </div>
 
-      <div class="output-label"><strong>客户方案文字</strong><span class="tip">金额按测算结果保留2位</span></div>
+      <div class="output-label"><strong id="finance-output-title">客户方案文字</strong><span class="tip">金额按测算结果保留2位</span></div>
       <textarea id="finance-message" readonly aria-label="客户方案文字"></textarea>
       <button id="finance-copy" type="button">复制客户方案</button>
       <p class="note" id="finance-status">复制后可直接粘贴到微信。实际方案以双方合同约定为准。</p>
     </section>
-    <div class="warning">测算说明：采用等额本息公式，月供按未四舍五入的结果计算总额；本工具用于方案沟通，不替代正式合同。</div>
+    <div class="warning">测算说明：采用等本等息，利息始终按原贷款金额计算。剩余本金不等于最终结清金额，未付租金、滞纳金、违约金或提前结清费用应按合同另行核算。</div>
   </div>
 
   <div class="panel" id="late-fee-panel">
@@ -213,15 +216,8 @@
     if(ok){const old=button.textContent;button.classList.add('ok');button.textContent='已复制';setTimeout(()=>{button.classList.remove('ok');button.textContent=old},1600)}else{window.prompt('请手动复制下面的文字：',text)}
   }
 
-  function monthlyPayment(principal,rate,term){
-    if(rate===0)return principal/term;
-    const factor=Math.pow(1+rate,term);
-    return principal*rate*factor/(factor-1);
-  }
-  function principalFromPayment(payment,rate,term){
-    if(rate===0)return payment*term;
-    return payment*(1-Math.pow(1+rate,-term))/rate;
-  }
+  function monthlyPayment(principal,rate,term){return principal/term+principal*rate}
+  function principalFromPayment(payment,rate,term){return payment/(1/term+rate)}
   function readPositive(id,allowZero=false){
     const raw=$(id).value;if(raw==='')return null;const value=Number(raw);
     return Number.isFinite(value)&&(allowZero?value>=0:value>0)?value:null;
@@ -236,13 +232,25 @@
     $('finance-message').value='请先完整填写有效的方案数据。';
   }
   function calculateFinance(){
-    const price=readPositive('car-price'),term=readPositive('term'),ratePct=readPositive('monthly-rate',true);
+    const term=readPositive('term');
     const error=$('finance-error');error.classList.remove('show');error.textContent='';
-    if(price===null||term===null||ratePct===null||!Number.isInteger(term)||term>120){
-      showFinanceError('请填写有效的车辆价格、1至120个月的整数期限和月利率。');return;
+    if(term===null||!Number.isInteger(term)||term>120){
+      showFinanceError('贷款期限请填写1至120个月的整数。');return;
     }
-    const rate=ratePct/100;
     let loan,payment,totalInterest,totalRepayment,message;
+    if(financeMode==='settlement'){
+      loan=readPositive('settlement-loan');const paidTerms=readPositive('paid-terms',true);
+      if(loan===null||paidTerms===null||!Number.isInteger(paidTerms)||paidTerms>term){showFinanceError('请填写有效的原贷款金额；已还期数必须是0至总期数之间的整数。');return;}
+      const monthlyPrincipal=loan/term,paidPrincipal=monthlyPrincipal*paidTerms,remainingPrincipal=Math.max(0,loan-paidPrincipal),remainingTerms=term-paidTerms;
+      $('loan-amount').textContent=money(loan)+' 元';$('primary-result-label').textContent='每期偿还本金';$('secondary-result-label').textContent='已归还本金';$('tertiary-result-label').textContent='剩余未还本金';
+      $('primary-result').textContent=money(monthlyPrincipal)+' 元';$('secondary-result').textContent=money(paidPrincipal)+' 元';$('tertiary-result').textContent=money(remainingPrincipal)+' 元';
+      $('finance-output-title').textContent='剩余本金核算文字';
+      message=`您好，您的剩余贷款本金核算如下：\n\n原贷款金额：${money(loan)}元\n贷款期限：${term}期\n已还期数：${paidTerms}期\n剩余期数：${remainingTerms}期\n每期偿还本金：${money(monthlyPrincipal)}元\n已归还本金：${money(paidPrincipal)}元\n剩余未还本金：${money(remainingPrincipal)}元\n\n以上仅为剩余未还本金，不代表最终结清金额。其他应付费用以合同约定及双方最终核算为准。`;
+      $('finance-message').value=message;resetCopy('finance-copy','finance-status','复制核算结果');return;
+    }
+    const price=readPositive('car-price'),ratePct=readPositive('monthly-rate',true);
+    if(price===null||ratePct===null){showFinanceError('请填写有效的车辆价格和固定月利率。');return;}
+    const rate=ratePct/100;
     if(financeMode==='quote'){
       const downRatePct=readPositive('down-payment-rate',true);
       if(downRatePct===null||downRatePct>100){showFinanceError('首付比例请填写0%至100%。');return;}
@@ -250,7 +258,7 @@
       loan=price-down;payment=monthlyPayment(loan,rate,term);totalRepayment=payment*term;totalInterest=totalRepayment-loan;
       $('primary-result-label').textContent='每月还款';$('secondary-result-label').textContent='分期总还款';$('tertiary-result-label').textContent='总利息';
       $('primary-result').textContent=money(payment)+' 元';$('secondary-result').textContent=money(totalRepayment)+' 元';$('tertiary-result').textContent=money(totalInterest)+' 元';
-      message=`您好，这是为您测算的车辆以租代购方案：\n\n车辆价格：${money(price)}元\n首付比例：${shortMoney(downRatePct)}%\n首付款：${money(down)}元\n贷款金额：${money(loan)}元\n贷款期限：${term}个月\n月利率：${shortMoney(ratePct)}%\n每月还款：${money(payment)}元\n分期总还款：${money(totalRepayment)}元\n总利息：${money(totalInterest)}元\n\n以上为等额本息测算结果，最终以双方确认的正式合同为准。`;
+      message=`您好，这是为您测算的车辆以租代购方案：\n\n车辆价格：${money(price)}元\n首付比例：${shortMoney(downRatePct)}%\n首付款：${money(down)}元\n贷款金额：${money(loan)}元\n贷款期限：${term}个月\n固定月利率：${shortMoney(ratePct)}%\n每月还款：${money(payment)}元\n分期总还款：${money(totalRepayment)}元\n总利息：${money(totalInterest)}元\n\n以上为等本等息测算结果，最终以双方确认的正式合同为准。`;
     }else{
       const target=readPositive('target-payment');
       if(target===null){showFinanceError('请输入大于0的可接受月供。');return;}
@@ -259,9 +267,9 @@
       $('primary-result-label').textContent='建议首付款';$('secondary-result-label').textContent='对应月供';$('tertiary-result-label').textContent='分期总还款';
       $('primary-result').textContent=`${shortMoney(downRatePct)}% / ${money(down)} 元`;$('secondary-result').textContent=money(payment)+' 元';$('tertiary-result').textContent=money(totalRepayment)+' 元';
       const note=affordableLoan>price?'\n说明：该月供额度已足够覆盖整车价格，因此建议首付款为0元。':'';
-      message=`您好，按您可接受的月供为您倒推了一套车辆以租代购方案：\n\n车辆价格：${money(price)}元\n可接受月供：${money(target)}元\n贷款期限：${term}个月\n月利率：${shortMoney(ratePct)}%\n可贷款金额：${money(loan)}元\n建议首付比例：${shortMoney(downRatePct)}%\n建议首付款：${money(down)}元\n对应月供：${money(payment)}元\n分期总还款：${money(totalRepayment)}元${note}\n\n以上为等额本息测算结果，最终以双方确认的正式合同为准。`;
+      message=`您好，按您可接受的月供为您倒推了一套车辆以租代购方案：\n\n车辆价格：${money(price)}元\n可接受月供：${money(target)}元\n贷款期限：${term}个月\n固定月利率：${shortMoney(ratePct)}%\n可贷款金额：${money(loan)}元\n建议首付比例：${shortMoney(downRatePct)}%\n建议首付款：${money(down)}元\n对应月供：${money(payment)}元\n分期总还款：${money(totalRepayment)}元${note}\n\n以上为等本等息测算结果，最终以双方确认的正式合同为准。`;
     }
-    $('loan-amount').textContent=money(loan)+' 元';$('finance-message').value=message;
+    $('loan-amount').textContent=money(loan)+' 元';$('finance-output-title').textContent='客户方案文字';$('finance-message').value=message;
     resetCopy('finance-copy','finance-status','复制客户方案');
   }
 
@@ -288,7 +296,7 @@
   }));
   document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{
     financeMode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item===button));
-    document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');calculateFinance();
+    document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');document.querySelectorAll('.quote-reverse-field').forEach(item=>item.hidden=financeMode==='settlement');document.querySelectorAll('.settlement-field').forEach(item=>item.hidden=financeMode!=='settlement');calculateFinance();
   }));
   $('plan-form').addEventListener('submit',event=>{
     event.preventDefault();
@@ -309,7 +317,7 @@
     if(button.dataset.paid){const plan=plans.find(item=>item.id===button.dataset.paid);if(plan&&Number(plan.completedTerms)<Number(plan.totalTerms)){plan.completedTerms=Number(plan.completedTerms)+1;savePlans();renderPlanModule()}}
     if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&nextInstallment(plan);if(item)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
   });
-  ['car-price','down-payment-rate','target-payment','term','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
+  ['car-price','down-payment-rate','target-payment','term','monthly-rate','settlement-loan','paid-terms'].forEach(id=>$(id).addEventListener('input',calculateFinance));
   ['due','pay','amount','rate'].forEach(id=>$(id).addEventListener('input',calculateLateFee));
   $('finance-copy').addEventListener('click',()=>copyPlain('finance-message','finance-copy','finance-status'));
   $('late-fee-copy').addEventListener('click',()=>copyPlain('late-fee-message','late-fee-copy','late-fee-status'));
