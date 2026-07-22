@@ -11,7 +11,7 @@
     main{max-width:780px;margin:32px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #16344d14;overflow:hidden}
     header{background:var(--blue);color:#fff;padding:24px 28px}h1{font-size:25px;margin:0 0 7px}header p{margin:0;opacity:.88;font-size:14px;line-height:1.55}
     .nav{display:grid;grid-template-columns:repeat(3,1fr);background:#edf3f7;border-bottom:1px solid var(--line);padding:8px;gap:8px}.nav button{margin:0;height:46px;background:transparent;color:var(--blue-dark);font-size:15px;padding:0 6px}.nav button.active{background:#fff;box-shadow:0 2px 8px #16344d17;color:var(--blue)}
-    .panel{display:none}.panel.active{display:block}section{padding:24px 28px}.mode-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:22px;padding:5px;background:#eef3f6;border-radius:12px}.mode-tabs button{margin:0;height:43px;background:transparent;color:#466175;font-size:15px}.mode-tabs button.active{background:var(--blue);color:#fff;box-shadow:none}
+    .panel{display:none}.panel.active{display:block}section{padding:24px 28px}.mode-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:22px;padding:5px;background:#eef3f6;border-radius:12px}.mode-tabs button{margin:0;height:43px;background:transparent;color:#466175;font-size:15px}.mode-tabs button.active{background:var(--blue);color:#fff;box-shadow:none}
     .section-title{margin:0 0 5px;font-size:20px}.section-help{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.55}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field label{display:block;font-weight:650;margin-bottom:7px;font-size:14px}.field input{width:100%;height:46px;border:1px solid #b8c7d3;border-radius:8px;padding:0 12px;font-size:16px;background:var(--yellow);color:var(--text)}.field input:focus{outline:3px solid #24578522;border-color:var(--blue)}.field-hint{margin-top:6px;color:var(--muted);font-size:12px}
     .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:22px 0}.metric{background:var(--light);border-radius:10px;padding:14px;text-align:center;min-height:79px}.metric span{display:block;color:#587083;font-size:13px}.metric strong{display:block;margin-top:5px;font-size:20px;color:var(--blue);overflow-wrap:anywhere}.metric.wide{grid-column:1/-1}.metric.wide strong{font-size:23px}
     .output-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.output-label strong{font-size:16px}.tip{font-size:12px;color:var(--muted);text-align:right}
@@ -22,8 +22,9 @@
     .reminder-group{margin:24px 0;scroll-margin-top:70px}.group-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:11px}.group-head h3{font-size:17px;margin:0}.count{background:var(--light);color:var(--blue);border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700}.reminder-list,.plans-list{display:grid;gap:11px}.empty{border:1px dashed #b7c8d5;border-radius:11px;padding:17px;text-align:center;color:var(--muted);font-size:13px;background:#fafcfd}
     .reminder-item,.plan-item{border:1px solid var(--line);border-radius:11px;padding:14px}.reminder-item.today{border-left:5px solid var(--blue)}.reminder-item.overdue{border-left:5px solid var(--danger)}.reminder-item.upcoming{border-left:5px solid #b36a0a}.item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.item-top h4{margin:0;font-size:16px}.item-sub{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.5}.badge{flex:0 0 auto;background:var(--light);color:var(--blue);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700}.overdue .badge{background:#fff0ec;color:var(--danger)}.upcoming .badge{background:#fff7e8;color:#9a5b0a}.item-money{display:flex;flex-wrap:wrap;gap:7px 15px;margin:12px 0;font-size:13px;color:#496172}.item-money strong{color:var(--text)}
     .item-actions,.plan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item-actions button,.plan-actions button,.form-actions button{margin:0;height:42px;font-size:14px}.secondary{background:#e9f1f6;color:var(--blue)}.danger{background:#fff0ec;color:var(--danger)}
-    .plan-form{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.field.full{grid-column:1/-1}.form-actions{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:15px}.local-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.plan-item .plan-actions{display:flex;margin-top:11px}.plan-actions button{width:auto;padding:0 16px}.plan-actions .danger{margin-left:auto}.plan-meta{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:9px;color:#496172;font-size:13px}.plan-meta strong{color:var(--text)}
+    .plan-form{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.field.full{grid-column:1/-1}.form-actions{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:15px}.local-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.plan-item .plan-actions{display:flex;flex-wrap:wrap;margin-top:11px}.plan-actions button{width:auto;padding:0 16px}.plan-actions .danger{margin-left:auto}.plan-meta{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:9px;color:#496172;font-size:13px}.plan-meta strong{color:var(--text)}
     .fee-choice{border:0;padding:0;margin:0;min-width:0}.fee-choice legend{font-weight:650;margin-bottom:7px;font-size:14px}.fee-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fee-options label{min-height:46px;border:1px solid #b8c7d3;border-radius:8px;background:#fff;display:flex;align-items:center;gap:8px;padding:0 11px;font-size:14px;font-weight:650;cursor:pointer}.fee-options label:has(input:checked){border-color:var(--blue);background:var(--light);color:var(--blue)}.fee-options input{width:18px;height:18px;margin:0;accent-color:var(--blue)}
+    dialog{width:min(620px,calc(100% - 24px));max-height:90vh;border:0;border-radius:16px;padding:0;color:var(--text);box-shadow:0 18px 60px #102c4260}dialog::backdrop{background:#102c4270}.dialog-body{padding:22px;overflow:auto;max-height:90vh}.dialog-body h2{margin:0 0 5px;font-size:21px}.dialog-context{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.55}.payment-preview{background:var(--light);border-radius:11px;padding:13px;margin-top:15px}.preview-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14px}.preview-row strong{text-align:right}.preview-row.total{border-top:1px solid #cad9e4;margin-top:5px;padding-top:10px}.allocation-preview{margin-top:10px;color:#496172;font-size:13px;line-height:1.65}.payment-error{color:var(--danger);font-size:13px;margin:10px 0 0}.dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}.dialog-actions button{margin:0}.payment-history{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.payment-history summary{cursor:pointer;color:var(--blue);font-size:13px;font-weight:700}.history-row{padding:10px 0;border-bottom:1px dashed var(--line);font-size:12px;color:#496172;line-height:1.55}.history-row:last-child{border-bottom:0}.history-actions{display:flex;gap:7px;margin-top:7px}.history-actions button{width:auto;height:32px;margin:0;padding:0 12px;border-radius:8px;font-size:12px}.history-actions .undo{background:#fff0ec;color:var(--danger)}
     @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full{grid-column:auto}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.mode-tabs{gap:4px}.mode-tabs button{font-size:13px;padding:0 4px}.output-label{align-items:flex-start}textarea{min-height:300px}.item-actions{grid-template-columns:1fr}.form-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}}
   </style>
 </head>
@@ -58,10 +59,12 @@
           <div class="field"><label for="customer-name">客户姓名</label><input id="customer-name" required placeholder="例如：张三"></div>
           <div class="field"><label for="plate">车牌号</label><input id="plate" placeholder="例如：湘A12345"></div>
           <div class="field"><label for="vehicle">车辆</label><input id="vehicle" placeholder="例如：奔驰E300L"></div>
-          <div class="field"><label for="plan-amount">每期金额（元）</label><input id="plan-amount" type="number" min="0.01" step="0.01" required value="8222.50"></div>
+          <div class="field"><label for="contract-price">合同车辆价格（元）</label><input id="contract-price" type="number" min="0.01" step="0.01" required value="91800"></div>
+          <div class="field"><label for="contract-down-rate">合同首付比例（%）</label><input id="contract-down-rate" type="number" min="0" max="100" step="0.1" required value="15"></div>
+          <div class="field"><label for="contract-monthly-rate">合同固定月利率（%）</label><input id="contract-monthly-rate" type="number" min="0" step="0.01" required value="1.25"><div class="field-hint">例如1.25代表每月1.25%</div></div>
+          <div class="field"><label for="plan-amount">合同月供（元）</label><input id="plan-amount" type="number" readonly value="3142.88"><div class="field-hint" id="contract-preview">贷款78,030.00元＝每期本金2,167.50元＋利息975.38元</div></div>
           <div class="field"><label for="due-day">每月还款日</label><input id="due-day" type="number" min="1" max="31" required value="5"></div>
-          <fieldset class="fee-choice"><legend>滞纳金设置</legend><div class="fee-options"><label><input type="radio" name="fee-mode" value="charge" checked>按合同收取</label><label><input type="radio" name="fee-mode" value="none">不收取</label></div></fieldset>
-          <div class="field" id="plan-rate-field"><label for="plan-rate">日滞纳金比例（小数）</label><input id="plan-rate" type="number" min="0" step="0.0001" required value="0.005"></div>
+          <div class="field"><label for="plan-rate">参考日滞纳金比例（小数）</label><input id="plan-rate" type="number" min="0" step="0.0001" required value="0.005"><div class="field-hint">登记收款时再决定是否收取及实际金额</div></div>
           <div class="field"><label for="start-date">起始日期（首期月份）</label><input id="start-date" type="date" required></div>
           <div class="field"><label for="total-terms">总期数</label><input id="total-terms" type="number" min="1" max="360" required value="36"></div>
           <div class="field"><label for="completed-terms">已完成期数</label><input id="completed-terms" type="number" min="0" max="360" required value="0"></div>
@@ -81,7 +84,6 @@
       <div class="mode-tabs" aria-label="计算模式">
         <button class="active" type="button" data-mode="quote">客户方案报价</button>
         <button type="button" data-mode="reverse">按月供倒推</button>
-        <button type="button" data-mode="settlement">剩余本金</button>
       </div>
 
       <div class="inputs">
@@ -90,8 +92,6 @@
         <div class="field reverse-field" hidden><label for="target-payment">可接受月供（元）</label><input id="target-payment" inputmode="decimal" type="number" min="0" step="10" value="4500"></div>
         <div class="field"><label for="term">贷款期限（月）</label><input id="term" inputmode="numeric" type="number" min="1" max="120" step="1" value="36"></div>
         <div class="field quote-reverse-field"><label for="monthly-rate">固定月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"><div class="field-hint">每月利息＝原贷款金额×固定月利率</div></div>
-        <div class="field settlement-field" hidden><label for="settlement-loan">原贷款金额（元）</label><input id="settlement-loan" inputmode="decimal" type="number" min="0" step="100" value="78030"></div>
-        <div class="field settlement-field" hidden><label for="paid-terms">已还期数</label><input id="paid-terms" inputmode="numeric" type="number" min="0" max="120" step="1" value="12"><div class="field-hint">已还清的完整期数，不包含当前尚未支付的一期</div></div>
       </div>
       <p class="error" id="finance-error" role="alert"></p>
 
@@ -107,7 +107,7 @@
       <button id="finance-copy" type="button">复制客户方案</button>
       <p class="note" id="finance-status">复制后可直接粘贴到微信。实际方案以双方合同约定为准。</p>
     </section>
-    <div class="warning">测算说明：采用等本等息，利息始终按原贷款金额计算。剩余本金不等于最终结清金额，未付租金、滞纳金、违约金或提前结清费用应按合同另行核算。</div>
+    <div class="warning">测算说明：采用等本等息，利息始终按原贷款金额计算。本区域只用于新方案报价；已有客户请从“客户还款计划”进入合同结清核算。</div>
   </div>
 
   <div class="panel" id="late-fee-panel">
@@ -133,6 +133,43 @@
     <div class="warning">计费口径：逾期天数＝实际付款日期－应付日期，应付日当天不计逾期。请以合同约定为准。</div>
   </div>
 </div></main>
+<dialog id="payment-dialog">
+  <form class="dialog-body" id="payment-form">
+    <input id="payment-plan-id" type="hidden"><input id="payment-term-index" type="hidden"><input id="payment-id" type="hidden">
+    <h2 id="payment-dialog-title">登记本期收款</h2><p class="dialog-context" id="payment-context"></p>
+    <div class="inputs">
+      <div class="field"><label for="payment-date">实际收款日期</label><input id="payment-date" type="date" required></div>
+      <div class="field"><label for="payment-total">本次到账总额（元）</label><input id="payment-total" type="number" min="0.01" step="0.01" required></div>
+      <fieldset class="fee-choice full"><legend>这笔钱是否包含滞纳金</legend><div class="fee-options"><label><input type="radio" name="payment-fee-mode" value="no" checked>不包含</label><label><input type="radio" name="payment-fee-mode" value="yes">包含</label></div></fieldset>
+      <div class="field full" id="payment-fee-field" hidden><label for="payment-fee">其中滞纳金金额（元）</label><input id="payment-fee" type="number" min="0" step="0.01" value="0"></div>
+    </div>
+    <div class="payment-preview">
+      <div class="preview-row"><span>计入滞纳金</span><strong id="preview-fee">0.00 元</strong></div>
+      <div class="preview-row"><span>冲抵本期应付款</span><strong id="preview-principal">0.00 元</strong></div>
+      <div class="preview-row total"><span>本期账单状态</span><strong id="preview-status">等待填写</strong></div>
+      <div class="allocation-preview" id="allocation-preview"></div>
+    </div>
+    <p class="payment-error" id="payment-error"></p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="cancel-payment">取消</button><button type="submit" id="save-payment">保存收款记录</button></div>
+  </form>
+</dialog>
+<dialog id="settlement-dialog">
+  <div class="dialog-body">
+    <h2>合同结清核算</h2><p class="dialog-context" id="settlement-context"></p>
+    <div class="summary" aria-live="polite">
+      <div class="metric"><span>合同贷款金额</span><strong id="settlement-loan-result">0.00 元</strong></div>
+      <div class="metric"><span>合同总利息</span><strong id="settlement-total-interest">0.00 元</strong></div>
+      <div class="metric"><span>已归还本金</span><strong id="settlement-paid-principal">0.00 元</strong></div>
+      <div class="metric"><span>已支付利息</span><strong id="settlement-paid-interest">0.00 元</strong></div>
+      <div class="metric"><span>剩余未还本金</span><strong id="settlement-remaining-principal">0.00 元</strong></div>
+      <div class="metric"><span>剩余合同利息</span><strong id="settlement-remaining-interest">0.00 元</strong></div>
+    </div>
+    <div class="output-label"><strong>合同核算文字</strong><span class="tip">可直接复制给客户核对</span></div>
+    <textarea id="settlement-message" readonly aria-label="合同结清核算文字"></textarea>
+    <p class="note" id="settlement-status">剩余本金与剩余合同利息分开显示，最终结清口径以合同为准。</p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="close-settlement">关闭</button><button type="button" id="copy-settlement">复制核算结果</button></div>
+  </div>
+</dialog>
 <script>
   const $=id=>document.getElementById(id);
   const money=n=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -152,68 +189,151 @@
   function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]))}
   function loadPlans(){try{const value=JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY)||'[]');return Array.isArray(value)?value:[]}catch(e){return []}}
   function savePlans(){localStorage.setItem(PLAN_STORAGE_KEY,JSON.stringify(plans))}
+  function contractData(plan){
+    const price=Number(plan.vehiclePrice),downRate=Number(plan.downPaymentRate),monthlyRatePct=Number(plan.monthlyRate),term=Number(plan.totalTerms);
+    if(!Number.isFinite(price)||price<=0||!Number.isFinite(downRate)||downRate<0||downRate>=100||!Number.isFinite(monthlyRatePct)||monthlyRatePct<0||!Number.isInteger(term)||term<=0)return null;
+    const downPayment=price*downRate/100,loan=price-downPayment,monthlyPrincipal=loan/term,monthlyInterest=loan*monthlyRatePct/100,monthlyPayment=monthlyPrincipal+monthlyInterest,totalInterest=monthlyInterest*term;
+    return {price,downRate,monthlyRatePct,term,downPayment,loan,monthlyPrincipal,monthlyInterest,monthlyPayment,totalInterest,totalRepayment:loan+totalInterest};
+  }
+  function updateContractPreview(){
+    const data=contractData({vehiclePrice:$('contract-price').value,downPaymentRate:$('contract-down-rate').value,monthlyRate:$('contract-monthly-rate').value,totalTerms:$('total-terms').value});
+    if(!data){$('contract-preview').textContent='请完整填写车价、0%至100%之间的首付比例、月利率和总期数。';$('plan-amount').value='';return null}
+    $('plan-amount').value=money(data.monthlyPayment).replace(/,/g,'');$('contract-preview').textContent=`贷款${money(data.loan)}元＝每期本金${money(data.monthlyPrincipal)}元＋利息${money(data.monthlyInterest)}元`;return data;
+  }
   function getDueDate(plan,termIndex){
     const start=parseLocalDate(plan.startDate),first=new Date(start.getFullYear(),start.getMonth()+termIndex,1,12);
     const lastDay=new Date(first.getFullYear(),first.getMonth()+1,0,12).getDate();
     return new Date(first.getFullYear(),first.getMonth(),Math.min(Number(plan.dueDay),lastDay),12);
   }
-  function nextInstallment(plan){
-    const termIndex=Number(plan.completedTerms);
-    if(termIndex>=Number(plan.totalTerms))return null;
-    const dueDate=getDueDate(plan,termIndex),delta=dateDiff(dueDate,todayNoon()),daysOverdue=Math.max(0,-delta);
-    const fee=plan.chargeLateFee===false?0:round2(Number(plan.amount)*Number(plan.rate)*daysOverdue);
-    return {plan,termIndex,dueDate,delta,daysOverdue,fee,total:round2(Number(plan.amount)+fee)};
+  function principalPaidFor(plan,termIndex){return round2((plan.payments||[]).flatMap(payment=>payment.allocations||[]).filter(item=>Number(item.termIndex)===Number(termIndex)).reduce((sum,item)=>sum+Number(item.principal||0),0))}
+  function installmentItem(plan,termIndex){
+    const dueDate=getDueDate(plan,termIndex),delta=dateDiff(dueDate,todayNoon()),daysOverdue=Math.max(0,-delta),paid=principalPaidFor(plan,termIndex),remaining=round2(Math.max(0,Number(plan.amount)-paid));
+    const fee=round2(remaining*Number(plan.rate)*daysOverdue);
+    const contract=contractData(plan),isPaid=paid+.005>=Number(plan.amount);let interestPaid=0,principalPaid=paid;
+    if(contract){interestPaid=isPaid?contract.monthlyInterest:Math.min(round2(contract.monthlyInterest),paid);principalPaid=isPaid?contract.monthlyPrincipal:Math.min(contract.monthlyPrincipal,Math.max(0,paid-interestPaid))}
+    return {plan,termIndex,dueDate,delta,daysOverdue,paid,remaining,fee,total:round2(remaining+fee),interestPaid,principalPaid};
   }
+  function openInstallments(plan){const items=[];for(let index=Number(plan.completedTerms);index<Number(plan.totalTerms);index++){const item=installmentItem(plan,index);if(item.remaining>.005)items.push(item)}return items}
+  function nextInstallment(plan){return openInstallments(plan)[0]||null}
   function planIdentity(plan){return [plan.plate,plan.vehicle].filter(Boolean).join(' · ')||'未填写车辆信息'}
   function reminderMessage(item,type){
     const {plan,dueDate,daysOverdue,fee,total}=item,name=plan.name?`${plan.name}，`:'';
     const vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'';
-    if(type==='today')return `您好，${name}提醒您一下，您本期车辆款项今天到期。\n\n本期应付款：${shortMoney(plan.amount)}元\n应付日期：${cnDate(dueDate)}${infoLine}\n\n请您今天安排付款，谢谢。`;
-    if(type==='upcoming'){const ending=plan.chargeLateFee===false?'请您提前安排一下，谢谢。':'请您提前安排一下，避免逾期产生滞纳金，谢谢。';return `您好，${name}提醒您一下，您本期车辆款项将在${cnDate(dueDate)}到期。\n\n本期应付款：${shortMoney(plan.amount)}元${infoLine}\n\n${ending}`}
-    if(plan.chargeLateFee===false)return `您好，${name}您本期应付款为 ${shortMoney(plan.amount)}元，原定付款日为 ${cnDate(dueDate)}。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，已逾期 ${daysOverdue}天。\n本次未计收滞纳金，当前应付金额为 ${shortMoney(plan.amount)}元。\n\n请您今天安排付款，谢谢。`;
+    const payable=item.remaining;
+    if(type==='today')return `您好，${name}提醒您一下，您本期车辆款项今天到期。\n\n本期剩余应付款：${shortMoney(payable)}元\n应付日期：${cnDate(dueDate)}${infoLine}\n\n请您今天安排付款，谢谢。`;
+    if(type==='upcoming')return `您好，${name}提醒您一下，您本期车辆款项将在${cnDate(dueDate)}到期。\n\n本期剩余应付款：${shortMoney(payable)}元${infoLine}\n\n请您提前安排一下，避免逾期产生滞纳金，谢谢。`;
     const pct=shortMoney(Number(plan.rate)*100),rateLabel=Math.abs(Number(plan.rate)-.005)<.0000001?'每日千分之五（0.5%）':`每日 ${pct}%`;
-    return `您好，${name}您本期应付款为 ${shortMoney(plan.amount)}元，原定付款日为 ${cnDate(dueDate)}。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，已逾期 ${daysOverdue}天。\n按照合同约定，滞纳金按${rateLabel}计算：\n\n${shortMoney(plan.amount)}元 × ${pct}% × ${daysOverdue}天 = ${shortMoney(fee)}元\n\n所以您本次应付金额为：\n\n本金：${shortMoney(plan.amount)}元\n滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+    return `您好，${name}您本期剩余应付款为 ${shortMoney(payable)}元，原定付款日为 ${cnDate(dueDate)}。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，已逾期 ${daysOverdue}天。\n按照合同约定，参考滞纳金按${rateLabel}计算：\n\n${shortMoney(payable)}元 × ${pct}% × ${daysOverdue}天 = ${shortMoney(fee)}元\n\n当前参考金额为：\n\n本期剩余应付款：${shortMoney(payable)}元\n参考滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
   }
   function reminderCard(item,type){
     const {plan,dueDate,termIndex,daysOverdue,fee,total,delta}=item;
     const status=type==='today'?'今天到期':type==='overdue'?`逾期 ${daysOverdue} 天`:`${delta} 天后到期`;
-    const feeValue=plan.chargeLateFee===false?'不收取':`${money(fee)} 元`;
-    const amounts=type==='overdue'?`<span>本金 <strong>${money(plan.amount)} 元</strong></span><span>滞纳金 <strong>${feeValue}</strong></span><span>合计 <strong>${money(total)} 元</strong></span>`:`<span>本期应付 <strong>${money(plan.amount)} 元</strong></span><span>应付日期 <strong>${cnDate(dueDate)}</strong></span>`;
-    return `<article class="reminder-item ${type}"><div class="item-top"><div><h4>${escapeHtml(plan.name)} · 第 ${termIndex+1}/${plan.totalTerms} 期</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}</div></div><span class="badge">${status}</span></div><div class="item-money">${amounts}</div><div class="item-actions"><button type="button" data-copy-reminder="${plan.id}" data-reminder-type="${type}">复制提醒话术</button><button class="secondary" type="button" data-paid="${plan.id}">标记本期已付款</button></div></article>`;
+    const amounts=type==='overdue'?`<span>本期剩余应付款 <strong>${money(item.remaining)} 元</strong></span><span>参考滞纳金 <strong>${money(fee)} 元</strong></span><span>参考合计 <strong>${money(total)} 元</strong></span>`:`<span>本期剩余 <strong>${money(item.remaining)} 元</strong></span><span>应付日期 <strong>${cnDate(dueDate)}</strong></span>`;
+    return `<article class="reminder-item ${type}"><div class="item-top"><div><h4>${escapeHtml(plan.name)} · 第 ${termIndex+1}/${plan.totalTerms} 期</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${item.paid>0?` · 已还本期款 ${money(item.paid)} 元`:''}</div></div><span class="badge">${status}</span></div><div class="item-money">${amounts}</div><div class="item-actions"><button type="button" data-copy-reminder="${plan.id}" data-term-index="${termIndex}" data-reminder-type="${type}">复制提醒话术</button><button class="secondary" type="button" data-receive="${plan.id}" data-term-index="${termIndex}">登记本期收款</button></div></article>`;
   }
   function renderReminders(){
-    const items=plans.map(nextInstallment).filter(Boolean).sort((a,b)=>a.dueDate-b.dueDate);
+    const items=plans.flatMap(openInstallments).filter(item=>item.delta<=3).sort((a,b)=>a.dueDate-b.dueDate);
     const groups={today:items.filter(item=>item.delta===0),overdue:items.filter(item=>item.delta<0),upcoming:items.filter(item=>item.delta>0&&item.delta<=3)};
     const emptyText={today:'今天没有到期客户。',overdue:'目前没有逾期客户。',upcoming:'未来3天没有即将到期客户。'};
     Object.entries(groups).forEach(([type,list])=>{
       $(`${type}-list`).innerHTML=list.length?list.map(item=>reminderCard(item,type)).join(''):`<div class="empty">${emptyText[type]}</div>`;
       $(`${type}-count`).textContent=list.length;$(`${type}-total`).textContent=list.length;
     });
-    $('today-label').textContent=`今天是 ${fullCnDate(todayNoon())}，系统按每位客户下一期未付款账单自动判断。`;
+    $('today-label').textContent=`今天是 ${fullCnDate(todayNoon())}，逾期多期会按每一期分别列出。`;
+  }
+  function paymentHistoryHtml(plan){
+    const payments=[...(plan.payments||[])].reverse();if(!payments.length)return '';
+    return `<details class="payment-history"><summary>查看收款记录（${payments.length}笔）</summary>${payments.map(payment=>`<div class="history-row"><strong>${escapeHtml(payment.date)}</strong> 收款 ${money(payment.total)} 元<br>滞纳金 ${money(payment.lateFee)} 元 · 冲抵合同款 ${money(payment.principal)} 元${payment.allocations?.length?` · ${payment.allocations.map(item=>`第${Number(item.termIndex)+1}期 ${money(item.principal)}元`).join('，')}`:''}<div class="history-actions"><button class="secondary" type="button" data-edit-payment="${payment.id}" data-payment-plan="${plan.id}">修改</button><button class="undo" type="button" data-undo-payment="${payment.id}" data-payment-plan="${plan.id}">撤销此笔</button></div></div>`).join('')}</details>`;
   }
   function renderPlans(){
     if(!plans.length){$('plans-list').innerHTML='<div class="empty">还没有客户计划，请先在上方录入。</div>';return}
     $('plans-list').innerHTML=plans.map(plan=>{
       const item=nextInstallment(plan),next=item?`${cnDate(item.dueDate)} · 第 ${item.termIndex+1} 期`:'已全部完成';
-      const feeMode=plan.chargeLateFee===false?'不收取':'按合同收取';
-      return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta"><span>每期 <strong>${money(plan.amount)} 元</strong></span><span>每月 <strong>${plan.dueDay} 日</strong></span><span>滞纳金 <strong>${feeMode}</strong></span><span>下一期 <strong>${next}</strong></span></div><div class="plan-actions"><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑</button><button class="danger" type="button" data-delete-plan="${plan.id}">删除</button></div></article>`;
+      const overdueCount=openInstallments(plan).filter(entry=>entry.delta<0).length,contract=contractData(plan);
+      const contractMeta=contract?`<span>合同贷款 <strong>${money(contract.loan)} 元</strong></span><span>固定月息 <strong>${shortMoney(contract.monthlyRatePct)}%</strong></span>`:'<span><strong>合同金融资料待补充</strong></span>';
+      return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta">${contractMeta}<span>合同月供 <strong>${money(plan.amount)} 元</strong></span><span>每月 <strong>${plan.dueDay} 日</strong></span><span>逾期 <strong>${overdueCount} 期</strong></span><span>下一期 <strong>${next}</strong></span></div>${paymentHistoryHtml(plan)}<div class="plan-actions"><button type="button" data-settle-plan="${plan.id}">结清核算</button><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑合同</button><button class="danger" type="button" data-delete-plan="${plan.id}">删除</button></div></article>`;
     }).join('');
   }
   function renderPlanModule(){renderReminders();renderPlans()}
   function resetPlanForm(){
-    $('plan-form').reset();$('plan-id').value='';$('start-date').value=toISO(todayNoon());$('plan-form-title').textContent='新增客户还款计划';$('save-plan').textContent='保存还款计划';$('cancel-edit').hidden=true;toggleRateField();
+    $('plan-form').reset();$('plan-id').value='';$('start-date').value=toISO(todayNoon());$('plan-form-title').textContent='新增客户还款计划';$('save-plan').textContent='保存还款计划';$('cancel-edit').hidden=true;updateContractPreview();
   }
-  function toggleRateField(){$('plan-rate-field').hidden=document.querySelector('input[name="fee-mode"]:checked').value==='none'}
   function editPlan(id){
     const plan=plans.find(item=>item.id===id);if(!plan)return;
-    $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('plan-amount').value=plan.amount;$('due-day').value=plan.dueDay;$('plan-rate').value=plan.rate;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';
-    document.querySelector(`input[name="fee-mode"][value="${plan.chargeLateFee===false?'none':'charge'}"]`).checked=true;toggleRateField();
+    $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('contract-price').value=plan.vehiclePrice??'';$('contract-down-rate').value=plan.downPaymentRate??'';$('contract-monthly-rate').value=plan.monthlyRate??'';$('due-day').value=plan.dueDay;$('plan-rate').value=plan.rate;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';updateContractPreview();
     $('plan-form-title').textContent='编辑客户还款计划';$('save-plan').textContent='保存修改';$('cancel-edit').hidden=false;$('plan-form-section').scrollIntoView({behavior:'smooth'});
   }
   async function copyReminderText(text,button){
     let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch(e){}
     if(!ok){const box=document.createElement('textarea');box.value=text;box.style.position='fixed';box.style.opacity='0';document.body.appendChild(box);box.focus();box.select();try{ok=document.execCommand('copy')}catch(e){}box.remove()}
     if(ok){const old=button.textContent;button.classList.add('ok');button.textContent='已复制';setTimeout(()=>{button.classList.remove('ok');button.textContent=old},1600)}else{window.prompt('请手动复制下面的文字：',text)}
+  }
+  function allocatePrincipal(plan,startIndex,principal){
+    let left=round2(principal);const allocations=[];
+    openInstallments(plan).filter(item=>item.termIndex>=startIndex).forEach(item=>{if(left<=.005)return;const amount=round2(Math.min(left,item.remaining));if(amount>0){allocations.push({termIndex:item.termIndex,principal:amount});left=round2(left-amount)}});
+    return {allocations,unallocated:left};
+  }
+  function openingCompletedTerms(plan){
+    if(Number.isInteger(Number(plan.openingCompletedTerms)))return Number(plan.openingCompletedTerms);
+    const terms=(plan.payments||[]).flatMap(payment=>payment.allocations||[]).map(item=>Number(item.termIndex)).filter(Number.isInteger);
+    return terms.length?Math.min(Number(plan.completedTerms)||0,...terms):Number(plan.completedTerms)||0;
+  }
+  function settlementBreakdown(plan){
+    const contract=contractData(plan);if(!contract)return null;
+    const opening=Math.max(0,Math.min(contract.term,openingCompletedTerms(plan)));let paidPrincipal=0,paidInterest=0;
+    for(let index=0;index<contract.term;index++){
+      if(index<opening){paidPrincipal+=contract.monthlyPrincipal;paidInterest+=contract.monthlyInterest;continue}
+      const item=installmentItem(plan,index);paidPrincipal+=item.principalPaid;paidInterest+=item.interestPaid;
+    }
+    paidPrincipal=Math.min(contract.loan,paidPrincipal);paidInterest=Math.min(contract.totalInterest,paidInterest);
+    return {contract,paidPrincipal,paidInterest,remainingPrincipal:Math.max(0,contract.loan-paidPrincipal),remainingInterest:Math.max(0,contract.totalInterest-paidInterest)};
+  }
+  function openSettlementDialog(planId){
+    const plan=plans.find(item=>item.id===planId),result=plan&&settlementBreakdown(plan);if(!plan)return;
+    if(!result){alert('该客户还没有完整的合同车价、首付比例和月利率，请先点击“编辑合同”补充。');editPlan(planId);return}
+    const {contract,paidPrincipal,paidInterest,remainingPrincipal,remainingInterest}=result;
+    $('settlement-context').textContent=`${plan.name} · ${planIdentity(plan)} · 已完成 ${plan.completedTerms}/${plan.totalTerms} 期`;
+    $('settlement-loan-result').textContent=money(contract.loan)+' 元';$('settlement-total-interest').textContent=money(contract.totalInterest)+' 元';$('settlement-paid-principal').textContent=money(paidPrincipal)+' 元';$('settlement-paid-interest').textContent=money(paidInterest)+' 元';$('settlement-remaining-principal').textContent=money(remainingPrincipal)+' 元';$('settlement-remaining-interest').textContent=money(remainingInterest)+' 元';
+    $('settlement-message').value=`您好，${plan.name}的车辆以租代购合同核算如下：\n\n车辆信息：${planIdentity(plan)}\n合同车辆价格：${money(contract.price)}元\n首付比例：${shortMoney(contract.downRate)}%\n首付款：${money(contract.downPayment)}元\n合同贷款金额：${money(contract.loan)}元\n合同期限：${contract.term}期\n固定月利率：${shortMoney(contract.monthlyRatePct)}%\n合同月供：${money(contract.monthlyPayment)}元\n合同总利息：${money(contract.totalInterest)}元\n\n已归还本金：${money(paidPrincipal)}元\n已支付利息：${money(paidInterest)}元\n剩余未还本金：${money(remainingPrincipal)}元\n剩余合同利息：${money(remainingInterest)}元\n\n说明：剩余未还本金与剩余合同利息分开核算；提前结清是否收取剩余利息、违约金、滞纳金或其他费用，以合同约定及双方最终确认结果为准。`;
+    $('settlement-status').textContent='部分还款按先利息、后本金暂算；最终结清口径以合同为准。';$('copy-settlement').classList.remove('ok');$('copy-settlement').textContent='复制核算结果';$('settlement-dialog').showModal();
+  }
+  function recomputeCompletedTerms(plan){
+    plan.completedTerms=Math.max(0,Math.min(Number(plan.totalTerms),openingCompletedTerms(plan)));
+    while(Number(plan.completedTerms)<Number(plan.totalTerms)&&principalPaidFor(plan,Number(plan.completedTerms))+0.005>=Number(plan.amount))plan.completedTerms=Number(plan.completedTerms)+1;
+  }
+  function rebuildPaymentAllocations(plan){
+    plan.openingCompletedTerms=openingCompletedTerms(plan);
+    (plan.payments||[]).forEach(payment=>{if(!Number.isInteger(Number(payment.startTermIndex)))payment.startTermIndex=Number(payment.allocations?.[0]?.termIndex??plan.openingCompletedTerms);payment.allocations=[]});
+    plan.completedTerms=plan.openingCompletedTerms;let unallocated=0;
+    (plan.payments||[]).forEach(payment=>{const result=allocatePrincipal(plan,Number(payment.startTermIndex),Number(payment.principal)||0);payment.allocations=result.allocations;unallocated=round2(unallocated+result.unallocated);recomputeCompletedTerms(plan)});
+    return unallocated;
+  }
+  function previewPaymentChange(plan,paymentId,termIndex,draft){
+    const copy=JSON.parse(JSON.stringify(plan)),id=paymentId||'__payment_draft__';
+    copy.openingCompletedTerms=openingCompletedTerms(plan);
+    const candidate={id,date:$('payment-date').value,total:draft.total,lateFee:draft.lateFee,principal:draft.principal,startTermIndex:termIndex,allocations:[]};
+    const index=(copy.payments||[]).findIndex(payment=>payment.id===paymentId);
+    if(index>=0)copy.payments[index]=candidate;else(copy.payments||(copy.payments=[])).push(candidate);
+    const unallocated=rebuildPaymentAllocations(copy),saved=copy.payments.find(payment=>payment.id===id);
+    return {copy,candidate:saved,unallocated};
+  }
+  function paymentDraft(){
+    const total=Number($('payment-total').value)||0,includesFee=document.querySelector('input[name="payment-fee-mode"]:checked').value==='yes',lateFee=includesFee?(Number($('payment-fee').value)||0):0;
+    return {total:round2(total),lateFee:round2(lateFee),principal:round2(total-lateFee)};
+  }
+  function updatePaymentPreview(){
+    const plan=plans.find(item=>item.id===$('payment-plan-id').value),termIndex=Number($('payment-term-index').value),draft=paymentDraft();if(!plan)return;
+    const result=draft.principal>=0?previewPaymentChange(plan,$('payment-id').value,termIndex,draft):null,item=result?installmentItem(result.copy,termIndex):installmentItem(plan,termIndex);
+    $('preview-fee').textContent=money(Math.max(0,draft.lateFee))+' 元';$('preview-principal').textContent=money(Math.max(0,draft.principal))+' 元';
+    $('preview-status').textContent=draft.total<=0?'等待填写':draft.lateFee>draft.total?'滞纳金不能超过到账总额':item.remaining<=.005?'本期账单已还清':`部分还款，本期仍欠 ${money(item.remaining)} 元`;
+    const allocations=result?.candidate?.allocations||[];$('allocation-preview').innerHTML=allocations.length?`合同款冲抵明细：<br>${allocations.map(entry=>`第 ${entry.termIndex+1} 期：${money(entry.principal)} 元`).join('<br>')}${result.unallocated>.005?`<br>未分配金额：${money(result.unallocated)} 元`:''}`:'';
+    $('payment-error').textContent=draft.lateFee>draft.total?'其中滞纳金不能大于本次到账总额。':result?.unallocated>.005?'修改后会有合同款无法分配，请调整金额。':'';
+  }
+  function openPaymentDialog(planId,termIndex,paymentId=''){
+    const plan=plans.find(item=>item.id===planId),payment=paymentId&&(plan?.payments||[]).find(item=>item.id===paymentId),resolvedTerm=payment?Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??termIndex):termIndex,item=plan&&installmentItem(plan,resolvedTerm);if(!item)return;
+    $('payment-plan-id').value=planId;$('payment-term-index').value=resolvedTerm;$('payment-id').value=paymentId;$('payment-date').value=payment?.date||toISO(todayNoon());$('payment-total').value=payment?shortMoney(payment.total):shortMoney(item.remaining);$('payment-fee').value=payment?shortMoney(payment.lateFee):'0';
+    const includesFee=Number(payment?.lateFee)>0;document.querySelector(`input[name="payment-fee-mode"][value="${includesFee?'yes':'no'}"]`).checked=true;$('payment-fee-field').hidden=!includesFee;$('payment-dialog-title').textContent=payment?'修改收款记录':'登记本期收款';$('save-payment').textContent=payment?'保存修改':'保存收款记录';$('payment-context').textContent=`${plan.name} · 第 ${resolvedTerm+1} 期 · 本期剩余应付款 ${money(item.remaining)} 元 · 参考滞纳金 ${money(item.fee)} 元`;
+    updatePaymentPreview();$('payment-dialog').showModal();
   }
 
   function monthlyPayment(principal,rate,term){return principal/term+principal*rate}
@@ -238,16 +358,6 @@
       showFinanceError('贷款期限请填写1至120个月的整数。');return;
     }
     let loan,payment,totalInterest,totalRepayment,message;
-    if(financeMode==='settlement'){
-      loan=readPositive('settlement-loan');const paidTerms=readPositive('paid-terms',true);
-      if(loan===null||paidTerms===null||!Number.isInteger(paidTerms)||paidTerms>term){showFinanceError('请填写有效的原贷款金额；已还期数必须是0至总期数之间的整数。');return;}
-      const monthlyPrincipal=loan/term,paidPrincipal=monthlyPrincipal*paidTerms,remainingPrincipal=Math.max(0,loan-paidPrincipal),remainingTerms=term-paidTerms;
-      $('loan-amount').textContent=money(loan)+' 元';$('primary-result-label').textContent='每期偿还本金';$('secondary-result-label').textContent='已归还本金';$('tertiary-result-label').textContent='剩余未还本金';
-      $('primary-result').textContent=money(monthlyPrincipal)+' 元';$('secondary-result').textContent=money(paidPrincipal)+' 元';$('tertiary-result').textContent=money(remainingPrincipal)+' 元';
-      $('finance-output-title').textContent='剩余本金核算文字';
-      message=`您好，您的剩余贷款本金核算如下：\n\n原贷款金额：${money(loan)}元\n贷款期限：${term}期\n已还期数：${paidTerms}期\n剩余期数：${remainingTerms}期\n每期偿还本金：${money(monthlyPrincipal)}元\n已归还本金：${money(paidPrincipal)}元\n剩余未还本金：${money(remainingPrincipal)}元\n\n以上仅为剩余未还本金，不代表最终结清金额。其他应付费用以合同约定及双方最终核算为准。`;
-      $('finance-message').value=message;resetCopy('finance-copy','finance-status','复制核算结果');return;
-    }
     const price=readPositive('car-price'),ratePct=readPositive('monthly-rate',true);
     if(price===null||ratePct===null){showFinanceError('请填写有效的车辆价格和固定月利率。');return;}
     const rate=ratePct/100;
@@ -296,32 +406,62 @@
   }));
   document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{
     financeMode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item===button));
-    document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');document.querySelectorAll('.quote-reverse-field').forEach(item=>item.hidden=financeMode==='settlement');document.querySelectorAll('.settlement-field').forEach(item=>item.hidden=financeMode!=='settlement');calculateFinance();
+    document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');calculateFinance();
   }));
   $('plan-form').addEventListener('submit',event=>{
     event.preventDefault();
     const totalTerms=Number($('total-terms').value),completedTerms=Number($('completed-terms').value),dueDay=Number($('due-day').value);
     if(completedTerms>totalTerms){alert('已完成期数不能大于总期数。');return}
+    const contract=updateContractPreview();if(!contract){alert('请完整填写该客户合同中的车辆价格、首付比例、固定月利率和总期数。');return}
     const id=$('plan-id').value||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const plan={id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),amount:Number($('plan-amount').value),dueDay,chargeLateFee:document.querySelector('input[name="fee-mode"]:checked').value==='charge',rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,notes:$('plan-notes').value.trim()};
+    const existing=plans.find(item=>item.id===id);
+    const plan={id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),vehiclePrice:contract.price,downPaymentRate:contract.downRate,monthlyRate:contract.monthlyRatePct,loanAmount:contract.loan,amount:round2(contract.monthlyPayment),dueDay,rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,openingCompletedTerms:existing?.payments?.length?openingCompletedTerms(existing):completedTerms,notes:$('plan-notes').value.trim(),payments:JSON.parse(JSON.stringify(existing?.payments||[]))};
+    if(plan.payments.length&&rebuildPaymentAllocations(plan)>.005){alert('修改后已有收款金额超过剩余合同应付款，请先修改或撤销相关收款记录。');return}
     const index=plans.findIndex(item=>item.id===id);if(index>=0)plans[index]=plan;else plans.push(plan);
     savePlans();renderPlanModule();resetPlanForm();
   });
   $('cancel-edit').addEventListener('click',resetPlanForm);
-  document.querySelectorAll('input[name="fee-mode"]').forEach(input=>input.addEventListener('change',toggleRateField));
+  document.querySelectorAll('input[name="payment-fee-mode"]').forEach(input=>input.addEventListener('change',()=>{
+    const includesFee=document.querySelector('input[name="payment-fee-mode"]:checked').value==='yes';
+    $('payment-fee-field').hidden=!includesFee;if(!includesFee)$('payment-fee').value='0';updatePaymentPreview();
+  }));
+  ['payment-total','payment-fee'].forEach(id=>$(id).addEventListener('input',updatePaymentPreview));
+  $('cancel-payment').addEventListener('click',()=>$('payment-dialog').close());
+  $('close-settlement').addEventListener('click',()=>$('settlement-dialog').close());
+  $('copy-settlement').addEventListener('click',()=>copyPlain('settlement-message','copy-settlement','settlement-status'));
+  $('payment-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    const plan=plans.find(item=>item.id===$('payment-plan-id').value),termIndex=Number($('payment-term-index').value),paymentId=$('payment-id').value,draft=paymentDraft();
+    const error=$('payment-error');error.textContent='';
+    if(!plan||!Number.isInteger(termIndex)){error.textContent='没有找到对应的还款账单，请关闭后重新登记。';return}
+    if(!$('payment-date').value){error.textContent='请选择实际收款日期。';return}
+    if(!Number.isFinite(draft.total)||draft.total<=0){error.textContent='本次到账总额必须大于0。';return}
+    if(!Number.isFinite(draft.lateFee)||draft.lateFee<0||draft.lateFee>draft.total){error.textContent='其中滞纳金应为0至到账总额之间的金额。';return}
+    if(!Number.isFinite(draft.principal)||draft.principal<0){error.textContent='冲抵合同款金额不正确，请检查到账总额和滞纳金。';return}
+    const result=previewPaymentChange(plan,paymentId,termIndex,draft);
+    if(result.unallocated>.005){error.textContent=`修改后有 ${money(result.unallocated)} 元合同款无法分配，请调整到账总额或滞纳金金额。`;return}
+    if(draft.principal>.005&&!result.candidate?.allocations.length){error.textContent='当前没有可冲抵的剩余合同应付款。';return}
+    if(!paymentId)result.candidate.id=`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    plan.payments=result.copy.payments;plan.openingCompletedTerms=result.copy.openingCompletedTerms;plan.completedTerms=result.copy.completedTerms;
+    savePlans();renderPlanModule();$('payment-dialog').close();
+  });
   document.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;
     if(button.dataset.scroll)$(button.dataset.scroll).scrollIntoView({behavior:'smooth'});
+    if(button.dataset.settlePlan)openSettlementDialog(button.dataset.settlePlan);
     if(button.dataset.editPlan)editPlan(button.dataset.editPlan);
     if(button.dataset.deletePlan){const plan=plans.find(item=>item.id===button.dataset.deletePlan);if(plan&&confirm(`确定删除“${plan.name}”的还款计划吗？`)){plans=plans.filter(item=>item.id!==plan.id);savePlans();renderPlanModule()}}
-    if(button.dataset.paid){const plan=plans.find(item=>item.id===button.dataset.paid);if(plan&&Number(plan.completedTerms)<Number(plan.totalTerms)){plan.completedTerms=Number(plan.completedTerms)+1;savePlans();renderPlanModule()}}
-    if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&nextInstallment(plan);if(item)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
+    if(button.dataset.receive)openPaymentDialog(button.dataset.receive,Number(button.dataset.termIndex));
+    if(button.dataset.editPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.editPayment);if(payment)openPaymentDialog(plan.id,Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??plan.completedTerms),payment.id)}
+    if(button.dataset.undoPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.undoPayment);if(plan&&payment&&confirm(`确定撤销 ${payment.date} 收到的 ${money(payment.total)} 元记录吗？撤销后各期欠款会自动恢复。`)){plan.payments=plan.payments.filter(item=>item.id!==payment.id);rebuildPaymentAllocations(plan);savePlans();renderPlanModule()}}
+    if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&installmentItem(plan,Number(button.dataset.termIndex));if(item&&item.remaining>.005)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
   });
-  ['car-price','down-payment-rate','target-payment','term','monthly-rate','settlement-loan','paid-terms'].forEach(id=>$(id).addEventListener('input',calculateFinance));
+  ['car-price','down-payment-rate','target-payment','term','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
+  ['contract-price','contract-down-rate','contract-monthly-rate','total-terms'].forEach(id=>$(id).addEventListener('input',updateContractPreview));
   ['due','pay','amount','rate'].forEach(id=>$(id).addEventListener('input',calculateLateFee));
   $('finance-copy').addEventListener('click',()=>copyPlain('finance-message','finance-copy','finance-status'));
   $('late-fee-copy').addEventListener('click',()=>copyPlain('late-fee-message','late-fee-copy','late-fee-status'));
-  $('start-date').value=toISO(todayNoon());renderPlanModule();calculateFinance();calculateLateFee();
+  $('start-date').value=toISO(todayNoon());updateContractPreview();renderPlanModule();calculateFinance();calculateLateFee();
   window.addEventListener('focus',renderReminders);
 </script>
 </body></html>
