@@ -23,6 +23,7 @@
     .reminder-item,.plan-item{border:1px solid var(--line);border-radius:11px;padding:14px}.reminder-item.today{border-left:5px solid var(--blue)}.reminder-item.overdue{border-left:5px solid var(--danger)}.reminder-item.upcoming{border-left:5px solid #b36a0a}.item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.item-top h4{margin:0;font-size:16px}.item-sub{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.5}.badge{flex:0 0 auto;background:var(--light);color:var(--blue);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700}.overdue .badge{background:#fff0ec;color:var(--danger)}.upcoming .badge{background:#fff7e8;color:#9a5b0a}.item-money{display:flex;flex-wrap:wrap;gap:7px 15px;margin:12px 0;font-size:13px;color:#496172}.item-money strong{color:var(--text)}
     .item-actions,.plan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item-actions button,.plan-actions button,.form-actions button{margin:0;height:42px;font-size:14px}.secondary{background:#e9f1f6;color:var(--blue)}.danger{background:#fff0ec;color:var(--danger)}
     .plan-form{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.field.full{grid-column:1/-1}.form-actions{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:15px}.local-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.plan-item .plan-actions{display:flex;margin-top:11px}.plan-actions button{width:auto;padding:0 16px}.plan-actions .danger{margin-left:auto}.plan-meta{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:9px;color:#496172;font-size:13px}.plan-meta strong{color:var(--text)}
+    .fee-choice{border:0;padding:0;margin:0;min-width:0}.fee-choice legend{font-weight:650;margin-bottom:7px;font-size:14px}.fee-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fee-options label{min-height:46px;border:1px solid #b8c7d3;border-radius:8px;background:#fff;display:flex;align-items:center;gap:8px;padding:0 11px;font-size:14px;font-weight:650;cursor:pointer}.fee-options label:has(input:checked){border-color:var(--blue);background:var(--light);color:var(--blue)}.fee-options input{width:18px;height:18px;margin:0;accent-color:var(--blue)}
     @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full{grid-column:auto}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.output-label{align-items:flex-start}textarea{min-height:300px}.item-actions{grid-template-columns:1fr}.form-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}}
   </style>
 </head>
@@ -59,7 +60,8 @@
           <div class="field"><label for="vehicle">车辆</label><input id="vehicle" placeholder="例如：奔驰E300L"></div>
           <div class="field"><label for="plan-amount">每期金额（元）</label><input id="plan-amount" type="number" min="0.01" step="0.01" required value="8222.50"></div>
           <div class="field"><label for="due-day">每月还款日</label><input id="due-day" type="number" min="1" max="31" required value="5"></div>
-          <div class="field"><label for="plan-rate">日滞纳金比例（小数）</label><input id="plan-rate" type="number" min="0" step="0.0001" required value="0.005"></div>
+          <fieldset class="fee-choice"><legend>滞纳金设置</legend><div class="fee-options"><label><input type="radio" name="fee-mode" value="charge" checked>按合同收取</label><label><input type="radio" name="fee-mode" value="none">不收取</label></div></fieldset>
+          <div class="field" id="plan-rate-field"><label for="plan-rate">日滞纳金比例（小数）</label><input id="plan-rate" type="number" min="0" step="0.0001" required value="0.005"></div>
           <div class="field"><label for="start-date">起始日期（首期月份）</label><input id="start-date" type="date" required></div>
           <div class="field"><label for="total-terms">总期数</label><input id="total-terms" type="number" min="1" max="360" required value="36"></div>
           <div class="field"><label for="completed-terms">已完成期数</label><input id="completed-terms" type="number" min="0" max="360" required value="0"></div>
@@ -156,7 +158,7 @@
     const termIndex=Number(plan.completedTerms);
     if(termIndex>=Number(plan.totalTerms))return null;
     const dueDate=getDueDate(plan,termIndex),delta=dateDiff(dueDate,todayNoon()),daysOverdue=Math.max(0,-delta);
-    const fee=round2(Number(plan.amount)*Number(plan.rate)*daysOverdue);
+    const fee=plan.chargeLateFee===false?0:round2(Number(plan.amount)*Number(plan.rate)*daysOverdue);
     return {plan,termIndex,dueDate,delta,daysOverdue,fee,total:round2(Number(plan.amount)+fee)};
   }
   function planIdentity(plan){return [plan.plate,plan.vehicle].filter(Boolean).join(' · ')||'未填写车辆信息'}
@@ -164,14 +166,16 @@
     const {plan,dueDate,daysOverdue,fee,total}=item,name=plan.name?`${plan.name}，`:'';
     const vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'';
     if(type==='today')return `您好，${name}提醒您一下，您本期车辆款项今天到期。\n\n本期应付款：${shortMoney(plan.amount)}元\n应付日期：${cnDate(dueDate)}${infoLine}\n\n请您今天安排付款，谢谢。`;
-    if(type==='upcoming')return `您好，${name}提醒您一下，您本期车辆款项将在${cnDate(dueDate)}到期。\n\n本期应付款：${shortMoney(plan.amount)}元${infoLine}\n\n请您提前安排一下，避免逾期产生滞纳金，谢谢。`;
+    if(type==='upcoming'){const ending=plan.chargeLateFee===false?'请您提前安排一下，谢谢。':'请您提前安排一下，避免逾期产生滞纳金，谢谢。';return `您好，${name}提醒您一下，您本期车辆款项将在${cnDate(dueDate)}到期。\n\n本期应付款：${shortMoney(plan.amount)}元${infoLine}\n\n${ending}`}
+    if(plan.chargeLateFee===false)return `您好，${name}您本期应付款为 ${shortMoney(plan.amount)}元，原定付款日为 ${cnDate(dueDate)}。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，已逾期 ${daysOverdue}天。\n本次未计收滞纳金，当前应付金额为 ${shortMoney(plan.amount)}元。\n\n请您今天安排付款，谢谢。`;
     const pct=shortMoney(Number(plan.rate)*100),rateLabel=Math.abs(Number(plan.rate)-.005)<.0000001?'每日千分之五（0.5%）':`每日 ${pct}%`;
     return `您好，${name}您本期应付款为 ${shortMoney(plan.amount)}元，原定付款日为 ${cnDate(dueDate)}。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，已逾期 ${daysOverdue}天。\n按照合同约定，滞纳金按${rateLabel}计算：\n\n${shortMoney(plan.amount)}元 × ${pct}% × ${daysOverdue}天 = ${shortMoney(fee)}元\n\n所以您本次应付金额为：\n\n本金：${shortMoney(plan.amount)}元\n滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
   }
   function reminderCard(item,type){
     const {plan,dueDate,termIndex,daysOverdue,fee,total,delta}=item;
     const status=type==='today'?'今天到期':type==='overdue'?`逾期 ${daysOverdue} 天`:`${delta} 天后到期`;
-    const amounts=type==='overdue'?`<span>本金 <strong>${money(plan.amount)} 元</strong></span><span>滞纳金 <strong>${money(fee)} 元</strong></span><span>合计 <strong>${money(total)} 元</strong></span>`:`<span>本期应付 <strong>${money(plan.amount)} 元</strong></span><span>应付日期 <strong>${cnDate(dueDate)}</strong></span>`;
+    const feeValue=plan.chargeLateFee===false?'不收取':`${money(fee)} 元`;
+    const amounts=type==='overdue'?`<span>本金 <strong>${money(plan.amount)} 元</strong></span><span>滞纳金 <strong>${feeValue}</strong></span><span>合计 <strong>${money(total)} 元</strong></span>`:`<span>本期应付 <strong>${money(plan.amount)} 元</strong></span><span>应付日期 <strong>${cnDate(dueDate)}</strong></span>`;
     return `<article class="reminder-item ${type}"><div class="item-top"><div><h4>${escapeHtml(plan.name)} · 第 ${termIndex+1}/${plan.totalTerms} 期</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}</div></div><span class="badge">${status}</span></div><div class="item-money">${amounts}</div><div class="item-actions"><button type="button" data-copy-reminder="${plan.id}" data-reminder-type="${type}">复制提醒话术</button><button class="secondary" type="button" data-paid="${plan.id}">标记本期已付款</button></div></article>`;
   }
   function renderReminders(){
@@ -188,16 +192,19 @@
     if(!plans.length){$('plans-list').innerHTML='<div class="empty">还没有客户计划，请先在上方录入。</div>';return}
     $('plans-list').innerHTML=plans.map(plan=>{
       const item=nextInstallment(plan),next=item?`${cnDate(item.dueDate)} · 第 ${item.termIndex+1} 期`:'已全部完成';
-      return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta"><span>每期 <strong>${money(plan.amount)} 元</strong></span><span>每月 <strong>${plan.dueDay} 日</strong></span><span>下一期 <strong>${next}</strong></span></div><div class="plan-actions"><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑</button><button class="danger" type="button" data-delete-plan="${plan.id}">删除</button></div></article>`;
+      const feeMode=plan.chargeLateFee===false?'不收取':'按合同收取';
+      return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta"><span>每期 <strong>${money(plan.amount)} 元</strong></span><span>每月 <strong>${plan.dueDay} 日</strong></span><span>滞纳金 <strong>${feeMode}</strong></span><span>下一期 <strong>${next}</strong></span></div><div class="plan-actions"><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑</button><button class="danger" type="button" data-delete-plan="${plan.id}">删除</button></div></article>`;
     }).join('');
   }
   function renderPlanModule(){renderReminders();renderPlans()}
   function resetPlanForm(){
-    $('plan-form').reset();$('plan-id').value='';$('start-date').value=toISO(todayNoon());$('plan-form-title').textContent='新增客户还款计划';$('save-plan').textContent='保存还款计划';$('cancel-edit').hidden=true;
+    $('plan-form').reset();$('plan-id').value='';$('start-date').value=toISO(todayNoon());$('plan-form-title').textContent='新增客户还款计划';$('save-plan').textContent='保存还款计划';$('cancel-edit').hidden=true;toggleRateField();
   }
+  function toggleRateField(){$('plan-rate-field').hidden=document.querySelector('input[name="fee-mode"]:checked').value==='none'}
   function editPlan(id){
     const plan=plans.find(item=>item.id===id);if(!plan)return;
     $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('plan-amount').value=plan.amount;$('due-day').value=plan.dueDay;$('plan-rate').value=plan.rate;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';
+    document.querySelector(`input[name="fee-mode"][value="${plan.chargeLateFee===false?'none':'charge'}"]`).checked=true;toggleRateField();
     $('plan-form-title').textContent='编辑客户还款计划';$('save-plan').textContent='保存修改';$('cancel-edit').hidden=false;$('plan-form-section').scrollIntoView({behavior:'smooth'});
   }
   async function copyReminderText(text,button){
@@ -216,7 +223,7 @@
     return payment*(1-Math.pow(1+rate,-term))/rate;
   }
   function readPositive(id,allowZero=false){
-    const value=Number($(id).value);
+    const raw=$(id).value;if(raw==='')return null;const value=Number(raw);
     return Number.isFinite(value)&&(allowZero?value>=0:value>0)?value:null;
   }
   function resetCopy(buttonId,statusId,defaultText){
@@ -288,11 +295,12 @@
     const totalTerms=Number($('total-terms').value),completedTerms=Number($('completed-terms').value),dueDay=Number($('due-day').value);
     if(completedTerms>totalTerms){alert('已完成期数不能大于总期数。');return}
     const id=$('plan-id').value||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const plan={id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),amount:Number($('plan-amount').value),dueDay,rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,notes:$('plan-notes').value.trim()};
+    const plan={id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),amount:Number($('plan-amount').value),dueDay,chargeLateFee:document.querySelector('input[name="fee-mode"]:checked').value==='charge',rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,notes:$('plan-notes').value.trim()};
     const index=plans.findIndex(item=>item.id===id);if(index>=0)plans[index]=plan;else plans.push(plan);
     savePlans();renderPlanModule();resetPlanForm();
   });
   $('cancel-edit').addEventListener('click',resetPlanForm);
+  document.querySelectorAll('input[name="fee-mode"]').forEach(input=>input.addEventListener('change',toggleRateField));
   document.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button)return;
     if(button.dataset.scroll)$(button.dataset.scroll).scrollIntoView({behavior:'smooth'});
