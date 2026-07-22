@@ -2,65 +2,177 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>滞纳金纯文字计算器</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#245785" />
+  <title>车辆还款计算工具</title>
   <style>
-    :root{--blue:#245785;--light:#eef5fb;--yellow:#fff3c7;--green:#287a4b;--line:#d6e0e8;--text:#17212b}
-    *{box-sizing:border-box} body{margin:0;background:#f4f7f9;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
-    main{max-width:780px;margin:32px auto;padding:0 16px}.card{background:white;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #16344d14;overflow:hidden}
-    header{background:var(--blue);color:white;padding:24px 28px}h1{font-size:25px;margin:0 0 7px}header p{margin:0;opacity:.88;font-size:14px}
-    section{padding:24px 28px}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field label{display:block;font-weight:650;margin-bottom:7px;font-size:14px}.field input{width:100%;height:44px;border:1px solid #b8c7d3;border-radius:8px;padding:0 12px;font-size:16px;background:var(--yellow)}
-    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0}.metric{background:var(--light);border-radius:10px;padding:13px;text-align:center}.metric span{display:block;color:#587083;font-size:13px}.metric strong{display:block;margin-top:4px;font-size:20px;color:var(--blue)}
-    .output-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.output-label strong{font-size:16px}.tip{font-size:12px;color:#667985}
-    textarea{width:100%;min-height:310px;resize:vertical;border:1px solid #b8c7d3;border-radius:10px;background:#fafcfd;padding:17px;font:15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#17212b}
-    button{width:100%;height:50px;margin-top:14px;border:0;border-radius:10px;background:var(--green);color:white;font-size:17px;font-weight:700;cursor:pointer}button:hover{filter:brightness(.95)}button:active{transform:translateY(1px)}button.ok{background:#156a3b}
-    .note{margin:12px 0 0;color:#677985;font-size:13px;text-align:center}.warning{background:#fff1eb;color:#8f321f;border-top:1px solid #f0d0c5;padding:13px 28px;font-size:13px}
-    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.summary{grid-template-columns:1fr}section,header{padding-left:18px;padding-right:18px}}
+    :root{--blue:#245785;--blue-dark:#183f61;--light:#eef5fb;--yellow:#fff3c7;--green:#287a4b;--line:#d6e0e8;--text:#17212b;--muted:#637786;--danger:#a23a29}
+    *{box-sizing:border-box}html{background:#f4f7f9}body{margin:0;background:#f4f7f9;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+    main{max-width:780px;margin:32px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #16344d14;overflow:hidden}
+    header{background:var(--blue);color:#fff;padding:24px 28px}h1{font-size:25px;margin:0 0 7px}header p{margin:0;opacity:.88;font-size:14px;line-height:1.55}
+    .nav{display:grid;grid-template-columns:1fr 1fr;background:#edf3f7;border-bottom:1px solid var(--line);padding:8px;gap:8px}.nav button{margin:0;height:46px;background:transparent;color:var(--blue-dark);font-size:15px}.nav button.active{background:#fff;box-shadow:0 2px 8px #16344d17;color:var(--blue)}
+    .panel{display:none}.panel.active{display:block}section{padding:24px 28px}.mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;padding:5px;background:#eef3f6;border-radius:12px}.mode-tabs button{margin:0;height:43px;background:transparent;color:#466175;font-size:15px}.mode-tabs button.active{background:var(--blue);color:#fff;box-shadow:none}
+    .section-title{margin:0 0 5px;font-size:20px}.section-help{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.55}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field label{display:block;font-weight:650;margin-bottom:7px;font-size:14px}.field input{width:100%;height:46px;border:1px solid #b8c7d3;border-radius:8px;padding:0 12px;font-size:16px;background:var(--yellow);color:var(--text)}.field input:focus{outline:3px solid #24578522;border-color:var(--blue)}
+    .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:22px 0}.metric{background:var(--light);border-radius:10px;padding:14px;text-align:center;min-height:79px}.metric span{display:block;color:#587083;font-size:13px}.metric strong{display:block;margin-top:5px;font-size:20px;color:var(--blue);overflow-wrap:anywhere}.metric.wide{grid-column:1/-1}.metric.wide strong{font-size:23px}
+    .output-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.output-label strong{font-size:16px}.tip{font-size:12px;color:var(--muted);text-align:right}
+    textarea{width:100%;min-height:280px;resize:vertical;border:1px solid #b8c7d3;border-radius:10px;background:#fafcfd;padding:17px;font:15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
+    button{width:100%;height:50px;margin-top:14px;border:0;border-radius:10px;background:var(--green);color:#fff;font-size:17px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}button:hover{filter:brightness(.96)}button:active{transform:translateY(1px)}button.ok{background:#156a3b}
+    .note{margin:12px 0 0;color:var(--muted);font-size:13px;text-align:center;line-height:1.5}.warning{background:#fff1eb;color:#8f321f;border-top:1px solid #f0d0c5;padding:13px 28px;font-size:13px;line-height:1.55}.error{display:none;margin:14px 0 0;color:var(--danger);font-size:13px}.error.show{display:block}
+    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5}.output-label{align-items:flex-start}textarea{min-height:300px}}
   </style>
 </head>
 <body>
 <main><div class="card">
-  <header><h1>滞纳金纯文字计算器</h1><p>填写四项，自动计算；点击按钮后粘贴到微信就是纯文字。</p></header>
-  <section>
-    <div class="inputs">
-      <div class="field"><label for="due">应付日期</label><input id="due" type="date" value="2026-06-05"></div>
-      <div class="field"><label for="pay">实际付款日期</label><input id="pay" type="date" value="2026-07-15"></div>
-      <div class="field"><label for="amount">应付金额（元）</label><input id="amount" type="number" min="0" step="0.01" value="8222.50"></div>
-      <div class="field"><label for="rate">日滞纳金比例（%）</label><input id="rate" type="number" min="0" step="0.001" value="0.5"></div>
-    </div>
-    <div class="summary">
-      <div class="metric"><span>逾期天数</span><strong id="days">40 天</strong></div>
-      <div class="metric"><span>滞纳金</span><strong id="fee">1,644.50 元</strong></div>
-      <div class="metric"><span>应付合计</span><strong id="total">9,867.00 元</strong></div>
-    </div>
-    <div class="output-label"><strong>发给客户的话术</strong><span class="tip">也可在框内手动全选复制</span></div>
-    <textarea id="message" readonly aria-label="发给客户的话术"></textarea>
-    <button id="copy" type="button">复制纯文字</button>
-    <p class="note" id="status">复制后直接到微信粘贴，不会带表格或图片格式。</p>
-  </section>
-  <div class="warning">计费口径：逾期天数＝实际付款日期－应付日期，应付日当天不计逾期。请以合同约定为准。</div>
+  <header><h1>车辆还款计算工具</h1><p>现场快速算方案、算滞纳金，生成纯文字后可直接发给客户。</p></header>
+  <nav class="nav" aria-label="工具选择">
+    <button class="active" type="button" data-panel="finance">以租代购方案</button>
+    <button type="button" data-panel="late-fee">滞纳金计算</button>
+  </nav>
+
+  <div class="panel active" id="finance-panel">
+    <section>
+      <h2 class="section-title">以租代购方案计算器</h2>
+      <p class="section-help">采用等额本息。月利率可直接修改，例如 0.6 代表每月 0.6%。</p>
+      <div class="mode-tabs" aria-label="计算模式">
+        <button class="active" type="button" data-mode="quote">客户方案报价</button>
+        <button type="button" data-mode="reverse">按月供倒推</button>
+      </div>
+
+      <div class="inputs">
+        <div class="field"><label for="car-price">车辆价格（元）</label><input id="car-price" inputmode="decimal" type="number" min="0" step="100" value="200000"></div>
+        <div class="field quote-field"><label for="down-payment">首付款（元）</label><input id="down-payment" inputmode="decimal" type="number" min="0" step="100" value="50000"></div>
+        <div class="field reverse-field" hidden><label for="target-payment">可接受月供（元）</label><input id="target-payment" inputmode="decimal" type="number" min="0" step="10" value="4500"></div>
+        <div class="field"><label for="term">贷款期限（月）</label><input id="term" inputmode="numeric" type="number" min="1" max="120" step="1" value="36"></div>
+        <div class="field"><label for="monthly-rate">月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"></div>
+      </div>
+      <p class="error" id="finance-error" role="alert"></p>
+
+      <div class="summary" aria-live="polite">
+        <div class="metric"><span>贷款金额</span><strong id="loan-amount">0.00 元</strong></div>
+        <div class="metric"><span id="primary-result-label">每月还款</span><strong id="primary-result">0.00 元</strong></div>
+        <div class="metric"><span id="secondary-result-label">分期总还款</span><strong id="secondary-result">0.00 元</strong></div>
+        <div class="metric"><span id="tertiary-result-label">总利息</span><strong id="tertiary-result">0.00 元</strong></div>
+      </div>
+
+      <div class="output-label"><strong>客户方案文字</strong><span class="tip">金额按测算结果保留2位</span></div>
+      <textarea id="finance-message" readonly aria-label="客户方案文字"></textarea>
+      <button id="finance-copy" type="button">复制客户方案</button>
+      <p class="note" id="finance-status">复制后可直接粘贴到微信。实际方案以双方合同约定为准。</p>
+    </section>
+    <div class="warning">测算说明：采用等额本息公式，月供按未四舍五入的结果计算总额；本工具用于方案沟通，不替代正式合同。</div>
+  </div>
+
+  <div class="panel" id="late-fee-panel">
+    <section>
+      <h2 class="section-title">滞纳金计算器</h2>
+      <p class="section-help">填写四项，自动计算并生成可直接发送的纯文字。</p>
+      <div class="inputs">
+        <div class="field"><label for="due">应付日期</label><input id="due" type="date" value="2026-06-05"></div>
+        <div class="field"><label for="pay">实际付款日期</label><input id="pay" type="date" value="2026-07-15"></div>
+        <div class="field"><label for="amount">应付金额（元）</label><input id="amount" inputmode="decimal" type="number" min="0" step="0.01" value="8222.50"></div>
+        <div class="field"><label for="rate">日滞纳金比例（%）</label><input id="rate" inputmode="decimal" type="number" min="0" step="0.001" value="0.5"></div>
+      </div>
+      <div class="summary">
+        <div class="metric"><span>逾期天数</span><strong id="days">40 天</strong></div>
+        <div class="metric"><span>滞纳金</span><strong id="fee">1,644.50 元</strong></div>
+        <div class="metric wide"><span>应付合计</span><strong id="total">9,867.00 元</strong></div>
+      </div>
+      <div class="output-label"><strong>发给客户的话术</strong><span class="tip">也可在框内手动全选复制</span></div>
+      <textarea id="late-fee-message" readonly aria-label="发给客户的话术"></textarea>
+      <button id="late-fee-copy" type="button">复制纯文字</button>
+      <p class="note" id="late-fee-status">复制后直接到微信粘贴，不会带表格或图片格式。</p>
+    </section>
+    <div class="warning">计费口径：逾期天数＝实际付款日期－应付日期，应付日当天不计逾期。请以合同约定为准。</div>
+  </div>
 </div></main>
 <script>
-  const $=id=>document.getElementById(id), ids=['due','pay','amount','rate'];
+  const $=id=>document.getElementById(id);
   const money=n=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
   const shortMoney=n=>String(Math.round(Number(n)*100)/100);
   const cnDate=s=>{const d=new Date(s+'T00:00:00');return `${d.getMonth()+1}月${d.getDate()}日`};
-  function calculate(){
+  const round2=n=>Math.round((n+Number.EPSILON)*100)/100;
+  let financeMode='quote';
+
+  function monthlyPayment(principal,rate,term){
+    if(rate===0)return principal/term;
+    const factor=Math.pow(1+rate,term);
+    return principal*rate*factor/(factor-1);
+  }
+  function principalFromPayment(payment,rate,term){
+    if(rate===0)return payment*term;
+    return payment*(1-Math.pow(1+rate,-term))/rate;
+  }
+  function readPositive(id,allowZero=false){
+    const value=Number($(id).value);
+    return Number.isFinite(value)&&(allowZero?value>=0:value>0)?value:null;
+  }
+  function resetCopy(buttonId,statusId,defaultText){
+    $(buttonId).classList.remove('ok');$(buttonId).textContent=defaultText;
+    $(statusId).textContent='复制后可直接粘贴到微信。实际方案以双方合同约定为准。';
+  }
+  function showFinanceError(message){
+    const error=$('finance-error');error.textContent=message;error.classList.add('show');
+    ['loan-amount','primary-result','secondary-result','tertiary-result'].forEach(id=>$(id).textContent='—');
+    $('finance-message').value='请先完整填写有效的方案数据。';
+  }
+  function calculateFinance(){
+    const price=readPositive('car-price'),term=readPositive('term'),ratePct=readPositive('monthly-rate',true);
+    const error=$('finance-error');error.classList.remove('show');error.textContent='';
+    if(price===null||term===null||ratePct===null||!Number.isInteger(term)||term>120){
+      showFinanceError('请填写有效的车辆价格、1至120个月的整数期限和月利率。');return;
+    }
+    const rate=ratePct/100;
+    let loan,payment,totalInterest,totalRepayment,message;
+    if(financeMode==='quote'){
+      const down=readPositive('down-payment',true);
+      if(down===null||down>price){showFinanceError('首付款不能小于0，也不能超过车辆价格。');return;}
+      loan=price-down;payment=monthlyPayment(loan,rate,term);totalRepayment=payment*term;totalInterest=totalRepayment-loan;
+      $('primary-result-label').textContent='每月还款';$('secondary-result-label').textContent='分期总还款';$('tertiary-result-label').textContent='总利息';
+      $('primary-result').textContent=money(payment)+' 元';$('secondary-result').textContent=money(totalRepayment)+' 元';$('tertiary-result').textContent=money(totalInterest)+' 元';
+      message=`您好，这是为您测算的车辆以租代购方案：\n\n车辆价格：${money(price)}元\n首付款：${money(down)}元\n贷款金额：${money(loan)}元\n贷款期限：${term}个月\n月利率：${shortMoney(ratePct)}%\n每月还款：${money(payment)}元\n分期总还款：${money(totalRepayment)}元\n总利息：${money(totalInterest)}元\n\n以上为等额本息测算结果，最终以双方确认的正式合同为准。`;
+    }else{
+      const target=readPositive('target-payment');
+      if(target===null){showFinanceError('请输入大于0的可接受月供。');return;}
+      const affordableLoan=principalFromPayment(target,rate,term);loan=Math.min(price,affordableLoan);
+      const down=Math.max(0,price-loan);payment=monthlyPayment(loan,rate,term);totalRepayment=payment*term;totalInterest=totalRepayment-loan;
+      $('primary-result-label').textContent='建议首付款';$('secondary-result-label').textContent='对应月供';$('tertiary-result-label').textContent='分期总还款';
+      $('primary-result').textContent=money(down)+' 元';$('secondary-result').textContent=money(payment)+' 元';$('tertiary-result').textContent=money(totalRepayment)+' 元';
+      const note=affordableLoan>price?'\n说明：该月供额度已足够覆盖整车价格，因此建议首付款为0元。':'';
+      message=`您好，按您可接受的月供为您倒推了一套车辆以租代购方案：\n\n车辆价格：${money(price)}元\n可接受月供：${money(target)}元\n贷款期限：${term}个月\n月利率：${shortMoney(ratePct)}%\n可贷款金额：${money(loan)}元\n建议首付款：${money(down)}元\n对应月供：${money(payment)}元\n分期总还款：${money(totalRepayment)}元${note}\n\n以上为等额本息测算结果，最终以双方确认的正式合同为准。`;
+    }
+    $('loan-amount').textContent=money(loan)+' 元';$('finance-message').value=message;
+    resetCopy('finance-copy','finance-status','复制客户方案');
+  }
+
+  function calculateLateFee(){
     const due=$('due').value,pay=$('pay').value,amount=Number($('amount').value),ratePct=Number($('rate').value);
-    if(!due||!pay||!Number.isFinite(amount)||!Number.isFinite(ratePct)){ $('message').value='请先完整填写日期、金额和日滞纳金比例。'; return; }
+    if(!due||!pay||!Number.isFinite(amount)||!Number.isFinite(ratePct)){$('late-fee-message').value='请先完整填写日期、金额和日滞纳金比例。';return;}
     const days=Math.max(0,Math.round((new Date(pay+'T00:00:00')-new Date(due+'T00:00:00'))/86400000));
-    const fee=Math.round(amount*(ratePct/100)*days*100)/100,total=Math.round((amount+fee)*100)/100;
-    $('days').textContent=days+' 天'; $('fee').textContent=money(fee)+' 元'; $('total').textContent=money(total)+' 元';
-    $('message').value=`您好，您本期应付款为 ${shortMoney(amount)}元，原定付款日为 ${cnDate(due)}。\n\n截止到 ${cnDate(pay)}，已逾期 ${days}天。\n按照合同约定，滞纳金按每日 ${ratePct}% 计算：\n\n${shortMoney(amount)}元 × ${ratePct}% × ${days}天 = ${shortMoney(fee)}元\n\n所以您本次应付金额为：\n\n本金：${shortMoney(amount)}元\n滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
-    $('copy').classList.remove('ok'); $('copy').textContent='复制纯文字'; $('status').textContent='复制后直接到微信粘贴，不会带表格或图片格式。';
+    const fee=round2(amount*(ratePct/100)*days),total=round2(amount+fee);
+    $('days').textContent=days+' 天';$('fee').textContent=money(fee)+' 元';$('total').textContent=money(total)+' 元';
+    $('late-fee-message').value=`您好，您本期应付款为 ${shortMoney(amount)}元，原定付款日为 ${cnDate(due)}。\n\n截止到 ${cnDate(pay)}，已逾期 ${days}天。\n按照合同约定，滞纳金按每日 ${ratePct}% 计算：\n\n${shortMoney(amount)}元 × ${ratePct}% × ${days}天 = ${shortMoney(fee)}元\n\n所以您本次应付金额为：\n\n本金：${shortMoney(amount)}元\n滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+    $('late-fee-copy').classList.remove('ok');$('late-fee-copy').textContent='复制纯文字';$('late-fee-status').textContent='复制后直接到微信粘贴，不会带表格或图片格式。';
   }
-  async function copyPlain(){
-    const text=$('message').value; let ok=false;
+  async function copyPlain(textareaId,buttonId,statusId){
+    const box=$(textareaId),text=box.value;let ok=false;
     try{await navigator.clipboard.writeText(text);ok=true}catch(e){}
-    if(!ok){const box=$('message');box.focus();box.select();ok=document.execCommand('copy');window.getSelection()?.removeAllRanges()}
-    if(ok){$('copy').classList.add('ok');$('copy').textContent='已复制纯文字';$('status').textContent='现在打开微信粘贴即可。'}
-    else{$('message').focus();$('message').select();$('status').textContent='浏览器阻止了自动复制，请按 Command+C，再粘贴到微信。'}
+    if(!ok){box.focus();box.select();ok=document.execCommand('copy');window.getSelection()?.removeAllRanges()}
+    if(ok){$(buttonId).classList.add('ok');$(buttonId).textContent='已复制';$(statusId).textContent='现在打开微信粘贴即可。'}
+    else{box.focus();box.select();$(statusId).textContent='浏览器阻止了自动复制，请手动复制选中的文字。'}
   }
-  ids.forEach(id=>$(id).addEventListener('input',calculate));$('copy').addEventListener('click',copyPlain);calculate();
+
+  document.querySelectorAll('[data-panel]').forEach(button=>button.addEventListener('click',()=>{
+    document.querySelectorAll('[data-panel]').forEach(item=>item.classList.toggle('active',item===button));
+    document.querySelectorAll('.panel').forEach(panel=>panel.classList.toggle('active',panel.id===button.dataset.panel+'-panel'));
+  }));
+  document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{
+    financeMode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item===button));
+    document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');calculateFinance();
+  }));
+  ['car-price','down-payment','target-payment','term','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
+  ['due','pay','amount','rate'].forEach(id=>$(id).addEventListener('input',calculateLateFee));
+  $('finance-copy').addEventListener('click',()=>copyPlain('finance-message','finance-copy','finance-status'));
+  $('late-fee-copy').addEventListener('click',()=>copyPlain('late-fee-message','late-fee-copy','late-fee-status'));
+  calculateFinance();calculateLateFee();
 </script>
 </body></html>
