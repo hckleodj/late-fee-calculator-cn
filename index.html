@@ -92,6 +92,7 @@
         <div class="field quote-field"><label for="down-payment-rate">首付比例（%）</label><input id="down-payment-rate" inputmode="decimal" type="number" min="0" max="100" step="0.1" value="25"><div class="field-hint" id="down-payment-preview">自动换算：50,000.00 元</div></div>
         <div class="field reverse-field" hidden><label for="target-payment">可接受月供（元）</label><input id="target-payment" inputmode="decimal" type="number" min="0" step="10" value="4500"></div>
         <div class="field"><label for="term">贷款期限（月）</label><input id="term" inputmode="numeric" type="number" min="1" max="120" step="1" value="36"></div>
+        <div class="field"><label for="deposit-months">押金（月）</label><input id="deposit-months" inputmode="numeric" type="number" min="0" max="120" step="1" value="1"><div class="field-hint">仅用于方案展示，不参与贷款和月供计算</div></div>
         <div class="field quote-reverse-field"><label for="monthly-rate">固定月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"><div class="field-hint">每月利息＝原贷款金额×固定月利率</div></div>
       </div>
       <p class="error" id="finance-error" role="alert"></p>
@@ -390,9 +391,13 @@
   }
   function calculateFinance(){
     const term=readPositive('term');
+    const depositMonths=readPositive('deposit-months',true);
     const error=$('finance-error');error.classList.remove('show');error.textContent='';
     if(term===null||!Number.isInteger(term)||term>120){
       showFinanceError('贷款期限请填写1至120个月的整数。');return;
+    }
+    if(depositMonths===null||!Number.isInteger(depositMonths)||depositMonths>120){
+      showFinanceError('押金请填写0至120个月的整数。');return;
     }
     let loan,payment,totalInterest,totalRepayment,message;
     const price=readPositive('car-price'),ratePct=readPositive('monthly-rate',true);
@@ -405,7 +410,7 @@
       loan=price-down;payment=monthlyPayment(loan,rate,term);totalRepayment=payment*term;totalInterest=totalRepayment-loan;
       $('primary-result-label').textContent='每月还款';$('secondary-result-label').textContent='分期总还款';$('tertiary-result-label').textContent='总利息';
       $('primary-result').textContent=money(payment)+' 元';$('secondary-result').textContent=money(totalRepayment)+' 元';$('tertiary-result').textContent=money(totalInterest)+' 元';
-      message=`您好，这是为您测算的车辆以租代购方案：\n\n车辆价格：${money(price)}元\n首付比例：${shortMoney(downRatePct)}%\n首付款：${money(down)}元\n贷款金额：${money(loan)}元\n贷款期限：${term}个月\n固定月利率：${shortMoney(ratePct)}%\n每月还款：${money(payment)}元\n分期总还款：${money(totalRepayment)}元\n总利息：${money(totalInterest)}元\n\n以上为等本等息测算结果，最终以双方确认的正式合同为准。`;
+      message=`您好，这是为您测算的车辆以租代购方案：\n\n车辆价格：${money(price)}元\n首付比例：${shortMoney(downRatePct)}%\n首付款：${money(down)}元\n押金：${depositMonths}个月\n贷款金额：${money(loan)}元\n贷款期限：${term}个月\n固定月利率：${shortMoney(ratePct)}%\n每月还款：${money(payment)}元\n分期总还款：${money(totalRepayment)}元\n总利息：${money(totalInterest)}元\n\n以上为等本等息测算结果，最终以双方确认的正式合同为准。`;
     }else{
       const target=readPositive('target-payment');
       if(target===null){showFinanceError('请输入大于0的可接受月供。');return;}
@@ -414,7 +419,7 @@
       $('primary-result-label').textContent='建议首付款';$('secondary-result-label').textContent='对应月供';$('tertiary-result-label').textContent='分期总还款';
       $('primary-result').textContent=`${shortMoney(downRatePct)}% / ${money(down)} 元`;$('secondary-result').textContent=money(payment)+' 元';$('tertiary-result').textContent=money(totalRepayment)+' 元';
       const note=affordableLoan>price?'\n说明：该月供额度已足够覆盖整车价格，因此建议首付款为0元。':'';
-      message=`您好，按您可接受的月供为您倒推了一套车辆以租代购方案：\n\n车辆价格：${money(price)}元\n可接受月供：${money(target)}元\n贷款期限：${term}个月\n固定月利率：${shortMoney(ratePct)}%\n可贷款金额：${money(loan)}元\n建议首付比例：${shortMoney(downRatePct)}%\n建议首付款：${money(down)}元\n对应月供：${money(payment)}元\n分期总还款：${money(totalRepayment)}元${note}\n\n以上为等本等息测算结果，最终以双方确认的正式合同为准。`;
+      message=`您好，按您可接受的月供为您倒推了一套车辆以租代购方案：\n\n车辆价格：${money(price)}元\n可接受月供：${money(target)}元\n贷款期限：${term}个月\n固定月利率：${shortMoney(ratePct)}%\n可贷款金额：${money(loan)}元\n建议首付比例：${shortMoney(downRatePct)}%\n建议首付款：${money(down)}元\n押金：${depositMonths}个月\n对应月供：${money(payment)}元\n分期总还款：${money(totalRepayment)}元${note}\n\n以上为等本等息测算结果，最终以双方确认的正式合同为准。`;
     }
     $('loan-amount').textContent=money(loan)+' 元';$('finance-output-title').textContent='客户方案文字';$('finance-message').value=message;
     resetCopy('finance-copy','finance-status','复制客户方案');
@@ -495,7 +500,7 @@
     if(button.dataset.undoPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.undoPayment);if(plan&&payment&&confirm(`确定撤销 ${payment.date} 收到的 ${money(payment.total)} 元记录吗？撤销后各期欠款会自动恢复。`)){plan.payments=plan.payments.filter(item=>item.id!==payment.id);rebuildPaymentAllocations(plan);savePlans();renderPlanModule()}}
     if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&installmentItem(plan,Number(button.dataset.termIndex));if(item&&item.remaining>.005)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
   });
-  ['car-price','down-payment-rate','target-payment','term','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
+  ['car-price','down-payment-rate','target-payment','term','deposit-months','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
   ['contract-price','contract-down-rate','contract-monthly-rate','total-terms'].forEach(id=>$(id).addEventListener('input',updateContractPreview));
   ['due','pay','amount','rate'].forEach(id=>$(id).addEventListener('input',calculateLateFee));
   $('finance-copy').addEventListener('click',()=>copyPlain('finance-message','finance-copy','finance-status'));
