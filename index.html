@@ -62,6 +62,7 @@
           <div class="field"><label for="vehicle">车辆</label><input id="vehicle" placeholder="例如：奔驰E300L"></div>
           <div class="field"><label for="contract-price">合同车辆价格（元）</label><input id="contract-price" type="number" min="0.01" step="0.01" required value="91800"></div>
           <div class="field"><label for="contract-down-rate">合同首付比例（%）</label><input id="contract-down-rate" type="number" min="0" max="100" step="0.1" required value="15"></div>
+          <div class="field"><label for="contract-deposit-months">合同押金（月）</label><input id="contract-deposit-months" type="number" min="0" max="120" step="1" required value="1"><div class="field-hint">仅用于合同留档，不参与月供和结清计算</div></div>
           <div class="field"><label for="contract-monthly-rate">合同固定月利率（%）</label><input id="contract-monthly-rate" type="number" min="0" step="0.01" required value="1.25"><div class="field-hint">例如1.25代表每月1.25%</div></div>
           <div class="field"><label for="plan-amount">合同月供（元）</label><input id="plan-amount" type="number" readonly value="3142.88"><div class="field-hint" id="contract-preview">贷款78,030.00元＝每期本金2,167.50元＋利息975.38元</div></div>
           <div class="field"><label for="due-day">每月还款日</label><input id="due-day" type="number" min="1" max="31" required value="5"></div>
@@ -206,7 +207,7 @@
   function setBackupStatus(message,isError=false){$('backup-status').textContent=message;$('backup-status').style.color=isError?'var(--danger)':'var(--blue)'}
   function validBackupPlan(plan){
     const safeId=value=>typeof value==='string'&&/^[A-Za-z0-9._:-]+$/.test(value),validPayments=Array.isArray(plan?.payments)&&(plan.payments||[]).every(payment=>safeId(payment.id)&&Number.isFinite(Number(payment.total))&&Number.isFinite(Number(payment.lateFee))&&Number.isFinite(Number(payment.principal))&&Array.isArray(payment.allocations));
-    return plan&&typeof plan==='object'&&safeId(plan.id)&&typeof plan.name==='string'&&Number.isFinite(Number(plan.amount))&&Number(plan.amount)>0&&Number.isInteger(Number(plan.totalTerms))&&Number(plan.totalTerms)>0&&Number.isInteger(Number(plan.completedTerms))&&Number(plan.completedTerms)>=0&&typeof plan.startDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(plan.startDate)&&(plan.payments===undefined||validPayments);
+    return plan&&typeof plan==='object'&&safeId(plan.id)&&typeof plan.name==='string'&&Number.isFinite(Number(plan.amount))&&Number(plan.amount)>0&&Number.isInteger(Number(plan.totalTerms))&&Number(plan.totalTerms)>0&&Number.isInteger(Number(plan.completedTerms))&&Number(plan.completedTerms)>=0&&(plan.depositMonths===undefined||(Number.isInteger(Number(plan.depositMonths))&&Number(plan.depositMonths)>=0&&Number(plan.depositMonths)<=120))&&typeof plan.startDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(plan.startDate)&&(plan.payments===undefined||validPayments);
   }
   async function exportBackup(){
     if(!plans.length){setBackupStatus('当前还没有客户数据，无需导出备份。',true);return}
@@ -288,7 +289,7 @@
     $('plans-list').innerHTML=plans.map(plan=>{
       const item=nextInstallment(plan),next=item?`${cnDate(item.dueDate)} · 第 ${item.termIndex+1} 期`:'已全部完成';
       const overdueCount=openInstallments(plan).filter(entry=>entry.delta<0).length,contract=contractData(plan);
-      const contractMeta=contract?`<span>合同贷款 <strong>${money(contract.loan)} 元</strong></span><span>固定月息 <strong>${shortMoney(contract.monthlyRatePct)}%</strong></span>`:'<span><strong>合同金融资料待补充</strong></span>';
+      const contractMeta=contract?`<span>合同贷款 <strong>${money(contract.loan)} 元</strong></span><span>押金 <strong>${Number(plan.depositMonths)||0} 个月</strong></span><span>固定月息 <strong>${shortMoney(contract.monthlyRatePct)}%</strong></span>`:'<span><strong>合同金融资料待补充</strong></span>';
       return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta">${contractMeta}<span>合同月供 <strong>${money(plan.amount)} 元</strong></span><span>每月 <strong>${plan.dueDay} 日</strong></span><span>逾期 <strong>${overdueCount} 期</strong></span><span>下一期 <strong>${next}</strong></span></div>${paymentHistoryHtml(plan)}<div class="plan-actions"><button type="button" data-settle-plan="${plan.id}">结清核算</button><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑合同</button><button class="danger" type="button" data-delete-plan="${plan.id}">删除</button></div></article>`;
     }).join('');
   }
@@ -298,7 +299,7 @@
   }
   function editPlan(id){
     const plan=plans.find(item=>item.id===id);if(!plan)return;
-    $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('contract-price').value=plan.vehiclePrice??'';$('contract-down-rate').value=plan.downPaymentRate??'';$('contract-monthly-rate').value=plan.monthlyRate??'';$('due-day').value=plan.dueDay;$('plan-rate').value=plan.rate;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';updateContractPreview();
+    $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('contract-price').value=plan.vehiclePrice??'';$('contract-down-rate').value=plan.downPaymentRate??'';$('contract-deposit-months').value=plan.depositMonths??0;$('contract-monthly-rate').value=plan.monthlyRate??'';$('due-day').value=plan.dueDay;$('plan-rate').value=plan.rate;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';updateContractPreview();
     $('plan-form-title').textContent='编辑客户还款计划';$('save-plan').textContent='保存修改';$('cancel-edit').hidden=false;$('plan-form-section').scrollIntoView({behavior:'smooth'});
   }
   async function copyReminderText(text,button){
@@ -332,7 +333,7 @@
     const {contract,paidPrincipal,paidInterest,remainingPrincipal,remainingInterest}=result;
     $('settlement-context').textContent=`${plan.name} · ${planIdentity(plan)} · 已完成 ${plan.completedTerms}/${plan.totalTerms} 期`;
     $('settlement-loan-result').textContent=money(contract.loan)+' 元';$('settlement-total-interest').textContent=money(contract.totalInterest)+' 元';$('settlement-paid-principal').textContent=money(paidPrincipal)+' 元';$('settlement-paid-interest').textContent=money(paidInterest)+' 元';$('settlement-remaining-principal').textContent=money(remainingPrincipal)+' 元';$('settlement-remaining-interest').textContent=money(remainingInterest)+' 元';
-    $('settlement-message').value=`您好，${plan.name}的车辆以租代购合同核算如下：\n\n车辆信息：${planIdentity(plan)}\n合同车辆价格：${money(contract.price)}元\n首付比例：${shortMoney(contract.downRate)}%\n首付款：${money(contract.downPayment)}元\n合同贷款金额：${money(contract.loan)}元\n合同期限：${contract.term}期\n固定月利率：${shortMoney(contract.monthlyRatePct)}%\n合同月供：${money(contract.monthlyPayment)}元\n合同总利息：${money(contract.totalInterest)}元\n\n已归还本金：${money(paidPrincipal)}元\n已支付利息：${money(paidInterest)}元\n剩余未还本金：${money(remainingPrincipal)}元\n剩余合同利息：${money(remainingInterest)}元\n\n说明：剩余未还本金与剩余合同利息分开核算；提前结清是否收取剩余利息、违约金、滞纳金或其他费用，以合同约定及双方最终确认结果为准。`;
+    $('settlement-message').value=`您好，${plan.name}的车辆以租代购合同核算如下：\n\n车辆信息：${planIdentity(plan)}\n合同车辆价格：${money(contract.price)}元\n首付比例：${shortMoney(contract.downRate)}%\n首付款：${money(contract.downPayment)}元\n押金：${Number(plan.depositMonths)||0}个月\n合同贷款金额：${money(contract.loan)}元\n合同期限：${contract.term}期\n固定月利率：${shortMoney(contract.monthlyRatePct)}%\n合同月供：${money(contract.monthlyPayment)}元\n合同总利息：${money(contract.totalInterest)}元\n\n已归还本金：${money(paidPrincipal)}元\n已支付利息：${money(paidInterest)}元\n剩余未还本金：${money(remainingPrincipal)}元\n剩余合同利息：${money(remainingInterest)}元\n\n说明：剩余未还本金与剩余合同利息分开核算；提前结清是否收取剩余利息、违约金、滞纳金或其他费用，以合同约定及双方最终确认结果为准。`;
     $('settlement-status').textContent='部分还款按先利息、后本金暂算；最终结清口径以合同为准。';$('copy-settlement').classList.remove('ok');$('copy-settlement').textContent='复制核算结果';$('settlement-dialog').showModal();
   }
   function recomputeCompletedTerms(plan){
@@ -452,12 +453,13 @@
   }));
   $('plan-form').addEventListener('submit',event=>{
     event.preventDefault();
-    const totalTerms=Number($('total-terms').value),completedTerms=Number($('completed-terms').value),dueDay=Number($('due-day').value);
+    const totalTerms=Number($('total-terms').value),completedTerms=Number($('completed-terms').value),dueDay=Number($('due-day').value),depositMonths=Number($('contract-deposit-months').value);
     if(completedTerms>totalTerms){alert('已完成期数不能大于总期数。');return}
+    if(!Number.isInteger(depositMonths)||depositMonths<0||depositMonths>120){alert('合同押金请填写0至120个月的整数。');return}
     const contract=updateContractPreview();if(!contract){alert('请完整填写该客户合同中的车辆价格、首付比例、固定月利率和总期数。');return}
     const id=$('plan-id').value||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const existing=plans.find(item=>item.id===id);
-    const plan={id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),vehiclePrice:contract.price,downPaymentRate:contract.downRate,monthlyRate:contract.monthlyRatePct,loanAmount:contract.loan,amount:round2(contract.monthlyPayment),dueDay,rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,openingCompletedTerms:existing?.payments?.length?openingCompletedTerms(existing):completedTerms,notes:$('plan-notes').value.trim(),payments:JSON.parse(JSON.stringify(existing?.payments||[]))};
+    const plan={id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),vehiclePrice:contract.price,downPaymentRate:contract.downRate,depositMonths,monthlyRate:contract.monthlyRatePct,loanAmount:contract.loan,amount:round2(contract.monthlyPayment),dueDay,rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,openingCompletedTerms:existing?.payments?.length?openingCompletedTerms(existing):completedTerms,notes:$('plan-notes').value.trim(),payments:JSON.parse(JSON.stringify(existing?.payments||[]))};
     if(plan.payments.length&&rebuildPaymentAllocations(plan)>.005){alert('修改后已有收款金额超过剩余合同应付款，请先修改或撤销相关收款记录。');return}
     const index=plans.findIndex(item=>item.id===id);if(index>=0)plans[index]=plan;else plans.push(plan);
     savePlans();renderPlanModule();resetPlanForm();
