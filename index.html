@@ -270,15 +270,29 @@
     const amounts=type==='overdue'?`<span>本期剩余应付款 <strong>${money(item.remaining)} 元</strong></span><span>参考滞纳金 <strong>${money(fee)} 元</strong></span><span>参考合计 <strong>${money(total)} 元</strong></span>`:`<span>本期剩余 <strong>${money(item.remaining)} 元</strong></span><span>应付日期 <strong>${cnDate(dueDate)}</strong></span>`;
     return `<article class="reminder-item ${type}"><div class="item-top"><div><h4>${escapeHtml(plan.name)} · 第 ${termIndex+1}/${plan.totalTerms} 期</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${item.paid>0?` · 已还本期款 ${money(item.paid)} 元`:''}</div></div><span class="badge">${status}</span></div><div class="item-money">${amounts}</div><div class="item-actions"><button type="button" data-copy-reminder="${plan.id}" data-term-index="${termIndex}" data-reminder-type="${type}">复制提醒话术</button><button class="secondary" type="button" data-receive="${plan.id}" data-term-index="${termIndex}">登记本期收款</button></div></article>`;
   }
+  function overdueAccount(plan){
+    const items=openInstallments(plan).filter(item=>item.delta<0);if(!items.length)return null;
+    return {plan,items,remaining:round2(items.reduce((sum,item)=>sum+item.remaining,0)),fee:round2(items.reduce((sum,item)=>sum+item.fee,0)),total:round2(items.reduce((sum,item)=>sum+item.total,0)),maxDays:Math.max(...items.map(item=>item.daysOverdue))};
+  }
+  function overdueAccountMessage(account){
+    const {plan,items,remaining,fee,total}=account,name=plan.name?`${plan.name}，`:'',vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'',pct=shortMoney(Number(plan.rate)*100),rateLabel=Math.abs(Number(plan.rate)-.005)<.0000001?'每日千分之五（0.5%）':`每日 ${pct}%`;
+    const details=items.map(item=>`第${item.termIndex+1}期：应付日${cnDate(item.dueDate)}，逾期${item.daysOverdue}天\n剩余合同款：${shortMoney(item.remaining)}元${Number(plan.rate)>0?`\n滞纳金：${shortMoney(item.remaining)}元 × ${pct}% × ${item.daysOverdue}天 = ${shortMoney(item.fee)}元`:''}`).join('\n\n');
+    const rule=Number(plan.rate)>0?`按照合同约定，滞纳金按${rateLabel}计算。`:'该客户当前设置为不收取滞纳金。';
+    return `您好，${name}您目前有${items.length}期车辆款项已逾期。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，逾期明细如下：\n\n${details}\n\n${rule}\n\n截至今天应付金额为：\n\n逾期未付合同款：${shortMoney(remaining)}元\n滞纳金：${shortMoney(fee)}元\n合计应付：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+  }
+  function overdueAccountCard(account){
+    const {plan,items,remaining,fee,total,maxDays}=account,paid=round2(items.reduce((sum,item)=>sum+item.paid,0));
+    return `<article class="reminder-item overdue"><div class="item-top"><div><h4>${escapeHtml(plan.name)} · 逾期 ${items.length} 期</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${paid>0?` · 已登记合同款 ${money(paid)} 元`:''}</div></div><span class="badge">最早逾期 ${maxDays} 天</span></div><div class="item-money"><span>逾期未付合同款 <strong>${money(remaining)} 元</strong></span><span>滞纳金 <strong>${money(fee)} 元</strong></span><span>截至今天应付 <strong>${money(total)} 元</strong></span></div><div class="item-actions"><button type="button" data-copy-overdue="${plan.id}">复制总催款文案</button><button class="secondary" type="button" data-receive="${plan.id}" data-term-index="${items[0].termIndex}">登记收款</button></div></article>`;
+  }
   function renderReminders(){
     const items=plans.flatMap(openInstallments).filter(item=>item.delta<=3).sort((a,b)=>a.dueDate-b.dueDate);
-    const groups={today:items.filter(item=>item.delta===0),overdue:items.filter(item=>item.delta<0),upcoming:items.filter(item=>item.delta>0&&item.delta<=3)};
+    const groups={today:items.filter(item=>item.delta===0),overdue:plans.map(overdueAccount).filter(Boolean).sort((a,b)=>b.maxDays-a.maxDays),upcoming:items.filter(item=>item.delta>0&&item.delta<=3)};
     const emptyText={today:'今天没有到期客户。',overdue:'目前没有逾期客户。',upcoming:'未来3天没有即将到期客户。'};
     Object.entries(groups).forEach(([type,list])=>{
-      $(`${type}-list`).innerHTML=list.length?list.map(item=>reminderCard(item,type)).join(''):`<div class="empty">${emptyText[type]}</div>`;
+      $(`${type}-list`).innerHTML=list.length?list.map(item=>type==='overdue'?overdueAccountCard(item):reminderCard(item,type)).join(''):`<div class="empty">${emptyText[type]}</div>`;
       $(`${type}-count`).textContent=list.length;$(`${type}-total`).textContent=list.length;
     });
-    $('today-label').textContent=`今天是 ${fullCnDate(todayNoon())}，逾期多期会按每一期分别列出。`;
+    $('today-label').textContent=`今天是 ${fullCnDate(todayNoon())}，逾期客户会自动汇总各期欠款和滞纳金。`;
   }
   function paymentHistoryHtml(plan){
     const payments=[...(plan.payments||[])].reverse();if(!payments.length)return '';
@@ -500,6 +514,7 @@
     if(button.dataset.receive)openPaymentDialog(button.dataset.receive,Number(button.dataset.termIndex));
     if(button.dataset.editPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.editPayment);if(payment)openPaymentDialog(plan.id,Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??plan.completedTerms),payment.id)}
     if(button.dataset.undoPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.undoPayment);if(plan&&payment&&confirm(`确定撤销 ${payment.date} 收到的 ${money(payment.total)} 元记录吗？撤销后各期欠款会自动恢复。`)){plan.payments=plan.payments.filter(item=>item.id!==payment.id);rebuildPaymentAllocations(plan);savePlans();renderPlanModule()}}
+    if(button.dataset.copyOverdue){const plan=plans.find(item=>item.id===button.dataset.copyOverdue),account=plan&&overdueAccount(plan);if(account)copyReminderText(overdueAccountMessage(account),button)}
     if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&installmentItem(plan,Number(button.dataset.termIndex));if(item&&item.remaining>.005)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
   });
   ['car-price','down-payment-rate','target-payment','term','deposit-months','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
