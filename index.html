@@ -24,9 +24,9 @@
     .item-actions,.plan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item-actions button,.plan-actions button,.form-actions button{margin:0;height:42px;font-size:14px}.secondary{background:#e9f1f6;color:var(--blue)}.danger{background:#fff0ec;color:var(--danger)}
     .plan-form{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.field.full{grid-column:1/-1}.form-actions{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:15px}.local-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.plan-item .plan-actions{display:flex;flex-wrap:wrap;margin-top:11px}.plan-actions button{width:auto;padding:0 16px}.plan-actions .danger{margin-left:auto}.plan-meta{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:9px;color:#496172;font-size:13px}.plan-meta strong{color:var(--text)}
     .section-heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}.section-heading-row .section-help{margin-bottom:0}.compact-tool{width:auto;height:38px;margin:0;padding:0 14px;background:#e9f1f6;color:var(--blue);font-size:13px;white-space:nowrap}.backup-box{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.backup-actions button{margin:0;height:44px;font-size:14px}.backup-status{margin:11px 0 0;color:var(--blue);font-size:13px;line-height:1.5}.backup-warning{margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
-    .fee-choice{border:0;padding:0;margin:0;min-width:0}.fee-choice legend{font-weight:650;margin-bottom:7px;font-size:14px}.fee-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fee-options label{min-height:46px;border:1px solid #b8c7d3;border-radius:8px;background:#fff;display:flex;align-items:center;gap:8px;padding:0 11px;font-size:14px;font-weight:650;cursor:pointer}.fee-options label:has(input:checked){border-color:var(--blue);background:var(--light);color:var(--blue)}.fee-options input{width:18px;height:18px;margin:0;accent-color:var(--blue)}
+    .fee-choice{border:0;padding:0;margin:0;min-width:0}.fee-choice legend{font-weight:650;margin-bottom:7px;font-size:14px}.fee-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fee-options label{min-height:46px;border:1px solid #b8c7d3;border-radius:8px;background:#fff;display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:14px;font-weight:650;line-height:1.35;cursor:pointer}.fee-options label:has(input:checked){border-color:var(--blue);background:var(--light);color:var(--blue)}.fee-options input{width:18px;height:18px;margin:0;accent-color:var(--blue);flex:0 0 auto}.formula-note{grid-column:1/-1;background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:13px 14px;color:#496172;font-size:13px;line-height:1.65}.formula-note strong{display:block;color:var(--blue);margin-bottom:3px}
     dialog{width:min(620px,calc(100% - 24px));max-height:90vh;border:0;border-radius:16px;padding:0;color:var(--text);box-shadow:0 18px 60px #102c4260}dialog::backdrop{background:#102c4270}.dialog-body{padding:22px;overflow:auto;max-height:90vh}.dialog-body h2{margin:0 0 5px;font-size:21px}.dialog-context{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.55}.payment-preview{background:var(--light);border-radius:11px;padding:13px;margin-top:15px}.preview-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14px}.preview-row strong{text-align:right}.preview-row.total{border-top:1px solid #cad9e4;margin-top:5px;padding-top:10px}.allocation-preview{margin-top:10px;color:#496172;font-size:13px;line-height:1.65}.payment-error{color:var(--danger);font-size:13px;margin:10px 0 0}.dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}.dialog-actions button{margin:0}#backup-dialog .dialog-actions{grid-template-columns:1fr}.payment-history{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.payment-history summary{cursor:pointer;color:var(--blue);font-size:13px;font-weight:700}.history-row{padding:10px 0;border-bottom:1px dashed var(--line);font-size:12px;color:#496172;line-height:1.55}.history-row:last-child{border-bottom:0}.history-actions{display:flex;gap:7px;margin-top:7px}.history-actions button{width:auto;height:32px;margin:0;padding:0 12px;border-radius:8px;font-size:12px}.history-actions .undo{background:#fff0ec;color:var(--danger)}
-    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full{grid-column:auto}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.mode-tabs{gap:4px}.mode-tabs button{font-size:13px;padding:0 4px}.output-label{align-items:flex-start}textarea{min-height:300px}.item-actions{grid-template-columns:1fr}.form-actions,.backup-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}}
+    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full,.formula-note{grid-column:auto}.fee-options{grid-template-columns:1fr}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.mode-tabs{gap:4px}.mode-tabs button{font-size:13px;padding:0 4px}.output-label{align-items:flex-start}textarea{min-height:300px}.item-actions{grid-template-columns:1fr}.form-actions,.backup-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}}
   </style>
 </head>
 <body>
@@ -82,19 +82,27 @@
   <div class="panel" id="finance-panel">
     <section>
       <h2 class="section-title">以租代购方案计算器</h2>
-      <p class="section-help">采用等本等息：每期本金相同，利息始终按原贷款金额计算。月利率可直接修改，例如1.25代表每月1.25%。</p>
+      <p class="section-help">先选择合同使用的计息口径，再进行方案报价或按月供倒推。默认使用以租代购常见的平息 / 固定月息。</p>
       <div class="mode-tabs" aria-label="计算模式">
         <button class="active" type="button" data-mode="quote">客户方案报价</button>
         <button type="button" data-mode="reverse">按月供倒推</button>
       </div>
 
       <div class="inputs">
+        <fieldset class="fee-choice full">
+          <legend>计息方式</legend>
+          <div class="fee-options">
+            <label><input type="radio" name="finance-method" value="flat" checked>平息 / 等本等息 / 固定月息（按原贷款金额计息）</label>
+            <label><input type="radio" name="finance-method" value="annuity">标准等额本息（按剩余本金递减计息）</label>
+          </div>
+        </fieldset>
+        <div class="formula-note" id="finance-method-note" aria-live="polite"></div>
         <div class="field quote-reverse-field"><label for="car-price">车辆价格（元）</label><input id="car-price" inputmode="decimal" type="number" min="0" step="100" value="200000"></div>
         <div class="field quote-field"><label for="down-payment-rate">首付比例（%）</label><input id="down-payment-rate" inputmode="decimal" type="number" min="0" max="100" step="0.1" value="25"><div class="field-hint" id="down-payment-preview">自动换算：50,000.00 元</div></div>
         <div class="field reverse-field" hidden><label for="target-payment">可接受月供（元）</label><input id="target-payment" inputmode="decimal" type="number" min="0" step="10" value="4500"></div>
         <div class="field"><label for="term">贷款期限（月）</label><input id="term" inputmode="numeric" type="number" min="1" max="120" step="1" value="36"></div>
         <div class="field"><label for="deposit-months">押金（月）</label><input id="deposit-months" inputmode="numeric" type="number" min="0" max="120" step="1" value="1"><div class="field-hint">仅用于方案展示，不参与贷款和月供计算</div></div>
-        <div class="field quote-reverse-field"><label for="monthly-rate">固定月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"><div class="field-hint">每月利息＝原贷款金额×固定月利率</div></div>
+        <div class="field quote-reverse-field"><label for="monthly-rate">月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"><div class="field-hint" id="finance-rate-hint">例如1.29代表每月1.29%</div></div>
       </div>
       <p class="error" id="finance-error" role="alert"></p>
 
@@ -110,7 +118,7 @@
       <button id="finance-copy" type="button">复制客户方案</button>
       <p class="note" id="finance-status">复制后可直接粘贴到微信。实际方案以双方合同约定为准。</p>
     </section>
-    <div class="warning">测算说明：采用等本等息，利息始终按原贷款金额计算。本区域只用于新方案报价；已有客户请从“客户还款计划”进入合同结清核算。</div>
+    <div class="warning" id="finance-method-warning">本区域只用于新方案报价；已有客户请从“客户还款计划”进入合同结清核算。</div>
   </div>
 
   <div class="panel" id="late-fee-panel">
@@ -389,8 +397,33 @@
     updatePaymentPreview();$('payment-dialog').showModal();
   }
 
-  function monthlyPayment(principal,rate,term){return principal/term+principal*rate}
-  function principalFromPayment(payment,rate,term){return payment/(1/term+rate)}
+  function selectedFinanceMethod(){return document.querySelector('input[name="finance-method"]:checked')?.value||'flat'}
+  function financeMethodName(method){return method==='annuity'?'标准等额本息（按剩余本金递减计息）':'平息 / 固定月息（按原贷款金额计息）'}
+  function monthlyPayment(principal,rate,term,method='flat'){
+    if(rate===0)return principal/term;
+    if(method==='annuity'){
+      const factor=(1+rate)**term;
+      return principal*rate*factor/(factor-1);
+    }
+    return principal/term+principal*rate;
+  }
+  function principalFromPayment(payment,rate,term,method='flat'){
+    if(rate===0)return payment*term;
+    if(method==='annuity')return payment*(1-(1+rate)**(-term))/rate;
+    return payment/(1/term+rate);
+  }
+  function repaymentTotals(principal,payment,rate,term,method='flat'){
+    const totalInterest=method==='flat'?principal*rate*term:payment*term-principal;
+    return {totalInterest,totalRepayment:principal+totalInterest};
+  }
+  function updateFinanceMethodNote(){
+    const method=selectedFinanceMethod(),flat=method==='flat';
+    $('finance-method-note').innerHTML=flat
+      ?'<strong>当前计息方式：平息 / 固定月息</strong>月供＝贷款金额÷期数＋贷款金额×月利率；总利息＝贷款金额×月利率×期数。每期利息都按原贷款金额计算。'
+      :'<strong>当前计息方式：标准等额本息</strong>月供＝贷款金额×月利率×(1＋月利率)^期数÷[(1＋月利率)^期数－1]；总利息＝月供×期数－贷款金额。每期利息按剩余本金递减计算。';
+    $('finance-rate-hint').textContent=flat?'每期利息＝原贷款金额×月利率；例如1.29代表每月1.29%':'按剩余本金递减计息；例如0.6代表月利率0.6%';
+    $('finance-method-warning').textContent=`当前计息方式：${financeMethodName(method)}。押金仅用于展示，不参与贷款金额、月供或利息计算。本区域只用于新方案报价；已有客户请从“客户还款计划”进入合同结清核算。`;
+  }
   function readPositive(id,allowZero=false){
     const raw=$(id).value;if(raw==='')return null;const value=Number(raw);
     return Number.isFinite(value)&&(allowZero?value>=0:value>0)?value:null;
@@ -416,25 +449,24 @@
     }
     let loan,payment,totalInterest,totalRepayment,message;
     const price=readPositive('car-price'),ratePct=readPositive('monthly-rate',true);
-    if(price===null||ratePct===null){showFinanceError('请填写有效的车辆价格和固定月利率。');return;}
-    const rate=ratePct/100;
+    if(price===null||ratePct===null){showFinanceError('请填写有效的车辆价格和月利率。');return;}
+    const rate=ratePct/100,method=selectedFinanceMethod();updateFinanceMethodNote();
     if(financeMode==='quote'){
       const downRatePct=readPositive('down-payment-rate',true);
       if(downRatePct===null||downRatePct>100){showFinanceError('首付比例请填写0%至100%。');return;}
       const down=price*(downRatePct/100);$('down-payment-preview').textContent=`自动换算：${money(down)} 元`;
-      loan=price-down;payment=monthlyPayment(loan,rate,term);totalRepayment=payment*term;totalInterest=totalRepayment-loan;
+      loan=price-down;payment=monthlyPayment(loan,rate,term,method);({totalInterest,totalRepayment}=repaymentTotals(loan,payment,rate,term,method));
       $('primary-result-label').textContent='每月还款';$('secondary-result-label').textContent='分期总还款';$('tertiary-result-label').textContent='总利息';
       $('primary-result').textContent=money(payment)+' 元';$('secondary-result').textContent=money(totalRepayment)+' 元';$('tertiary-result').textContent=money(totalInterest)+' 元';
-      message=`您好，这是为您测算的车辆以租代购方案：\n\n车辆价格：${money(price)}元\n首付比例：${shortMoney(downRatePct)}%\n首付款：${money(down)}元\n押金：${depositMonths}个月\n贷款金额：${money(loan)}元\n贷款期限：${term}个月\n固定月利率：${shortMoney(ratePct)}%\n每月还款：${money(payment)}元\n分期总还款：${money(totalRepayment)}元\n总利息：${money(totalInterest)}元\n\n以上为等本等息测算结果，最终以双方确认的正式合同为准。`;
+      message=`车辆价格：${money(price)}元\n首付：${shortMoney(downRatePct)}% / ${money(down)}元\n贷款金额：${money(loan)}元\n期数：${term}个月\n月供：${money(payment)}元\n押金：${depositMonths}个月`;
     }else{
       const target=readPositive('target-payment');
       if(target===null){showFinanceError('请输入大于0的可接受月供。');return;}
-      const affordableLoan=principalFromPayment(target,rate,term);loan=Math.min(price,affordableLoan);
-      const down=Math.max(0,price-loan),downRatePct=price?down/price*100:0;payment=monthlyPayment(loan,rate,term);totalRepayment=payment*term;totalInterest=totalRepayment-loan;
+      const affordableLoan=principalFromPayment(target,rate,term,method);loan=Math.min(price,affordableLoan);
+      const down=Math.max(0,price-loan),downRatePct=price?down/price*100:0;payment=monthlyPayment(loan,rate,term,method);({totalInterest,totalRepayment}=repaymentTotals(loan,payment,rate,term,method));
       $('primary-result-label').textContent='建议首付款';$('secondary-result-label').textContent='对应月供';$('tertiary-result-label').textContent='分期总还款';
       $('primary-result').textContent=`${shortMoney(downRatePct)}% / ${money(down)} 元`;$('secondary-result').textContent=money(payment)+' 元';$('tertiary-result').textContent=money(totalRepayment)+' 元';
-      const note=affordableLoan>price?'\n说明：该月供额度已足够覆盖整车价格，因此建议首付款为0元。':'';
-      message=`您好，按您可接受的月供为您倒推了一套车辆以租代购方案：\n\n车辆价格：${money(price)}元\n可接受月供：${money(target)}元\n贷款期限：${term}个月\n固定月利率：${shortMoney(ratePct)}%\n可贷款金额：${money(loan)}元\n建议首付比例：${shortMoney(downRatePct)}%\n建议首付款：${money(down)}元\n押金：${depositMonths}个月\n对应月供：${money(payment)}元\n分期总还款：${money(totalRepayment)}元${note}\n\n以上为等本等息测算结果，最终以双方确认的正式合同为准。`;
+      message=`车辆价格：${money(price)}元\n首付：${shortMoney(downRatePct)}% / ${money(down)}元\n贷款金额：${money(loan)}元\n期数：${term}个月\n月供：${money(payment)}元\n押金：${depositMonths}个月`;
     }
     $('loan-amount').textContent=money(loan)+' 元';$('finance-output-title').textContent='客户方案文字';$('finance-message').value=message;
     resetCopy('finance-copy','finance-status','复制客户方案');
@@ -465,6 +497,7 @@
     financeMode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item===button));
     document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');calculateFinance();
   }));
+  document.querySelectorAll('input[name="finance-method"]').forEach(input=>input.addEventListener('change',calculateFinance));
   $('plan-form').addEventListener('submit',event=>{
     event.preventDefault();
     const totalTerms=Number($('total-terms').value),completedTerms=Number($('completed-terms').value),dueDay=Number($('due-day').value),depositMonths=Number($('contract-deposit-months').value);
