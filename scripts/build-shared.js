@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, '..');
 const copies = [
   ['packages/domain/index.js', 'miniapp/shared/domain.js'],
   ['packages/domain/index.js', 'cloudfunctions/api/shared/domain.js'],
+  ['packages/domain/index.js', 'webapp/shared/domain.js'],
   ['packages/migration/index.js', 'cloudfunctions/api/shared/migration.js']
 ];
 

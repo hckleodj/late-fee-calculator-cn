@@ -1,0 +1,12 @@
+{
+  "name": "大进车贷助手",
+  "short_name": "大进车贷",
+  "description": "大进车贷助手 v0.9 内部试用版",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f8",
+  "theme_color": "#0d6b4d",
+  "icons": [
+    { "src": "icons/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

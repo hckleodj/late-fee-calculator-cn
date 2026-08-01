@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0d6b4d">
+  <meta name="robots" content="noindex,nofollow">
+  <title>大进车贷助手</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/app-icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>大进车贷助手</h1>
+      <p>v0.9 内部试用版 · 云端网页版</p>
+    </div>
+    <button id="logout-button" class="ghost" type="button" hidden>退出</button>
+  </header>
+
+  <main>
+    <section id="login-view" class="login-card">
+      <h2>管理员登录</h2>
+      <p>手机和电脑使用同一个管理员密码，读取同一份云端数据。</p>
+      <form id="login-form">
+        <label>管理员密码<input id="login-password" type="password" autocomplete="current-password" minlength="12" required></label>
+        <button type="submit">登录</button>
+      </form>
+      <div class="actions"><button id="offline-calculator" class="secondary" type="button">仅打开方案测算</button></div>
+      <p id="login-error" class="error"></p>
+      <p class="security-note">密码只发送到你自己的 CloudBase 云函数；会话令牌仅保存在当前浏览器标签页。</p>
+    </section>
+
+    <section id="app-shell" hidden>
+      <nav class="tabs" aria-label="主要功能">
+        <button type="button" data-route="dashboard">还款提醒</button>
+        <button type="button" data-route="calculator">方案测算</button>
+        <button type="button" data-route="customers">客户合同</button>
+        <button type="button" data-route="settings">迁移备份</button>
+      </nav>
+      <div id="notice" class="notice" hidden></div>
+      <div id="view" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <template id="loading-template"><div class="panel loading">正在读取云端数据…</div></template>
+  <script src="config.js"></script>
+  <script src="shared/domain.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -5,6 +5,7 @@
   "description": "大进车贷助手 v0.9 内部试用版",
   "scripts": {
     "build:shared": "node scripts/build-shared.js",
+    "hash:admin": "node scripts/hash-admin-password.js",
     "test": "node --test tests/*.test.js",
     "check": "npm run build:shared && npm test"
   },

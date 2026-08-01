@@ -2,11 +2,12 @@
 
 当前版本：`v0.9 内部试用版`
 
-本仓库同时保留原 GitHub Pages 工具和新的微信小程序迁移工程。根目录 `index.html` 继续作为旧网页运行，小程序和 CloudBase 代码位于独立目录，不改变旧页面的发布入口。
+本仓库同时保留原 GitHub Pages 工具、新的 PWA 云端管理页和微信小程序迁移工程。根目录 `index.html` 继续作为旧网页运行，不改变旧页面的发布入口。当前优先推进 `webapp/`，小程序代码保留，暂不要求支付微信认证费用。
 
 ## 目录
 
 - `index.html`：原 GitHub Pages 版本，保持兼容
+- `webapp/`：可安装到手机桌面的云端管理页，手机与电脑共用数据
 - `miniapp/`：微信原生小程序
 - `cloudfunctions/api/`：统一 CloudBase 云函数 API
 - `cloudbase/`：集合、索引和安全规则清单
@@ -35,3 +36,5 @@ npm run check
 - 金额统一使用整数“分”保存。
 
 完整部署步骤见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，数据结构见 [docs/DATA_MODEL.md](docs/DATA_MODEL.md)。
+
+涉及平台和部署选择时，必须先阅读 [docs/COSTS_AND_LIMITS.md](docs/COSTS_AND_LIMITS.md)，明确一次性费用、续费、资源用量和迁移成本后再决定。

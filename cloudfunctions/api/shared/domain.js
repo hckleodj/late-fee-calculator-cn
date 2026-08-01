@@ -258,7 +258,7 @@ function summarizeDashboard(plans, todayDateKey) {
   return result;
 }
 
-module.exports = {
+const domainExports = {
   METHOD_FLAT,
   METHOD_ANNUITY,
   yuanToCents,
@@ -277,3 +277,6 @@ module.exports = {
   settlementBreakdown,
   summarizeDashboard
 };
+
+if (typeof module !== 'undefined' && module.exports) module.exports = domainExports;
+if (typeof globalThis !== 'undefined') globalThis.DajinDomain = domainExports;
