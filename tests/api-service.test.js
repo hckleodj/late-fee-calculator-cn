@@ -125,3 +125,56 @@ test('payment transaction splits late fee and updates only the owner contract pl
   assert.equal(payment.contractAmountCents, 51000);
   assert.equal(db._store.repayment_plans[0].status, 'paid');
 });
+
+test('normal payment, overdue reminder, reversal, and settlement work as one cloud workflow', async () => {
+  const db = createMemoryDb();
+  const openId = 'admin-flow';
+  const fixedNow = new Date('2026-01-05T04:00:00.000Z');
+  const api = createApi({ db, getTrustedIdentity: () => ({ openId }), getAdminOpenIds: () => [openId], now: () => fixedNow });
+
+  const customerResponse = await api.handle({ action: 'customers.save', payload: { name: '真实场景客户', plate: '湘A12345', vehicle: '测试车' } });
+  assert.equal(customerResponse.ok, true);
+  const customerId = customerResponse.data.customerId;
+  const contractResponse = await api.handle({ action: 'contracts.create', payload: {
+    customerId,
+    interestMethod: 'flat',
+    vehiclePriceCents: 9180000,
+    downPaymentRateBps: 1500,
+    monthlyRateBps: 125,
+    terms: 36,
+    depositMonths: 1,
+    dueDay: 5,
+    startDateKey: '2026-01-01',
+    dailyLateFeeRateBps: 50
+  }});
+  assert.equal(contractResponse.ok, true);
+  assert.equal(contractResponse.data.repaymentPlanCount, 36);
+
+  const dueToday = await api.handle({ action: 'dashboard.list', payload: { todayDateKey: '2026-01-05' } });
+  assert.equal(dueToday.data.today.length, 1);
+  const firstPlan = db._store.repayment_plans.find(row => row.termNo === 1);
+
+  const paymentResponse = await api.handle({ action: 'payments.record', payload: {
+    contractId: contractResponse.data.contractId,
+    amountCents: firstPlan.scheduledAmountCents,
+    lateFeeCents: 0,
+    startTermNo: 1,
+    receivedDateKey: '2026-01-05'
+  }});
+  assert.equal(paymentResponse.ok, true);
+  const afterPayment = await api.handle({ action: 'dashboard.list', payload: { todayDateKey: '2026-01-05' } });
+  assert.equal(afterPayment.data.today.length, 0);
+
+  const reversed = await api.handle({ action: 'payments.reverse', payload: { paymentId: paymentResponse.data.paymentId, reason: '测试撤销' } });
+  assert.equal(reversed.ok, true);
+  const afterReverse = await api.handle({ action: 'dashboard.list', payload: { todayDateKey: '2026-01-08' } });
+  assert.equal(afterReverse.data.overdue.length, 1);
+  assert.equal(afterReverse.data.overdue[0].daysOverdue, 3);
+  assert.equal(afterReverse.data.overdue[0].lateFeeCents, 4714);
+
+  const settlement = await api.handle({ action: 'settlement.get', payload: { contractId: contractResponse.data.contractId } });
+  assert.equal(settlement.ok, true);
+  assert.equal(settlement.data.remainingPrincipalCents, 7803000);
+  assert.equal(settlement.data.remainingInterestCents, 3511350);
+  assert.equal(settlement.data.depositBalanceCents, 0);
+});
