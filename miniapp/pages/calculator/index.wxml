@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">以租代购方案测算</view>
+    <view class="field"><text class="label">模式</text><picker class="picker" mode="selector" range="{{modes}}" value="{{modeIndex}}" bindchange="onMode">{{modes[modeIndex]}}</picker></view>
+    <view class="field"><text class="label">计息方式</text><picker class="picker" mode="selector" range="{{methods}}" value="{{methodIndex}}" bindchange="onMethod">{{methods[methodIndex]}}</picker></view>
+    <view class="field"><text class="label">车辆价格（元）</text><input class="input" type="digit" data-key="carPrice" value="{{form.carPrice}}" bindinput="onField" /></view>
+    <view wx:if="{{modeIndex === 0}}" class="field"><text class="label">首付比例（%）</text><input class="input" type="digit" data-key="downPaymentRate" value="{{form.downPaymentRate}}" bindinput="onField" /></view>
+    <view wx:else class="field"><text class="label">可接受月供（元）</text><input class="input" type="digit" data-key="targetPayment" value="{{form.targetPayment}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">期限（月）</text><input class="input" type="number" data-key="terms" value="{{form.terms}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">月利率（%）</text><input class="input" type="digit" data-key="monthlyRate" value="{{form.monthlyRate}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">押金（月）</text><input class="input" type="number" data-key="depositMonths" value="{{form.depositMonths}}" bindinput="onField" /><view class="muted">押金不参与贷款额和月供计算</view></view>
+  </view>
+
+  <view wx:if="{{result}}" class="card result-grid">
+    <view><text>贷款金额</text><strong>{{result.loanText}}元</strong></view>
+    <view><text>首付款</text><strong>{{result.downText}}元</strong></view>
+    <view><text>参考月供</text><strong>{{result.paymentText}}元</strong></view>
+    <view><text>总利息</text><strong>{{result.interestText}}元</strong></view>
+    <button class="button result-button" bindtap="copyPlan">复制客户方案</button>
+  </view>
+
+  <view class="card">
+    <view class="card-title">滞纳金计算</view>
+    <view class="field"><text class="label">剩余应付款（元）</text><input class="input" type="digit" data-key="amount" value="{{late.amount}}" bindinput="onLateField" /></view>
+    <view class="field"><text class="label">日滞纳金比例（%）</text><input class="input" type="digit" data-key="rate" value="{{late.rate}}" bindinput="onLateField" /></view>
+    <view class="field"><text class="label">应付日期</text><picker class="picker" mode="date" data-key="dueDate" value="{{late.dueDate}}" bindchange="onLateDate">{{late.dueDate}}</picker></view>
+    <view class="field"><text class="label">计算日期</text><picker class="picker" mode="date" data-key="payDate" value="{{late.payDate}}" bindchange="onLateDate">{{late.payDate}}</picker></view>
+    <view wx:if="{{lateResult}}" class="late-result">
+      <view><text>逾期</text><strong>{{lateResult.days}}天</strong></view>
+      <view><text>参考滞纳金</text><strong>{{lateResult.feeText}}元</strong></view>
+      <view><text>参考合计</text><strong>{{lateResult.totalText}}元</strong></view>
+    </view>
+    <button class="button" bindtap="copyLateFee">复制滞纳金文案</button>
+  </view>
+</view>

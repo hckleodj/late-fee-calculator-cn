@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-title">大进车贷助手</view>
+    <view class="hero-subtitle">v0.9 内部试用版 · {{todayDateKey}}</view>
+  </view>
+
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{loading}}" class="loading">正在读取云端数据…</view>
+
+  <block wx:else>
+    <view class="summary-grid">
+      <view class="summary-item"><text>{{counts.today}}</text><view>今日应还</view></view>
+      <view class="summary-item danger"><text>{{counts.overdue}}</text><view>已逾期客户</view></view>
+      <view class="summary-item warning"><text>{{counts.upcoming}}</text><view>未来3天</view></view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">今日应还</view>
+      <view wx:if="{{!today.length}}" class="empty">今天没有到期客户</view>
+      <view wx:for="{{today}}" wx:key="_id" class="reminder" bindtap="openCustomer" data-id="{{item.customerId}}">
+        <view class="row"><text class="name">{{item.customer.name}}</text><text class="money">{{item.amountText}}元</text></view>
+        <view class="muted">第{{item.termNo}}期 · {{item.customer.plate}} {{item.customer.vehicle}}</view>
+      </view>
+    </view>
+
+    <view class="card overdue-card">
+      <view class="card-title danger-text">已逾期</view>
+      <view wx:if="{{!overdueGroups.length}}" class="empty">目前没有逾期客户</view>
+      <view wx:for="{{overdueGroups}}" wx:key="customerId" class="reminder" bindtap="openCustomer" data-id="{{item.customerId}}">
+        <view class="row"><text class="name">{{item.customer.name}} · {{item.items.length}}期</text><text class="badge">最早{{item.maxDays}}天</text></view>
+        <view class="amount-grid">
+          <view><text>未付合同款</text><strong>{{item.remainingText}}元</strong></view>
+          <view><text>滞纳金</text><strong>{{item.lateFeeText}}元</strong></view>
+          <view><text>截至今日</text><strong class="danger-text">{{item.totalText}}元</strong></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title warning-text">未来3天</view>
+      <view wx:if="{{!upcoming.length}}" class="empty">未来3天没有到期客户</view>
+      <view wx:for="{{upcoming}}" wx:key="_id" class="reminder" bindtap="openCustomer" data-id="{{item.customerId}}">
+        <view class="row"><text class="name">{{item.customer.name}}</text><text class="money">{{item.amountText}}元</text></view>
+        <view class="muted">{{item.dueDateKey}} · 第{{item.termNo}}期</view>
+      </view>
+    </view>
+  </block>
+</view>

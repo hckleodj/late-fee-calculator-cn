@@ -1,0 +1,4 @@
+{
+  "desc": "内部管理工具，不允许被微信索引",
+  "rules": [{ "action": "disallow", "page": "*" }]
+}

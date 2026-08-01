@@ -1,0 +1,75 @@
+<view class="page">
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{loading}}" class="loading">正在读取合同…</view>
+  <block wx:elif="{{detail}}">
+    <view class="hero">
+      <view class="hero-title">{{detail.customer.name}}</view>
+      <view class="hero-subtitle">{{detail.customer.plate || '未填车牌'}} · {{detail.customer.vehicle || '未填车辆'}}</view>
+    </view>
+
+    <view wx:if="{{!detail.contract}}" class="card empty">该客户尚未建立合同</view>
+    <block wx:else>
+      <view class="card">
+        <view class="row"><view class="card-title">合同概要</view><text class="badge">{{detail.contract.methodText}}</text></view>
+        <view class="contract-grid">
+          <view><text>车辆价格</text><strong>{{detail.contract.vehiclePriceText}}元</strong></view>
+          <view><text>贷款金额</text><strong>{{detail.contract.principalText}}元</strong></view>
+          <view><text>标准月供</text><strong>{{detail.contract.paymentText}}元</strong></view>
+          <view><text>期限</text><strong>{{detail.contract.terms}}期</strong></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="row"><view class="card-title">还款计划</view><button class="button mini secondary" bindtap="copyOverdueMessage">复制逾期文案</button></view>
+        <scroll-view class="plan-scroll" scroll-y>
+          <view wx:for="{{detail.repaymentPlans}}" wx:key="_id" class="plan-row">
+            <view class="row"><text class="term">第{{item.termNo}}期 · {{item.dueDateKey}}</text><text class="badge">{{item.statusText}}</text></view>
+            <view class="muted">应还{{item.scheduledText}}元 · 已还{{item.paidText}}元 · 剩余{{item.remainingText}}元</view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">登记收款</view>
+        <view class="field"><text class="label">到账总额（元）</text><input class="input" type="digit" data-key="amount" value="{{paymentForm.amount}}" bindinput="onPaymentField" /></view>
+        <view class="field"><text class="label">其中滞纳金（元）</text><input class="input" type="digit" data-key="lateFee" value="{{paymentForm.lateFee}}" bindinput="onPaymentField" /></view>
+        <view class="field"><text class="label">从第几期开始冲抵</text><input class="input" type="number" data-key="startTermNo" value="{{paymentForm.startTermNo}}" bindinput="onPaymentField" /></view>
+        <view class="field"><text class="label">收款日期</text><picker class="picker" mode="date" value="{{paymentForm.receivedDateKey}}" bindchange="onPaymentDate">{{paymentForm.receivedDateKey}}</picker></view>
+        <view class="field"><text class="label">备注</text><input class="input" data-key="notes" value="{{paymentForm.notes}}" bindinput="onPaymentField" /></view>
+        <button class="button" loading="{{savingPayment}}" bindtap="savePayment">确认登记收款</button>
+      </view>
+
+      <view class="card">
+        <view class="card-title">收款记录</view>
+        <view wx:if="{{!detail.payments.length}}" class="empty">暂无收款记录</view>
+        <view wx:for="{{detail.payments}}" wx:key="_id" class="history-row">
+          <view class="row"><text>{{item.receivedDateKey}} · {{item.amountText}}元</text><text class="badge">{{item.status === 'active' ? '有效' : '已撤销'}}</text></view>
+          <view class="muted">其中滞纳金 {{item.lateFeeText}}元</view>
+          <button wx:if="{{item.status === 'active' && item.paymentType === 'repayment'}}" class="button mini danger" data-id="{{item._id}}" bindtap="reversePayment">撤销此笔</button>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">押金记录</view>
+        <view class="muted">押金独立记账，不参与月供、贷款额及自动结清计算。</view>
+        <view class="field"><text class="label">类型</text><picker class="picker" mode="selector" range="{{depositDirections}}" value="{{depositForm.directionIndex}}" bindchange="onDepositDirection">{{depositDirections[depositForm.directionIndex]}}</picker></view>
+        <view class="field"><text class="label">金额（元）</text><input class="input" type="digit" data-key="amount" value="{{depositForm.amount}}" bindinput="onDepositField" /></view>
+        <view class="field"><text class="label">日期</text><picker class="picker" mode="date" value="{{depositForm.occurredDateKey}}" bindchange="onDepositDate">{{depositForm.occurredDateKey}}</picker></view>
+        <view class="field"><text class="label">备注</text><input class="input" data-key="notes" value="{{depositForm.notes}}" bindinput="onDepositField" /></view>
+        <button class="button secondary" loading="{{savingDeposit}}" bindtap="saveDeposit">保存押金记录</button>
+        <view class="divider"></view>
+        <view wx:for="{{detail.deposits}}" wx:key="_id" class="row deposit-row"><text>{{item.occurredDateKey}} · {{item.direction === 'out' ? '支出' : '收取'}}</text><strong>{{item.amountText}}元</strong></view>
+      </view>
+
+      <view wx:if="{{settlement}}" class="card settlement">
+        <view class="row"><view class="card-title">合同结清核算</view><button class="button mini secondary" bindtap="copySettlement">复制</button></view>
+        <view class="settlement-row"><text>已归还本金</text><strong>{{settlement.paidPrincipalText}}元</strong></view>
+        <view class="settlement-row"><text>已支付利息</text><strong>{{settlement.paidInterestText}}元</strong></view>
+        <view class="settlement-row"><text>剩余本金</text><strong>{{settlement.remainingPrincipalText}}元</strong></view>
+        <view class="settlement-row"><text>剩余合同利息</text><strong>{{settlement.remainingInterestText}}元</strong></view>
+        <view class="settlement-row total"><text>合同结清参考</text><strong>{{settlement.contractSettlementText}}元</strong></view>
+        <view class="settlement-row"><text>押金余额（单列）</text><strong>{{settlement.depositBalanceText}}元</strong></view>
+      </view>
+    </block>
+  </block>
+</view>

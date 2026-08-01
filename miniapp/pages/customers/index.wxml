@@ -1,0 +1,17 @@
+<view class="page">
+  <view class="row search-row">
+    <input class="input search-input" placeholder="姓名、车牌或车辆" value="{{keyword}}" bindinput="onKeyword" bindconfirm="search" />
+    <button class="button mini" bindtap="search">搜索</button>
+  </view>
+  <button class="button" bindtap="addCustomer">新增客户和合同</button>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{loading}}" class="loading">正在读取客户…</view>
+  <view wx:elif="{{!customers.length}}" class="card empty">还没有客户资料</view>
+  <block wx:else>
+    <view class="card customer" wx:for="{{customers}}" wx:key="_id" bindtap="openCustomer" data-id="{{item._id}}">
+      <view class="row"><text class="customer-name">{{item.name}}</text><text class="badge">查看合同</text></view>
+      <view class="muted">{{item.plate || '未填车牌'}} · {{item.vehicle || '未填车辆'}}</view>
+      <view wx:if="{{item.notes}}" class="muted notes">{{item.notes}}</view>
+    </view>
+  </block>
+</view>

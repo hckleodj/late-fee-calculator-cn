@@ -1,0 +1,11 @@
+.contract-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; }
+.contract-grid view { background: #eef5fb; border-radius: 14rpx; padding: 18rpx; }
+.contract-grid text, .contract-grid strong { display: block; }
+.contract-grid text { color: #637786; font-size: 22rpx; }
+.contract-grid strong { color: #245785; margin-top: 7rpx; }
+.plan-scroll { max-height: 620rpx; }
+.plan-row, .history-row { padding: 20rpx 0; border-bottom: 1rpx solid #d6e0e8; }
+.term { font-weight: 700; }
+.deposit-row { padding: 12rpx 0; }
+.settlement-row { display: flex; justify-content: space-between; padding: 14rpx 0; border-bottom: 1rpx solid #d6e0e8; }
+.settlement-row.total { color: #245785; font-size: 32rpx; font-weight: 700; }

@@ -1,0 +1,5 @@
+.preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12rpx; text-align: center; }
+.preview view { background: #eef5fb; border-radius: 14rpx; padding: 18rpx 8rpx; }
+.preview text, .preview strong { display: block; }
+.preview text { color: #637786; font-size: 22rpx; }
+.preview strong { color: #245785; margin-top: 8rpx; font-size: 25rpx; }

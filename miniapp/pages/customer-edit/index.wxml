@@ -1,0 +1,30 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">客户资料</view>
+    <view class="field"><text class="label">客户姓名</text><input class="input" data-key="name" value="{{form.name}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">车牌号</text><input class="input" data-key="plate" value="{{form.plate}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">车辆</text><input class="input" data-key="vehicle" value="{{form.vehicle}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">备注</text><input class="input" data-key="notes" value="{{form.notes}}" bindinput="onField" /></view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">合同金融参数</view>
+    <view class="field"><text class="label">计息方式</text><picker class="picker" mode="selector" range="{{interestMethods}}" value="{{interestMethodIndex}}" bindchange="onMethod">{{interestMethods[interestMethodIndex]}}</picker></view>
+    <view class="field"><text class="label">车辆价格（元）</text><input class="input" type="digit" data-key="vehiclePrice" value="{{form.vehiclePrice}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">首付比例（%）</text><input class="input" type="digit" data-key="downPaymentRate" value="{{form.downPaymentRate}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">月利率（%）</text><input class="input" type="digit" data-key="monthlyRate" value="{{form.monthlyRate}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">总期数</text><input class="input" type="number" data-key="terms" value="{{form.terms}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">押金（月）</text><input class="input" type="number" data-key="depositMonths" value="{{form.depositMonths}}" bindinput="onField" /><view class="muted">只留档，不参与贷款和月供计算</view></view>
+    <view class="field"><text class="label">每月还款日</text><input class="input" type="number" data-key="dueDay" value="{{form.dueDay}}" bindinput="onField" /></view>
+    <view class="field"><text class="label">第1期应付月份</text><picker class="picker" mode="date" value="{{form.startDateKey}}" bindchange="onStartDate">{{form.startDateKey}}</picker></view>
+    <view class="field"><text class="label">日滞纳金比例（%）</text><input class="input" type="digit" data-key="dailyLateFeeRate" value="{{form.dailyLateFeeRate}}" bindinput="onField" /></view>
+  </view>
+
+  <view wx:if="{{preview}}" class="card preview">
+    <view><text>首付款</text><strong>{{preview.downText}}元</strong></view>
+    <view><text>贷款额</text><strong>{{preview.loanText}}元</strong></view>
+    <view><text>标准月供</text><strong>{{preview.paymentText}}元</strong></view>
+  </view>
+
+  <button class="button" loading="{{saving}}" disabled="{{saving}}" bindtap="submit">保存客户和合同</button>
+</view>

@@ -1,0 +1,13 @@
+{
+  "collections": [
+    { "name": "users", "indexes": [["ownerOpenId"], ["status"]] },
+    { "name": "customers", "indexes": [["ownerOpenId", "status"], ["ownerOpenId", "source", "legacyId"]] },
+    { "name": "contracts", "indexes": [["ownerOpenId", "customerId", "status"], ["ownerOpenId", "source", "legacyId"]] },
+    { "name": "repayment_plans", "indexes": [["ownerOpenId", "dueDateKey", "status"], ["ownerOpenId", "contractId", "termNo"]] },
+    { "name": "payments", "indexes": [["ownerOpenId", "contractId", "receivedDateKey"], ["ownerOpenId", "source", "legacyId"]] },
+    { "name": "deposits", "indexes": [["ownerOpenId", "contractId", "createdAt"]] },
+    { "name": "app_settings", "indexes": [["ownerOpenId"]] },
+    { "name": "audit_logs", "indexes": [["ownerOpenId", "createdAt"], ["ownerOpenId", "entityType", "entityId"]] },
+    { "name": "migration_jobs", "indexes": [["ownerOpenId", "sourceFingerprint", "status"]] }
+  ]
+}

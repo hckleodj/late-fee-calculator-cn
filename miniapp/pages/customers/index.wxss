@@ -1,0 +1,5 @@
+.search-row { align-items: stretch; }
+.search-input { flex: 1; }
+.customer { margin-top: 20rpx; }
+.customer-name { font-size: 34rpx; font-weight: 700; }
+.notes { margin-top: 8rpx; }

@@ -1,0 +1,11 @@
+{
+  "users": { "read": "false", "write": "false" },
+  "customers": { "read": "false", "write": "false" },
+  "contracts": { "read": "false", "write": "false" },
+  "repayment_plans": { "read": "false", "write": "false" },
+  "payments": { "read": "false", "write": "false" },
+  "deposits": { "read": "false", "write": "false" },
+  "app_settings": { "read": "false", "write": "false" },
+  "audit_logs": { "read": "false", "write": "false" },
+  "migration_jobs": { "read": "false", "write": "false" }
+}

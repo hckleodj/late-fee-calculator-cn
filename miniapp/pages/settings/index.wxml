@@ -1,0 +1,52 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-title">{{config.appName}}</view>
+    <view class="hero-subtitle">{{config.versionLabel}}</view>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{loading}}" class="loading">正在验证管理员身份…</view>
+  <view wx:elif="{{session}}" class="card">
+    <view class="card-title">管理员状态</view>
+    <view class="row"><text>身份</text><text class="badge">{{session.role}}</text></view>
+    <view class="row line"><text>微信身份</text><text>{{session.ownerOpenIdMasked}}</text></view>
+    <view class="row line"><text>状态</text><text>{{session.status}}</text></view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">云端数据备份</view>
+    <view class="muted">导出当前管理员的客户、合同、账单、收款、押金和审计数据，并附带控制总计与SHA-256校验值。</view>
+    <button class="button" loading="{{exporting}}" bindtap="exportBackup">复制完整云端备份</button>
+  </view>
+
+  <view class="card">
+    <view class="card-title">旧网页数据迁移</view>
+    <view class="muted">先从现有GitHub Pages点击“数据备份”，复制备份文本，再粘贴到这里。预览不会写入云数据库。</view>
+    <textarea class="textarea migration-text" maxlength="-1" placeholder="粘贴【大进车贷助手备份】或JSON" value="{{backupText}}" bindinput="onBackupText" />
+    <button class="button secondary" loading="{{importing}}" bindtap="previewMigration">校验并预览</button>
+  </view>
+
+  <view wx:if="{{preview}}" class="card">
+    <view class="card-title">迁移预览</view>
+    <view class="preview-grid">
+      <view><text>客户</text><strong>{{preview.summary.customers}}</strong></view>
+      <view><text>合同</text><strong>{{preview.summary.contracts}}</strong></view>
+      <view><text>分期账单</text><strong>{{preview.summary.repaymentPlans}}</strong></view>
+      <view><text>收款记录</text><strong>{{preview.summary.payments}}</strong></view>
+    </view>
+    <view class="divider"></view>
+    <view class="row"><text>合同贷款总额</text><strong>{{preview.summary.principalText}}元</strong></view>
+    <view class="row line"><text>计划利息总额</text><strong>{{preview.summary.interestText}}元</strong></view>
+    <view class="row line"><text>历史实际收款</text><strong>{{preview.summary.receivedText}}元</strong></view>
+    <view wx:for="{{preview.warnings}}" wx:key="*this" class="warning">{{item}}</view>
+    <button class="button" loading="{{importing}}" bindtap="importMigration">确认导入云数据库</button>
+  </view>
+
+  <view wx:if="{{migrationResult}}" class="card success">
+    导入状态：{{migrationResult.status}}。成功或跳过记录共 {{migrationResult.results.length}} 位客户。
+  </view>
+
+  <view class="card safety">
+    <view class="card-title">数据安全</view>
+    <view class="muted">业务数据已改为通过云函数访问。不要录入身份证号、银行卡号等非必要信息；备份内容也属于敏感业务资料。</view>
+  </view>
+</view>

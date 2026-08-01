@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "openapi": []
+  },
+  "timeout": 60,
+  "envVariables": {
+    "ADMIN_OPENIDS": "请在云开发控制台填写管理员OpenID，多个用英文逗号分隔"
+  }
+}

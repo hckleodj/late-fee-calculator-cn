@@ -1,0 +1,7 @@
+.result-grid, .late-result { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14rpx; }
+.result-grid view, .late-result view { background: #eef5fb; border-radius: 14rpx; padding: 20rpx; text-align: center; }
+.result-grid text, .result-grid strong, .late-result text, .late-result strong { display: block; }
+.result-grid text, .late-result text { color: #637786; font-size: 22rpx; }
+.result-grid strong, .late-result strong { color: #245785; margin-top: 8rpx; }
+.result-button { grid-column: 1 / -1; }
+.late-result { grid-template-columns: repeat(3, 1fr); margin: 24rpx 0; }
