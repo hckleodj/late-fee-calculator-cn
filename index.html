@@ -69,7 +69,7 @@
           <div class="field"><label for="plan-amount">合同月供（元）</label><input id="plan-amount" type="number" readonly value="3142.88"><div class="field-hint" id="contract-preview">贷款78,030.00元＝每期本金2,167.50元＋利息975.38元</div></div>
           <div class="field"><label for="due-day">每月还款日</label><input id="due-day" type="number" min="1" max="31" required value="5"></div>
           <div class="field"><label for="plan-rate">参考日滞纳金比例（小数）</label><input id="plan-rate" type="number" min="0" step="0.0001" required value="0.005"><div class="field-hint">登记收款时再决定是否收取及实际金额</div></div>
-          <div class="field"><label for="start-date">起始日期（首期月份）</label><input id="start-date" type="date" required></div>
+          <div class="field"><label for="start-date">合同第1期应付月份</label><input id="start-date" type="date" required><div class="field-hint">请填写合同第1期原定还款所在月份，不是本次录入日期；后续期数会从这里逐月顺延</div></div>
           <div class="field"><label for="total-terms">总期数</label><input id="total-terms" type="number" min="1" max="360" required value="36"></div>
           <div class="field"><label for="completed-terms">已完成期数</label><input id="completed-terms" type="number" min="0" max="360" required value="0"></div>
           <div class="field full"><label for="plan-notes">备注</label><input id="plan-notes" placeholder="微信名、电话或其他说明（选填）"></div>
@@ -353,7 +353,7 @@
   function renderPlans(){
     if(!plans.length){$('plans-list').innerHTML='<div class="empty">还没有客户计划，请先在上方录入。</div>';return}
     $('plans-list').innerHTML=plans.map(plan=>{
-      const item=nextInstallment(plan),next=item?`${cnDate(item.dueDate)} · 第 ${item.termIndex+1} 期`:'已全部完成';
+      const item=nextInstallment(plan),nextStatus=item?(item.delta<0?`已逾期 ${item.daysOverdue} 天`:item.delta===0?'今天到期':`${item.delta} 天后到期`):'',next=item?`${fullCnDate(item.dueDate)} · 第 ${item.termIndex+1} 期 · ${nextStatus}`:'已全部完成';
       const overdueCount=openInstallments(plan).filter(entry=>entry.delta<0).length,contract=contractData(plan);
       const contractMeta=contract?`<span>合同贷款 <strong>${money(contract.loan)} 元</strong></span><span>押金 <strong>${Number(plan.depositMonths)||0} 个月</strong></span><span>固定月息 <strong>${shortMoney(contract.monthlyRatePct)}%</strong></span>`:'<span><strong>合同金融资料待补充</strong></span>';
       return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta">${contractMeta}<span>合同月供 <strong>${money(plan.amount)} 元</strong></span><span>每月 <strong>${plan.dueDay} 日</strong></span><span>逾期 <strong>${overdueCount} 期</strong></span><span>下一期 <strong>${next}</strong></span></div>${paymentHistoryHtml(plan)}<div class="plan-actions"><button type="button" data-settle-plan="${plan.id}">结清核算</button><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑合同</button><button class="danger" type="button" data-delete-plan="${plan.id}">删除</button></div></article>`;
