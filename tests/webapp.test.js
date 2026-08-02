@@ -32,6 +32,7 @@ test('web migration is resumable and shows per-customer progress instead of one 
   assert.match(app, /result\.status === 'running'/);
   assert.match(app, /每位客户完成后都会保存，可断点继续/);
   assert.match(app, /AbortController/);
+  assert.doesNotMatch(app, /finally \{ setBusy\(event\.currentTarget/);
 });
 
 test('shared domain module exposes the same calculations to CommonJS and browser', () => {

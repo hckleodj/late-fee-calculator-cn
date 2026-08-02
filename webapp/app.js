@@ -444,13 +444,14 @@
   async function previewMigration(event) {
     const backup = $('migration-backup').value.trim();
     if (!backup) return showNotice('请先粘贴旧网页备份。', true);
-    setBusy(event.currentTarget, true, '校验中…');
+    const button = event.currentTarget;
+    setBusy(button, true, '校验中…');
     try {
       const result = await apiCall('migration.preview', { backup });
       $('migration-result').innerHTML = `<div class="summary-box">客户 ${result.summary.customers} 位 · 合同 ${result.summary.contracts} 份 · 收款 ${result.summary.payments} 笔<br>合同本金 ${money(result.summary.contractPrincipalCents)}元 · 计划利息 ${money(result.summary.scheduledInterestCents)}元 · 已收 ${money(result.summary.receivedCents)}元</div><div class="actions"><button type="button" id="confirm-migration">确认导入云数据库</button></div><div id="migration-progress" class="migration-progress" hidden></div>`;
       $('confirm-migration').onclick = migrationEvent => importMigration(migrationEvent, backup, result.summary);
     } catch (error) { showNotice(error.message, true); }
-    finally { setBusy(event.currentTarget, false); }
+    finally { setBusy(button, false); }
   }
 
   async function importMigration(event, backup, summary) {
@@ -485,7 +486,8 @@
   }
 
   async function exportCloudBackup(event) {
-    setBusy(event.currentTarget, true, '导出中…');
+    const button = event.currentTarget;
+    setBusy(button, true, '导出中…');
     try {
       const backup = await apiCall('backup.export');
       const text = `【大进车贷助手云端备份】\n版本：v2\n导出时间：${backup.exportedAt}\n校验值：${backup.checksum}\n数据：\n${JSON.stringify(backup, null, 2)}`;
@@ -493,7 +495,7 @@
       await navigator.clipboard.writeText(text);
       showNotice('云端备份已复制，请保存到受保护的位置。');
     } catch (error) { showNotice(error.message, true); }
-    finally { setBusy(event.currentTarget, false); }
+    finally { setBusy(button, false); }
   }
 
   async function bootstrap() {
