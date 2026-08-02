@@ -34,6 +34,7 @@ test('web migration is resumable and shows per-customer progress instead of one 
   assert.match(app, /AbortController/);
   assert.match(app, /error\.details && error\.details\.errors/);
   assert.match(app, /未通过原因/);
+  assert.match(app, /迁移预览通过，核对汇总和提示后再确认导入/);
   assert.doesNotMatch(app, /finally \{ setBusy\(event\.currentTarget/);
 });
 

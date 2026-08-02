@@ -454,6 +454,7 @@
         : '';
       $('migration-result').innerHTML = `<div class="summary-box">客户 ${result.summary.customers} 位 · 合同 ${result.summary.contracts} 份 · 收款 ${result.summary.payments} 笔<br>合同本金 ${money(result.summary.contractPrincipalCents)}元 · 计划利息 ${money(result.summary.scheduledInterestCents)}元 · 已收 ${money(result.summary.receivedCents)}元</div>${warningHtml}<div class="actions"><button type="button" id="confirm-migration">确认导入云数据库</button></div><div id="migration-progress" class="migration-progress" hidden></div>`;
       $('confirm-migration').onclick = migrationEvent => importMigration(migrationEvent, backup, result.summary);
+      showNotice('迁移预览通过，核对汇总和提示后再确认导入。');
     } catch (error) {
       const errors = Array.isArray(error.details && error.details.errors) ? error.details.errors : [];
       const warnings = Array.isArray(error.details && error.details.warnings) ? error.details.warnings : [];
