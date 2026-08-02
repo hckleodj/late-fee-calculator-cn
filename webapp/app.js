@@ -448,9 +448,21 @@
     setBusy(button, true, '校验中…');
     try {
       const result = await apiCall('migration.preview', { backup });
-      $('migration-result').innerHTML = `<div class="summary-box">客户 ${result.summary.customers} 位 · 合同 ${result.summary.contracts} 份 · 收款 ${result.summary.payments} 笔<br>合同本金 ${money(result.summary.contractPrincipalCents)}元 · 计划利息 ${money(result.summary.scheduledInterestCents)}元 · 已收 ${money(result.summary.receivedCents)}元</div><div class="actions"><button type="button" id="confirm-migration">确认导入云数据库</button></div><div id="migration-progress" class="migration-progress" hidden></div>`;
+      const warnings = Array.isArray(result.warnings) ? result.warnings : [];
+      const warningHtml = warnings.length
+        ? `<div class="summary-box" style="margin-top:10px"><strong>导入前请核对</strong><ul>${warnings.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>`
+        : '';
+      $('migration-result').innerHTML = `<div class="summary-box">客户 ${result.summary.customers} 位 · 合同 ${result.summary.contracts} 份 · 收款 ${result.summary.payments} 笔<br>合同本金 ${money(result.summary.contractPrincipalCents)}元 · 计划利息 ${money(result.summary.scheduledInterestCents)}元 · 已收 ${money(result.summary.receivedCents)}元</div>${warningHtml}<div class="actions"><button type="button" id="confirm-migration">确认导入云数据库</button></div><div id="migration-progress" class="migration-progress" hidden></div>`;
       $('confirm-migration').onclick = migrationEvent => importMigration(migrationEvent, backup, result.summary);
-    } catch (error) { showNotice(error.message, true); }
+    } catch (error) {
+      const errors = Array.isArray(error.details && error.details.errors) ? error.details.errors : [];
+      const warnings = Array.isArray(error.details && error.details.warnings) ? error.details.warnings : [];
+      const reasons = [...errors, ...warnings];
+      showNotice(errors[0] || error.message, true);
+      $('migration-result').innerHTML = reasons.length
+        ? `<div class="summary-box"><strong class="error">未通过原因</strong><ul>${reasons.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul><p class="muted">原备份没有被修改，也没有写入云数据库。请保留完整备份。</p></div>`
+        : '';
+    }
     finally { setBusy(button, false); }
   }
 

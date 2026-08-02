@@ -14,24 +14,123 @@ function safeLegacyId(value) {
   return typeof value === 'string' && /^[A-Za-z0-9._:-]+$/.test(value);
 }
 
+function parseBackupJson(text) {
+  const trimmed = String(text || '').replace(/^\uFEFF/, '').trim();
+  const candidates = [trimmed];
+  const marker = /数据\s*[：:]\s*/.exec(trimmed);
+  if (marker) candidates.push(trimmed.slice(marker.index + marker[0].length).trim());
+  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(trimmed);
+  if (fence) candidates.push(fence[1].trim());
+  const possibleStarts = [trimmed.indexOf('{'), trimmed.indexOf('[')]
+    .filter(index => index >= 0)
+    .sort((a, b) => a - b);
+  for (const index of possibleStarts) {
+    const opener = trimmed[index];
+    const closer = opener === '{' ? '}' : ']';
+    const end = trimmed.lastIndexOf(closer);
+    if (end > index) candidates.push(trimmed.slice(index, end + 1));
+  }
+  for (const candidate of [...new Set(candidates)]) {
+    if (!candidate) continue;
+    try { return JSON.parse(candidate); }
+    catch (_error) { /* Try the next possible JSON section. */ }
+  }
+  throw new Error('没有识别到完整JSON，请重新复制从“【大进车贷助手备份】”到最后一个“}”的全部内容。');
+}
+
+function finiteNumber(value) {
+  if (value === null || value === undefined || (typeof value === 'string' && !value.trim())) return Number.NaN;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : Number.NaN;
+}
+
+function normalizeLegacyPlan(plan, index) {
+  if (!plan || typeof plan !== 'object') return { plan, warnings: [] };
+  const normalized = { ...plan };
+  const label = `第${index + 1}位客户${plan.name ? `“${String(plan.name).trim()}”` : ''}`;
+  const warnings = [];
+  const terms = finiteNumber(normalized.totalTerms);
+  const amount = finiteNumber(normalized.amount);
+  let price = finiteNumber(normalized.vehiclePrice);
+  let downRate = finiteNumber(normalized.downPaymentRate);
+  let loan = finiteNumber(normalized.loanAmount);
+  let monthlyRate = finiteNumber(normalized.monthlyRate);
+
+  if (!(loan > 0) && price > 0 && downRate >= 0 && downRate < 100) {
+    loan = price * (1 - downRate / 100);
+    normalized.loanAmount = loan;
+  }
+  if (!(loan > 0) && amount > 0 && terms > 0 && monthlyRate >= 0) {
+    const denominator = 1 / terms + monthlyRate / 100;
+    if (denominator > 0) {
+      loan = amount / denominator;
+      normalized.loanAmount = loan;
+      warnings.push(`${label}的贷款额由旧月供、期数和月利率倒推。`);
+    }
+  }
+  if (!(downRate >= 0 && downRate < 100) && price > 0 && loan > 0 && loan <= price * 1.000001) {
+    downRate = Math.max(0, (1 - loan / price) * 100);
+    normalized.downPaymentRate = downRate;
+    warnings.push(`${label}的首付比例由旧车价和贷款额倒推。`);
+  }
+  if (!(price > 0) && loan > 0) {
+    price = loan;
+    downRate = 0;
+    normalized.vehiclePrice = price;
+    normalized.downPaymentRate = downRate;
+    warnings.push(`${label}的旧备份没有车价，暂按贷款额作为车价、首付0%迁移；合同资料需后续核对。`);
+  }
+  if (!(monthlyRate >= 0) && loan > 0 && amount > 0 && terms > 0) {
+    const derivedRate = (amount - loan / terms) / loan * 100;
+    if (derivedRate >= -0.000001) {
+      monthlyRate = Math.max(0, derivedRate);
+      normalized.monthlyRate = monthlyRate;
+      warnings.push(`${label}的月利率由旧月供、贷款额和期数倒推。`);
+    }
+  }
+  if (price > 0) normalized.vehiclePrice = price;
+  if (loan > 0) normalized.loanAmount = loan;
+  if (downRate >= 0 && downRate < 100) normalized.downPaymentRate = downRate;
+
+  if (Array.isArray(normalized.payments)) {
+    normalized.payments = normalized.payments.map((payment, paymentIndex) => {
+      if (!payment || typeof payment !== 'object') return payment;
+      const copy = { ...payment };
+      const total = finiteNumber(copy.total);
+      const lateFee = finiteNumber(copy.lateFee) || 0;
+      if (!(finiteNumber(copy.principal) >= 0) && total >= lateFee) copy.principal = total - lateFee;
+      if (!Array.isArray(copy.allocations)) {
+        copy.allocations = [];
+        warnings.push(`${label}第${paymentIndex + 1}笔收款缺少旧分配明细，将按起始期数顺序重建。`);
+      } else {
+        copy.allocations = copy.allocations.map(item => ({ ...item }));
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(copy.date || ''))) {
+        copy.date = normalized.startDate;
+        warnings.push(`${label}第${paymentIndex + 1}笔收款缺少有效日期，暂用首期日期迁移。`);
+      }
+      return copy;
+    });
+  }
+  return { plan: normalized, warnings };
+}
+
 function normalizeBackupInput(input) {
   if (typeof input === 'string') {
     if (Buffer.byteLength(input, 'utf8') > MAX_BACKUP_BYTES) {
       throw new Error('备份超过5MB，无法导入。');
     }
-    const trimmed = input.trim();
-    const markerIndex = trimmed.indexOf('数据：');
-    let jsonText = trimmed;
-    if (!/^[{[]/.test(trimmed) && markerIndex >= 0) jsonText = trimmed.slice(markerIndex + 3).trim();
-    input = JSON.parse(jsonText);
+    input = parseBackupJson(input);
   }
   const plans = Array.isArray(input) ? input : input && input.plans;
   if (!Array.isArray(plans)) throw new Error('没有识别到旧版客户计划数组。');
+  const normalized = plans.map(normalizeLegacyPlan);
   return {
     app: input && input.app ? String(input.app) : 'legacy-localstorage',
     version: input && input.version ? Number(input.version) : 1,
     exportedAt: input && input.exportedAt ? String(input.exportedAt) : null,
-    plans
+    plans: normalized.map(item => item.plan),
+    compatibilityWarnings: normalized.flatMap(item => item.warnings)
   };
 }
 
@@ -41,17 +140,21 @@ function validateLegacyPlan(plan, index) {
   if (!plan || typeof plan !== 'object') return [`${label}不是有效对象。`];
   if (!safeLegacyId(plan.id)) errors.push(`${label}的客户ID不合法。`);
   if (typeof plan.name !== 'string' || !plan.name.trim()) errors.push(`${label}缺少客户姓名。`);
+  const fieldLabels = { vehiclePrice: '车辆价格', amount: '合同月供', totalTerms: '总期数', dueDay: '每月还款日' };
   const requiredPositive = ['vehiclePrice', 'amount', 'totalTerms', 'dueDay'];
   requiredPositive.forEach(field => {
-    if (!Number.isFinite(Number(plan[field])) || Number(plan[field]) <= 0) errors.push(`${label}的${field}不合法。`);
+    if (!Number.isFinite(Number(plan[field])) || Number(plan[field]) <= 0) errors.push(`${label}的${fieldLabels[field]}缺失或不合法。`);
   });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(plan.startDate || ''))) errors.push(`${label}的首期日期不合法。`);
   if (!Number.isInteger(Number(plan.totalTerms)) || Number(plan.totalTerms) > 360) errors.push(`${label}的总期数必须是1至360的整数。`);
+  if (!Number.isInteger(Number(plan.dueDay)) || Number(plan.dueDay) > 31) errors.push(`${label}的每月还款日必须是1至31的整数。`);
   if (!Number.isInteger(Number(plan.completedTerms)) || Number(plan.completedTerms) < 0 || Number(plan.completedTerms) > Number(plan.totalTerms)) {
     errors.push(`${label}的已完成期数不合法。`);
   }
-  if (Number(plan.downPaymentRate) < 0 || Number(plan.downPaymentRate) >= 100) errors.push(`${label}的首付比例不合法。`);
-  if (Number(plan.monthlyRate) < 0) errors.push(`${label}的月利率不合法。`);
+  if (!Number.isFinite(Number(plan.downPaymentRate)) || Number(plan.downPaymentRate) < 0 || Number(plan.downPaymentRate) >= 100) {
+    errors.push(`${label}的首付比例缺失或不合法。`);
+  }
+  if (!Number.isFinite(Number(plan.monthlyRate)) || Number(plan.monthlyRate) < 0) errors.push(`${label}的月利率缺失或不合法。`);
   if (Number(plan.depositMonths || 0) < 0 || Number(plan.depositMonths || 0) > 120) errors.push(`${label}的押金月数不合法。`);
   if (plan.payments !== undefined && !Array.isArray(plan.payments)) errors.push(`${label}的收款记录不是数组。`);
   for (const payment of plan.payments || []) {
@@ -60,6 +163,7 @@ function validateLegacyPlan(plan, index) {
     if (!Number.isFinite(Number(payment.lateFee)) || Number(payment.lateFee) < 0 || Number(payment.lateFee) > Number(payment.total)) {
       errors.push(`${label}存在不合法的滞纳金。`);
     }
+    if (!Number.isFinite(Number(payment.principal)) || Number(payment.principal) < 0) errors.push(`${label}存在不合法的合同款金额。`);
     if (!Array.isArray(payment.allocations)) errors.push(`${label}存在缺少分配明细的收款。`);
   }
   return errors;
@@ -77,6 +181,26 @@ function applyAmountToRow(row, amountCents) {
   row.paidPrincipalCents += principalCents;
   row.status = row.paidInterestCents + row.paidPrincipalCents >= row.scheduledAmountCents ? 'paid' : 'partial';
   return { interestCents, principalCents, unallocatedCents: remaining };
+}
+
+function allocateLegacyPayment(repaymentPlans, startTermIndex, amountCents) {
+  let remaining = amountCents;
+  const allocations = [];
+  for (let index = Math.max(0, startTermIndex); index < repaymentPlans.length && remaining > 0; index += 1) {
+    const row = repaymentPlans[index];
+    const applied = applyAmountToRow(row, remaining);
+    const contractAmountCents = applied.interestCents + applied.principalCents;
+    if (contractAmountCents > 0) {
+      allocations.push({
+        termNo: row.termNo,
+        principalCents: applied.principalCents,
+        interestCents: applied.interestCents,
+        contractAmountCents
+      });
+    }
+    remaining = applied.unallocatedCents;
+  }
+  return { allocations, unallocatedCents: remaining };
 }
 
 function convertLegacyPlan(plan) {
@@ -103,6 +227,7 @@ function convertLegacyPlan(plan) {
     startDateKey: plan.startDate,
     dueDay: Number(plan.dueDay)
   }).map(row => ({ ...row, dailyLateFeeRateBps }));
+  const migrationWarnings = [];
 
   const payments = [];
   if (openingCompletedTerms > 0) {
@@ -130,35 +255,50 @@ function convertLegacyPlan(plan) {
   }
 
   for (const payment of plan.payments || []) {
-    const allocations = [];
-    let unallocatedCents = 0;
     const legacyAllocations = payment.allocations.length
       ? payment.allocations
       : [{ termIndex: Number(payment.startTermIndex || openingCompletedTerms), principal: payment.principal }];
+    const mergedAllocations = new Map();
+    let unallocatedCents = 0;
     for (const item of legacyAllocations) {
-      const row = repaymentPlans[Number(item.termIndex)];
-      const amountCents = domain.yuanToCents(item.principal || 0);
-      if (!row) {
-        unallocatedCents += amountCents;
-        continue;
+      const rebuilt = allocateLegacyPayment(
+        repaymentPlans,
+        Number(item.termIndex),
+        domain.yuanToCents(item.principal || 0)
+      );
+      unallocatedCents += rebuilt.unallocatedCents;
+      for (const allocation of rebuilt.allocations) {
+        const existing = mergedAllocations.get(allocation.termNo) || {
+          termNo: allocation.termNo,
+          principalCents: 0,
+          interestCents: 0,
+          contractAmountCents: 0
+        };
+        existing.principalCents += allocation.principalCents;
+        existing.interestCents += allocation.interestCents;
+        existing.contractAmountCents += allocation.contractAmountCents;
+        mergedAllocations.set(allocation.termNo, existing);
       }
-      const applied = applyAmountToRow(row, amountCents);
-      unallocatedCents += applied.unallocatedCents;
-      allocations.push({
-        termNo: row.termNo,
-        principalCents: applied.principalCents,
-        interestCents: applied.interestCents,
-        contractAmountCents: applied.principalCents + applied.interestCents
-      });
     }
+    const originalContractAmountCents = domain.yuanToCents(payment.principal || 0);
+    const roundingToleranceCents = Math.max(2, Math.ceil(terms / 2));
+    const roundingAdjustmentCents = unallocatedCents > 0 && unallocatedCents <= roundingToleranceCents
+      ? unallocatedCents
+      : 0;
+    if (roundingAdjustmentCents) {
+      migrationWarnings.push(`${plan.name}有一笔旧收款存在${roundingAdjustmentCents}分分币尾差，已单独记录，不计入本金或利息。`);
+      unallocatedCents = 0;
+    }
+    const contractAmountCents = originalContractAmountCents - roundingAdjustmentCents;
     payments.push({
       legacyId: payment.id,
       paymentType: 'repayment',
       receivedDateKey: payment.date,
       amountCents: domain.yuanToCents(payment.total),
       lateFeeCents: domain.yuanToCents(payment.lateFee || 0),
-      contractAmountCents: domain.yuanToCents(payment.principal || 0),
-      allocations,
+      contractAmountCents,
+      allocations: [...mergedAllocations.values()].sort((a, b) => a.termNo - b.termNo),
+      roundingAdjustmentCents,
       unallocatedCents,
       status: 'active'
     });
@@ -198,7 +338,8 @@ function convertLegacyPlan(plan) {
       amountCents: 0,
       depositMonths: Number(plan.depositMonths),
       notes: '旧版仅记录押金月数，未记录押金金额，需人工补充。'
-    }] : []
+    }] : [],
+    migrationWarnings
   };
 }
 
@@ -215,7 +356,10 @@ function previewLegacyBackup(input) {
   if (errors.length) return { valid: false, errors, warnings: [], summary: null, records: [] };
 
   const records = backup.plans.map(convertLegacyPlan);
-  const warnings = [];
+  const warnings = [
+    ...(backup.compatibilityWarnings || []),
+    ...records.flatMap(record => record.migrationWarnings || [])
+  ];
   const missingFinancial = backup.plans.filter(plan => !Number.isFinite(Number(plan.vehiclePrice)) || !Number.isFinite(Number(plan.monthlyRate))).length;
   const depositNeedsAmount = records.filter(record => record.deposits.length).length;
   const unallocatedPayments = records.reduce((count, record) => count + record.payments.filter(payment => payment.unallocatedCents > 0).length, 0);
@@ -244,6 +388,8 @@ function previewLegacyBackup(input) {
 
 module.exports = {
   MAX_BACKUP_BYTES,
+  parseBackupJson,
+  normalizeLegacyPlan,
   normalizeBackupInput,
   validateLegacyPlan,
   convertLegacyPlan,
