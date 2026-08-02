@@ -7,7 +7,8 @@
     token: sessionStorage.getItem('dajinWebSession') || '',
     route: 'dashboard',
     customerId: '',
-    detail: null
+    detail: null,
+    cache: new Map()
   };
 
   const $ = id => document.getElementById(id);
@@ -43,17 +44,28 @@
     button.textContent = busy ? label : button.dataset.label || button.textContent;
   }
 
-  async function apiCall(action, payload = {}) {
+  async function apiCall(action, payload = {}, options = {}) {
     if (!config.apiUrl) throw new Error('尚未配置 CloudBase 网页API地址。');
-    const response = await fetch(config.apiUrl, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        ...(state.token ? { authorization: `Bearer ${state.token}` } : {})
-      },
-      body: JSON.stringify({ action, payload }),
-      cache: 'no-store'
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), options.timeoutMs || 20000);
+    let response;
+    try {
+      response = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(state.token ? { authorization: `Bearer ${state.token}` } : {})
+        },
+        body: JSON.stringify({ action, payload }),
+        cache: 'no-store',
+        signal: controller.signal
+      });
+    } catch (error) {
+      if (error.name === 'AbortError') throw new Error('云端响应超时，请检查网络后重试。已完成的数据不会重复导入。');
+      throw new Error('暂时无法连接云端，请检查网络后重试。');
+    } finally {
+      clearTimeout(timeout);
+    }
     let result;
     try { result = await response.json(); }
     catch (_error) { throw new Error('云端返回了无法识别的内容。'); }
@@ -65,6 +77,20 @@
       throw error;
     }
     return result.data;
+  }
+
+  async function cachedApiCall(action, payload = {}, options = {}) {
+    const key = `${action}:${JSON.stringify(payload)}`;
+    const cached = state.cache.get(key);
+    const maxAgeMs = options.maxAgeMs || 15000;
+    if (!options.force && cached && Date.now() - cached.savedAt < maxAgeMs) return cached.data;
+    const data = await apiCall(action, payload, options);
+    state.cache.set(key, { data, savedAt: Date.now() });
+    return data;
+  }
+
+  function clearBusinessCache() {
+    state.cache.clear();
   }
 
   function showApp(loggedIn) {
@@ -95,6 +121,7 @@
   function logout(render = true) {
     state.token = '';
     state.customerId = '';
+    clearBusinessCache();
     sessionStorage.removeItem('dajinWebSession');
     if (render) {
       showApp(false);
@@ -121,9 +148,9 @@
     if (route === 'calculator') return renderCalculator();
     loading();
     try {
-      if (route === 'dashboard') await renderDashboard();
-      else if (route === 'customers') await renderCustomers();
-      else if (route === 'customer') await renderCustomerDetail(state.customerId);
+      if (route === 'dashboard') await renderDashboard(options);
+      else if (route === 'customers') await renderCustomers(options);
+      else if (route === 'customer') await renderCustomerDetail(state.customerId, options);
       else if (route === 'settings') await renderSettings();
     } catch (error) {
       view.innerHTML = `<section class="panel"><h2>操作未完成</h2><p class="error">${escapeHtml(error.message)}</p><button type="button" id="retry-view">重试</button></section>`;
@@ -153,11 +180,11 @@
     </button>`).join('')}</div>`;
   }
 
-  async function renderDashboard() {
-    const data = await apiCall('dashboard.list', { todayDateKey: todayKey() });
+  async function renderDashboard(options = {}) {
+    const data = await cachedApiCall('dashboard.list', { todayDateKey: todayKey() }, { force: options.force, maxAgeMs: 15000 });
     const overdueGroups = groupOverdue(data.overdue);
     view.innerHTML = `<section class="panel">
-      <div class="section-title"><h2>还款提醒</h2><span class="muted">${todayKey()}</span></div>
+      <div class="section-title"><div><h2>还款提醒</h2><span class="muted">${todayKey()}</span></div><button type="button" class="secondary" id="refresh-dashboard">刷新</button></div>
       <div class="grid three" style="margin-top:16px">
         <div class="metric"><span>今日应还</span><strong>${data.today.length}</strong></div>
         <div class="metric"><span>未来3天</span><strong>${data.upcoming.length}</strong></div>
@@ -167,6 +194,7 @@
     <section class="panel"><h2>今日应还</h2>${reminderRows(data.today, '')}</section>
     <section class="panel"><h2>未来3天到期</h2>${reminderRows(data.upcoming, '')}</section>
     <section class="panel"><h2>已逾期</h2>${overdueGroups.length ? `<div class="list">${overdueGroups.map(group => `<button type="button" class="list-item overdue" data-customer="${escapeHtml(group.customerId)}"><span><h3>${escapeHtml(group.customer && group.customer.name || '未命名客户')}</h3><p>${group.items.length}期逾期 · 最长${group.maxDays}天</p></span><span class="amount">应付 ${money(group.contract + group.fee)}元<br><small>含滞纳金 ${money(group.fee)}元</small></span></button>`).join('')}</div>` : '<p class="empty">当前没有逾期客户。</p>'}</section>`;
+    $('refresh-dashboard').onclick = () => navigate('dashboard', { force: true });
     view.querySelectorAll('[data-customer]').forEach(button => button.onclick = () => navigate('customer', { customerId: button.dataset.customer }));
   }
 
@@ -242,15 +270,16 @@
     updateQuote(); updateLate();
   }
 
-  async function renderCustomers() {
-    const rows = await apiCall('customers.list', {});
+  async function renderCustomers(options = {}) {
+    const rows = await cachedApiCall('customers.list', {}, { force: options.force, maxAgeMs: 30000 });
     view.innerHTML = `<section class="panel">
-      <div class="section-title"><h2>客户合同</h2><button type="button" id="show-customer-form">新增客户</button></div>
+      <div class="section-title"><h2>客户合同</h2><div class="actions section-actions"><button type="button" class="secondary" id="refresh-customers">刷新</button><button type="button" id="show-customer-form">新增客户</button></div></div>
       <form id="customer-search" class="actions"><input name="keyword" placeholder="搜索姓名、车牌或车辆" style="flex:1"><button type="submit">搜索</button></form>
       <div id="customer-list" class="list" style="margin-top:16px">${customerListHtml(rows)}</div>
     </section>
     <section class="panel" id="customer-create-panel" hidden><h2>新增客户和合同</h2>${customerFormHtml()}</section>`;
     bindCustomerRows();
+    $('refresh-customers').onclick = () => navigate('customers', { force: true });
     $('show-customer-form').onclick = () => { $('customer-create-panel').hidden = false; $('customer-create-panel').scrollIntoView({ behavior: 'smooth' }); };
     $('customer-search').onsubmit = async event => {
       event.preventDefault();
@@ -310,6 +339,7 @@
           startDateKey: data.get('startDateKey'),
           dailyLateFeeRateBps: domain.percentToBps(data.get('dailyLateFeeRate') || 0)
         });
+        clearBusinessCache();
         showNotice('客户合同已建立。');
         await navigate('customer', { customerId: customer.customerId });
       } catch (error) { showNotice(error.message, true); }
@@ -321,10 +351,15 @@
     return row.status === 'paid' ? '已结清' : row.status === 'partial' ? '部分还款' : '待还';
   }
 
-  async function renderCustomerDetail(customerId) {
-    const detail = await apiCall('customers.detail', { customerId });
+  async function renderCustomerDetail(customerId, options = {}) {
+    const detail = await cachedApiCall('customers.detail', { customerId }, { force: options.force, maxAgeMs: 15000 });
     state.detail = detail;
-    const settlement = detail.contract ? await apiCall('settlement.get', { contractId: detail.contract._id }) : null;
+    const depositBalanceCents = detail.deposits
+      .filter(item => item.status === 'active')
+      .reduce((sum, item) => sum + (item.direction === 'out' ? -item.amountCents : item.amountCents), 0);
+    const settlement = detail.contract
+      ? domain.settlementBreakdown(detail.repaymentPlans, Math.max(0, depositBalanceCents))
+      : null;
     const next = detail.repaymentPlans.find(row => row.status !== 'paid');
     view.innerHTML = `<section class="panel"><div class="section-title"><div><h2>${escapeHtml(detail.customer.name)}</h2><p class="muted">${escapeHtml(detail.customer.plate || '未填车牌')} · ${escapeHtml(detail.customer.vehicle || '未填车辆')}</p></div><button type="button" class="secondary" id="back-customers">返回客户列表</button></div></section>
     ${detail.contract ? `<section class="panel"><h2>合同概况</h2><div class="grid three"><div class="metric"><span>车辆价格</span><strong>${money(detail.contract.vehiclePriceCents)}元</strong></div><div class="metric"><span>贷款金额</span><strong>${money(detail.contract.principalCents)}元</strong></div><div class="metric"><span>参考月供</span><strong>${money(detail.contract.quotedMonthlyPaymentCents)}元</strong></div></div><p class="muted">${detail.contract.interestMethod === 'annuity' ? '标准等额本息' : '平息 / 固定月息'} · ${detail.contract.terms}期 · 押金${detail.contract.depositMonths || 0}个月（独立记录）</p></section>
@@ -350,6 +385,7 @@
     setBusy(button, true, '登记中…');
     try {
       await apiCall('payments.record', { contractId, amountCents: domain.yuanToCents(form.get('amount')), lateFeeCents: domain.yuanToCents(form.get('lateFee') || 0), receivedDateKey: form.get('receivedDateKey'), startTermNo: Number(form.get('startTermNo')), notes: form.get('notes') });
+      clearBusinessCache();
       showNotice('收款已登记。');
       await navigate('customer', { customerId: state.customerId });
     } catch (error) { showNotice(error.message, true); }
@@ -363,6 +399,7 @@
     setBusy(button, true, '登记中…');
     try {
       await apiCall('deposits.record', { contractId, direction: form.get('direction'), amountCents: domain.yuanToCents(form.get('amount')), occurredDateKey: form.get('occurredDateKey'), notes: form.get('notes') });
+      clearBusinessCache();
       showNotice('押金流水已登记，未进入贷款计算。');
       await navigate('customer', { customerId: state.customerId });
     } catch (error) { showNotice(error.message, true); }
@@ -373,6 +410,7 @@
     if (!window.confirm('撤销后各期欠款会恢复，原流水会保留并标记为已撤销。确定继续吗？')) return;
     try {
       await apiCall('payments.reverse', { paymentId, reason: '管理员在网页端撤销' });
+      clearBusinessCache();
       showNotice('收款已撤销。');
       await navigate('customer', { customerId: state.customerId });
     } catch (error) { showNotice(error.message, true); }
@@ -409,19 +447,41 @@
     setBusy(event.currentTarget, true, '校验中…');
     try {
       const result = await apiCall('migration.preview', { backup });
-      $('migration-result').innerHTML = `<div class="summary-box">客户 ${result.summary.customers} 位 · 合同 ${result.summary.contracts} 份 · 收款 ${result.summary.payments} 笔<br>合同本金 ${money(result.summary.contractPrincipalCents)}元 · 计划利息 ${money(result.summary.scheduledInterestCents)}元 · 已收 ${money(result.summary.receivedCents)}元</div><div class="actions"><button type="button" id="confirm-migration">确认导入云数据库</button></div>`;
-      $('confirm-migration').onclick = () => importMigration(backup, result.summary);
+      $('migration-result').innerHTML = `<div class="summary-box">客户 ${result.summary.customers} 位 · 合同 ${result.summary.contracts} 份 · 收款 ${result.summary.payments} 笔<br>合同本金 ${money(result.summary.contractPrincipalCents)}元 · 计划利息 ${money(result.summary.scheduledInterestCents)}元 · 已收 ${money(result.summary.receivedCents)}元</div><div class="actions"><button type="button" id="confirm-migration">确认导入云数据库</button></div><div id="migration-progress" class="migration-progress" hidden></div>`;
+      $('confirm-migration').onclick = migrationEvent => importMigration(migrationEvent, backup, result.summary);
     } catch (error) { showNotice(error.message, true); }
     finally { setBusy(event.currentTarget, false); }
   }
 
-  async function importMigration(backup, summary) {
+  async function importMigration(event, backup, summary) {
     if (!window.confirm(`将导入${summary.customers}位客户、${summary.contracts}份合同。重复旧ID会跳过，确定继续吗？`)) return;
+    const button = event.currentTarget;
+    const progressNode = $('migration-progress');
+    setBusy(button, true, '准备导入…');
+    progressNode.hidden = false;
     try {
-      const result = await apiCall('migration.import', { backup });
-      $('migration-result').innerHTML += `<p>导入处理完成：${escapeHtml(result.status)}，任务 ${escapeHtml(result.migrationJobId)}</p>`;
-      showNotice('旧网页数据迁移处理完成。');
-    } catch (error) { showNotice(error.message, true); }
+      let result;
+      let attempts = 0;
+      do {
+        attempts += 1;
+        progressNode.textContent = `正在分批导入，请勿关闭页面（第${attempts}批）…`;
+        result = await apiCall('migration.import', { backup }, { timeoutMs: 45000 });
+        const progress = result.progress || { completed: summary.customers, total: summary.customers, remaining: 0 };
+        progressNode.innerHTML = `<strong>已处理 ${progress.completed}/${progress.total} 位客户</strong><span>剩余 ${progress.remaining} 位；每位客户完成后都会保存，可断点继续。</span>`;
+        setBusy(button, true, progress.remaining ? `已完成 ${progress.completed}/${progress.total}` : '导入完成');
+        if (attempts > summary.customers + 2) throw new Error('导入进度异常，请刷新页面后继续。');
+      } while (result.status === 'running');
+      clearBusinessCache();
+      const failed = (result.results || []).filter(item => item.status === 'failed').length;
+      progressNode.innerHTML += `<span>任务 ${escapeHtml(result.migrationJobId)} · ${result.status === 'duplicate' ? '该备份已导入，无需重复处理' : failed ? `完成，但有${failed}位失败` : '全部完成'}</span>`;
+      showNotice(failed ? `迁移完成，但有${failed}位客户失败，请保留原备份。` : '旧网页数据迁移处理完成。', failed > 0);
+    } catch (error) {
+      progressNode.innerHTML += `<span class="error">${escapeHtml(error.message)} 可以点击按钮从断点继续，不会重复已完成客户。</span>`;
+      showNotice(error.message, true);
+    } finally {
+      setBusy(button, false);
+      button.textContent = '继续 / 重新检查导入';
+    }
   }
 
   async function exportCloudBackup(event) {

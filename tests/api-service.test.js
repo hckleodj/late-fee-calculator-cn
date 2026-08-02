@@ -178,3 +178,49 @@ test('normal payment, overdue reminder, reversal, and settlement work as one clo
   assert.equal(settlement.data.remainingInterestCents, 3511350);
   assert.equal(settlement.data.depositBalanceCents, 0);
 });
+
+test('legacy migration advances one customer per request and resumes without duplicates', async () => {
+  const db = createMemoryDb();
+  const openId = 'admin-migration';
+  const api = createApi({ db, getTrustedIdentity: () => ({ openId }), getAdminOpenIds: () => [openId] });
+  const legacyPlan = index => ({
+    id: `legacy-${index}`,
+    name: `迁移客户${index}`,
+    plate: `TEST-${index}`,
+    vehicle: '迁移测试车',
+    vehiclePrice: 10000,
+    downPaymentRate: 20,
+    monthlyRate: 1,
+    amount: 4080,
+    dueDay: 5,
+    rate: 0.005,
+    startDate: '2026-01-01',
+    totalTerms: 2,
+    completedTerms: 0,
+    openingCompletedTerms: 0,
+    depositMonths: 0,
+    payments: []
+  });
+  const backup = { app: '车辆还款管理工具', version: 1, plans: [legacyPlan(1), legacyPlan(2), legacyPlan(3)] };
+
+  const first = await api.handle({ action: 'migration.import', payload: { backup } });
+  assert.equal(first.ok, true);
+  assert.equal(first.data.status, 'running');
+  assert.deepEqual(first.data.progress, { completed: 1, total: 3, remaining: 2 });
+  assert.equal(db._store.customers.length, 1);
+
+  const second = await api.handle({ action: 'migration.import', payload: { backup } });
+  assert.equal(second.data.status, 'running');
+  assert.deepEqual(second.data.progress, { completed: 2, total: 3, remaining: 1 });
+
+  const third = await api.handle({ action: 'migration.import', payload: { backup } });
+  assert.equal(third.data.status, 'completed');
+  assert.deepEqual(third.data.progress, { completed: 3, total: 3, remaining: 0 });
+  assert.equal(db._store.customers.length, 3);
+  assert.equal(db._store.contracts.length, 3);
+  assert.equal(db._store.repayment_plans.length, 6);
+
+  const repeated = await api.handle({ action: 'migration.import', payload: { backup } });
+  assert.equal(repeated.data.status, 'duplicate');
+  assert.equal(db._store.customers.length, 3);
+});

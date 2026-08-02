@@ -16,6 +16,8 @@ const COLLECTIONS = [
   'migration_jobs'
 ];
 
+const MIGRATION_BATCH_SIZE = 1;
+
 function createApi(options) {
   const db = options.db;
   const command = db.command;
@@ -219,7 +221,14 @@ function createApi(options) {
   async function dashboard(ownerOpenId, payload) {
     const todayDateKey = cleanText(payload.todayDateKey, 10);
     domain.daysBetweenDateKeys(todayDateKey, todayDateKey);
-    const all = await getAll('repayment_plans', { ownerOpenId, status: command.in(['pending', 'partial']) }, { field: 'dueDateKey', direction: 'asc' });
+    const today = new Date(`${todayDateKey}T00:00:00.000Z`);
+    today.setUTCDate(today.getUTCDate() + 3);
+    const upcomingDateKey = today.toISOString().slice(0, 10);
+    const all = await getAll('repayment_plans', {
+      ownerOpenId,
+      status: command.in(['pending', 'partial']),
+      dueDateKey: command.lte(upcomingDateKey)
+    }, { field: 'dueDateKey', direction: 'asc' });
     const relevant = domain.summarizeDashboard(all, todayDateKey);
     const customerIds = [...new Set([...relevant.today, ...relevant.upcoming, ...relevant.overdue].map(item => item.customerId))];
     const customers = customerIds.length ? await getAll('customers', { ownerOpenId, _id: command.in(customerIds) }) : [];
@@ -413,38 +422,70 @@ function createApi(options) {
   async function importLegacy(ownerOpenId, payload) {
     const raw = typeof payload.backup === 'string' ? payload.backup : JSON.stringify(payload.backup || {});
     const sourceFingerprint = crypto.createHash('sha256').update(raw).digest('hex');
-    const existingJob = await getOne('migration_jobs', { ownerOpenId, sourceFingerprint, status: 'completed' });
-    if (existingJob) return { migrationJobId: existingJob._id, status: 'duplicate', results: existingJob.results || [] };
+    const existingJob = await getOne('migration_jobs', { ownerOpenId, sourceFingerprint });
+    if (existingJob && existingJob.status === 'completed') {
+      return {
+        migrationJobId: existingJob._id,
+        status: 'duplicate',
+        results: existingJob.results || [],
+        progress: existingJob.progress || null
+      };
+    }
     const preview = migration.previewLegacyBackup(payload.backup);
     if (!preview.valid) fail('MIGRATION_PREVIEW_FAILED', '迁移预览未通过。', { errors: preview.errors, warnings: preview.warnings });
     if (!payload.confirmed) {
       const { records: _records, ...publicPreview } = preview;
       return { status: 'preview', sourceFingerprint, ...publicPreview };
     }
-    if (preview.records.length > 20) fail('MIGRATION_BATCH_LIMIT', '单次最多导入20位客户，请拆分备份。');
+    if (preview.records.length > 100) fail('MIGRATION_BATCH_LIMIT', '一次最多迁移100位客户，请拆分备份。');
     const timestamp = now();
-    const jobResult = await db.collection('migration_jobs').add({ data: {
-      ownerOpenId,
-      sourceFingerprint,
-      source: preview.source,
-      summary: preview.summary,
-      status: 'running',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      schemaVersion: 1
-    }});
-    const results = [];
-    for (const record of preview.records) {
+    let job = existingJob;
+    if (!job) {
+      const jobResult = await db.collection('migration_jobs').add({ data: {
+        ownerOpenId,
+        sourceFingerprint,
+        source: preview.source,
+        summary: preview.summary,
+        status: 'running',
+        results: [],
+        progress: { completed: 0, total: preview.records.length, remaining: preview.records.length },
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        schemaVersion: 1
+      }});
+      job = { _id: jobResult._id, status: 'running', results: [] };
+    }
+    const previousResults = Array.isArray(job.results) ? job.results : [];
+    const handledLegacyIds = new Set(previousResults.map(item => item.legacyId));
+    const pendingRecords = preview.records.filter(record => !handledLegacyIds.has(record.customer.legacyId));
+    const batch = pendingRecords.slice(0, MIGRATION_BATCH_SIZE);
+    const batchResults = [];
+    for (const record of batch) {
       try {
-        results.push(await importRecord(ownerOpenId, record, jobResult._id, sourceFingerprint));
+        batchResults.push(await importRecord(ownerOpenId, record, job._id, sourceFingerprint));
       } catch (error) {
-        results.push({ status: 'failed', legacyId: record.customer.legacyId, error: error.message });
+        batchResults.push({ status: 'failed', legacyId: record.customer.legacyId, error: error.message });
       }
     }
-    const status = results.some(item => item.status === 'failed') ? 'partial' : 'completed';
-    await db.collection('migration_jobs').doc(jobResult._id).update({ data: { status, results, updatedAt: now() } });
-    await audit(db, ownerOpenId, 'migration.import', 'migration_job', jobResult._id, { status, sourceFingerprint, summary: preview.summary });
-    return { migrationJobId: jobResult._id, status, sourceFingerprint, summary: preview.summary, results };
+    const results = [...previousResults, ...batchResults];
+    const remaining = Math.max(0, preview.records.length - results.length);
+    const status = remaining > 0
+      ? 'running'
+      : results.some(item => item.status === 'failed') ? 'partial' : 'completed';
+    const progress = { completed: results.length, total: preview.records.length, remaining };
+    await db.collection('migration_jobs').doc(job._id).update({ data: { status, results, progress, updatedAt: now() } });
+    if (status !== 'running') {
+      await audit(db, ownerOpenId, 'migration.import', 'migration_job', job._id, { status, sourceFingerprint, summary: preview.summary });
+    }
+    return {
+      migrationJobId: job._id,
+      status,
+      sourceFingerprint,
+      summary: preview.summary,
+      results,
+      batchResults,
+      progress
+    };
   }
 
   async function exportBackup(ownerOpenId) {

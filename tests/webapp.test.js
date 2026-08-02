@@ -26,6 +26,14 @@ test('web app stores only a session token and service worker never caches API wr
   assert.doesNotMatch(worker, /apiUrl/);
 });
 
+test('web migration is resumable and shows per-customer progress instead of one long request', () => {
+  const app = fs.readFileSync(path.join(root, 'webapp/app.js'), 'utf8');
+  assert.match(app, /progress\.completed/);
+  assert.match(app, /result\.status === 'running'/);
+  assert.match(app, /每位客户完成后都会保存，可断点继续/);
+  assert.match(app, /AbortController/);
+});
+
 test('shared domain module exposes the same calculations to CommonJS and browser', () => {
   const source = fs.readFileSync(path.join(root, 'packages/domain/index.js'), 'utf8');
   assert.match(source, /module\.exports = domainExports/);

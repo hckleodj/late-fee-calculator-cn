@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'dajin-web-v0.9.0-2';
+const CACHE = 'dajin-web-v0.9.1-performance';
 const SHELL = [
   './', './index.html', './styles.css', './config.js', './app.js',
   './shared/domain.js', './manifest.webmanifest', './icons/app-icon.svg'
