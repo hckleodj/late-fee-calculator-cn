@@ -73,6 +73,30 @@ function createMemoryDb() {
   return db;
 }
 
+function localFirstPlan(overrides = {}) {
+  return {
+    id: 'local-first-plan-1',
+    name: '本地优先客户',
+    plate: '湘A12345',
+    vehicle: '测试车辆',
+    vehiclePrice: 91800,
+    downPaymentRate: 15,
+    depositMonths: 1,
+    monthlyRate: 1.25,
+    loanAmount: 78030,
+    amount: 3142.88,
+    dueDay: 5,
+    rate: 0.005,
+    startDate: '2026-01-01',
+    totalTerms: 36,
+    completedTerms: 0,
+    openingCompletedTerms: 0,
+    notes: '',
+    payments: [],
+    ...overrides
+  };
+}
+
 test('administrator allowlist blocks unknown OpenID before data access', async () => {
   const db = createMemoryDb();
   const api = createApi({
@@ -98,6 +122,51 @@ test('two administrators never see each other customer rows', async () => {
   openId = 'admin-1';
   const firstList = await api.handle({ action: 'customers.list', payload: {} });
   assert.deepEqual(firstList.data.map(row => row.name), ['甲客户']);
+});
+
+test('local-first sync is owner-scoped, idempotent, and keeps newer deletions', async () => {
+  const db = createMemoryDb();
+  let openId = 'admin-sync-1';
+  const api = createApi({ db, getTrustedIdentity: () => ({ openId }), getAdminOpenIds: () => ['admin-sync-1', 'admin-sync-2'] });
+  const empty = await api.handle({ action: 'sync.pull', payload: {} });
+  assert.deepEqual(empty.data, { initialized: false, revision: 0, plans: [], updatedAt: null });
+
+  const upsert = { opId: 'device-a:100:upsert', type: 'plan.upsert', planId: 'local-first-plan-1', changedAt: 100, plan: localFirstPlan() };
+  const first = await api.handle({ action: 'sync.push', payload: { operations: [upsert] } });
+  assert.equal(first.ok, true);
+  assert.equal(first.data.revision, 1);
+  assert.equal(first.data.plans.length, 1);
+
+  const repeated = await api.handle({ action: 'sync.push', payload: { operations: [upsert] } });
+  assert.equal(repeated.data.revision, 1);
+  assert.equal(repeated.data.plans.length, 1);
+
+  const removed = await api.handle({ action: 'sync.push', payload: { operations: [{
+    opId: 'device-a:200:delete', type: 'plan.delete', planId: 'local-first-plan-1', changedAt: 200
+  }] } });
+  assert.equal(removed.data.plans.length, 0);
+
+  const stale = await api.handle({ action: 'sync.push', payload: { operations: [{
+    ...upsert, opId: 'device-b:150:stale', changedAt: 150, plan: localFirstPlan({ name: '不应复活' })
+  }] } });
+  assert.equal(stale.data.plans.length, 0);
+
+  openId = 'admin-sync-2';
+  const otherAdmin = await api.handle({ action: 'sync.pull', payload: {} });
+  assert.equal(otherAdmin.data.initialized, false);
+});
+
+test('local-first sync rejects invalid plans without creating a workspace', async () => {
+  const db = createMemoryDb();
+  const openId = 'admin-sync-invalid';
+  const api = createApi({ db, getTrustedIdentity: () => ({ openId }), getAdminOpenIds: () => [openId] });
+  const invalid = localFirstPlan({ name: '', vehiclePrice: undefined, loanAmount: undefined });
+  const response = await api.handle({ action: 'sync.push', payload: { operations: [{
+    opId: 'device-a:100:invalid', type: 'plan.upsert', planId: invalid.id, changedAt: 100, plan: invalid
+  }] } });
+  assert.equal(response.ok, false);
+  assert.equal(response.error.code, 'SYNC_PLAN_INVALID');
+  assert.equal((db._store.app_settings || []).length, 0);
 });
 
 test('payment transaction splits late fee and updates only the owner contract plans', async () => {

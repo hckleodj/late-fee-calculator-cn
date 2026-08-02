@@ -17,6 +17,10 @@ const COLLECTIONS = [
 ];
 
 const MIGRATION_BATCH_SIZE = 1;
+const LOCAL_FIRST_WORKSPACE_KEY = 'local-first-workspace-v1';
+const LOCAL_FIRST_MAX_BYTES = 5 * 1024 * 1024;
+const LOCAL_FIRST_MAX_OPERATIONS = 50;
+const LOCAL_FIRST_APPLIED_OP_LIMIT = 500;
 
 function createApi(options) {
   const db = options.db;
@@ -488,6 +492,119 @@ function createApi(options) {
     };
   }
 
+  function validSyncId(value, maxLength = 160) {
+    return typeof value === 'string'
+      && value.length > 0
+      && value.length <= maxLength
+      && /^[A-Za-z0-9._:-]+$/.test(value);
+  }
+
+  function publicWorkspace(workspace) {
+    return {
+      initialized: true,
+      revision: Number(workspace.revision || 0),
+      plans: Array.isArray(workspace.plans) ? workspace.plans : [],
+      updatedAt: workspace.updatedAt || null
+    };
+  }
+
+  async function pullLocalFirstWorkspace(ownerOpenId) {
+    const workspace = await getOne('app_settings', { ownerOpenId, key: LOCAL_FIRST_WORKSPACE_KEY });
+    if (!workspace) return { initialized: false, revision: 0, plans: [], updatedAt: null };
+    return publicWorkspace(workspace);
+  }
+
+  async function pushLocalFirstOperations(ownerOpenId, payload) {
+    const operations = Array.isArray(payload.operations) ? payload.operations : [];
+    if (!operations.length) fail('VALIDATION_ERROR', '没有待同步操作。');
+    if (operations.length > LOCAL_FIRST_MAX_OPERATIONS) fail('SYNC_BATCH_LIMIT', `每次最多同步${LOCAL_FIRST_MAX_OPERATIONS}项操作。`);
+    if (Buffer.byteLength(JSON.stringify(operations), 'utf8') > LOCAL_FIRST_MAX_BYTES) fail('SYNC_PAYLOAD_TOO_LARGE', '本次同步内容超过5MB，请拆分后重试。');
+
+    const transaction = await db.startTransaction();
+    try {
+      const existing = await getOne('app_settings', { ownerOpenId, key: LOCAL_FIRST_WORKSPACE_KEY }, transaction);
+      const workspace = existing || {
+        ownerOpenId,
+        key: LOCAL_FIRST_WORKSPACE_KEY,
+        revision: 0,
+        plans: [],
+        planMeta: [],
+        appliedOps: [],
+        createdAt: now(),
+        schemaVersion: 1
+      };
+      const plans = new Map((workspace.plans || []).map(plan => [plan.id, plan]));
+      const meta = new Map((workspace.planMeta || []).map(item => [item.planId, item]));
+      const appliedOps = new Set(workspace.appliedOps || []);
+      const newlySeen = [];
+      let changedPlans = 0;
+
+      const ordered = operations.map((operation, index) => ({ ...operation, _index: index }))
+        .sort((left, right) => Number(left.changedAt) - Number(right.changedAt) || left._index - right._index);
+      for (const operation of ordered) {
+        if (!validSyncId(operation.opId)) fail('VALIDATION_ERROR', '同步操作ID不合法。');
+        if (!validSyncId(operation.planId, 128)) fail('VALIDATION_ERROR', '同步客户ID不合法。');
+        if (operation.type !== 'plan.upsert' && operation.type !== 'plan.delete') fail('VALIDATION_ERROR', '同步操作类型不合法。');
+        const changedAt = requireInteger(operation.changedAt, '同步时间', 1);
+        if (appliedOps.has(operation.opId)) continue;
+        appliedOps.add(operation.opId);
+        newlySeen.push(operation.opId);
+
+        const previous = meta.get(operation.planId);
+        const isNewer = !previous
+          || changedAt > Number(previous.changedAt || 0)
+          || (changedAt === Number(previous.changedAt || 0) && operation.opId > String(previous.opId || ''));
+        if (!isNewer) continue;
+
+        if (operation.type === 'plan.delete') {
+          plans.delete(operation.planId);
+          meta.set(operation.planId, { planId: operation.planId, changedAt, opId: operation.opId, deleted: true });
+          changedPlans += 1;
+          continue;
+        }
+        if (!operation.plan || operation.plan.id !== operation.planId) fail('VALIDATION_ERROR', '同步客户资料与客户ID不一致。');
+        const normalized = migration.normalizeBackupInput({ version: 1, plans: [operation.plan] }).plans[0];
+        const preview = migration.previewLegacyBackup({ version: 1, plans: [normalized] });
+        if (!preview.valid) fail('SYNC_PLAN_INVALID', '有客户资料未通过同步校验。', { planId: operation.planId, errors: preview.errors });
+        plans.set(operation.planId, normalized);
+        meta.set(operation.planId, { planId: operation.planId, changedAt, opId: operation.opId, deleted: false });
+        changedPlans += 1;
+      }
+
+      if (newlySeen.length) {
+        workspace.revision = Number(workspace.revision || 0) + 1;
+        workspace.plans = [...plans.values()];
+        workspace.planMeta = [...meta.values()];
+        workspace.appliedOps = [...appliedOps].slice(-LOCAL_FIRST_APPLIED_OP_LIMIT);
+        workspace.updatedAt = now();
+        if (Buffer.byteLength(JSON.stringify({ plans: workspace.plans, planMeta: workspace.planMeta }), 'utf8') > LOCAL_FIRST_MAX_BYTES) {
+          fail('SYNC_WORKSPACE_TOO_LARGE', '云同步数据超过5MB，请先归档历史记录。');
+        }
+        if (existing) {
+          const { _id: _workspaceId, ...workspaceData } = workspace;
+          await transaction.collection('app_settings').doc(existing._id).update({ data: workspaceData });
+        }
+        else {
+          const result = await transaction.collection('app_settings').add({ data: workspace });
+          workspace._id = result._id;
+        }
+        await audit(transaction, ownerOpenId, 'local_first.sync.push', 'app_setting', workspace._id, {
+          operationCount: newlySeen.length,
+          changedPlans,
+          revision: workspace.revision
+        });
+      }
+      await transaction.commit();
+      return {
+        ...publicWorkspace(workspace),
+        acknowledgedOpIds: operations.map(operation => operation.opId).filter(value => validSyncId(value))
+      };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
   async function exportBackup(ownerOpenId) {
     const data = {};
     for (const collection of COLLECTIONS.filter(name => name !== 'users')) {
@@ -518,7 +635,9 @@ function createApi(options) {
     'deposits.record': (payload, user) => recordDeposit(user.ownerOpenId, payload),
     'migration.preview': (payload, user) => importLegacy(user.ownerOpenId, { backup: payload.backup, confirmed: false }),
     'migration.import': (payload, user) => importLegacy(user.ownerOpenId, { backup: payload.backup, confirmed: true }),
-    'backup.export': (_payload, user) => exportBackup(user.ownerOpenId)
+    'backup.export': (_payload, user) => exportBackup(user.ownerOpenId),
+    'sync.pull': (_payload, user) => pullLocalFirstWorkspace(user.ownerOpenId),
+    'sync.push': (payload, user) => pushLocalFirstOperations(user.ownerOpenId, payload)
   };
 
   return {
