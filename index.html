@@ -334,10 +334,8 @@
     return {plan,items,remaining:round2(items.reduce((sum,item)=>sum+item.remaining,0)),fee:round2(items.reduce((sum,item)=>sum+item.fee,0)),total:round2(items.reduce((sum,item)=>sum+item.total,0)),maxDays:Math.max(...items.map(item=>item.daysOverdue))};
   }
   function overdueAccountMessage(account){
-    const {plan,items,remaining,fee,total}=account,name=plan.name?`${plan.name}，`:'',vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'',pct=shortMoney(Number(plan.rate)*100),rateLabel=Math.abs(Number(plan.rate)-.005)<.0000001?'每日千分之五（0.5%）':`每日 ${pct}%`;
-    const details=items.map(item=>`第${item.termIndex+1}期：应付日${cnDate(item.dueDate)}，逾期${item.daysOverdue}天\n剩余合同款：${shortMoney(item.remaining)}元${Number(plan.rate)>0?`\n滞纳金：${shortMoney(item.remaining)}元 × ${pct}% × ${item.daysOverdue}天 = ${shortMoney(item.fee)}元`:''}`).join('\n\n');
-    const rule=Number(plan.rate)>0?`按照合同约定，滞纳金按${rateLabel}计算。`:'该客户当前设置为不收取滞纳金。';
-    return `您好，${name}您目前有${items.length}期车辆款项已逾期。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，逾期明细如下：\n\n${details}\n\n${rule}\n\n截至今天应付金额为：\n\n逾期未付合同款：${shortMoney(remaining)}元\n滞纳金：${shortMoney(fee)}元\n合计应付：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+    const {plan,items,remaining,fee,total}=account,name=plan.name?`${plan.name}，`:'',vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'';
+    return `您好，${name}您目前有${items.length}期车辆款项已逾期。${infoLine}\n\n截至今天 ${cnDate(todayNoon())}：\n未付合同款：${shortMoney(remaining)}元\n滞纳金：${shortMoney(fee)}元\n合计应付：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
   }
   function overdueAccountCard(account){
     const {plan,items,remaining,fee,total,maxDays}=account,paid=round2(items.reduce((sum,item)=>sum+item.paid,0));
