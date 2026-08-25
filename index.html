@@ -222,6 +222,7 @@
     <p class="recovery-status" id="recovery-status">准备检查原始数据。</p>
     <pre class="recovery-report" id="recovery-report"></pre>
     <button type="button" id="copy-storage-evidence">复制全部原始数据</button>
+    <button class="secondary" type="button" id="open-recovery-backup">我有客户备份，前往恢复</button>
     <button class="secondary" type="button" id="refresh-storage-diagnostics">重新检查</button>
     <textarea class="backup-textarea recovery-textarea" id="recovery-text" hidden placeholder="自动复制受限时，请长按全选并复制原始数据。"></textarea>
     <p class="backup-warning">原始数据可能包含客户信息以及同一网站下其他工具的数据，请仅保存到自己的文件传输助手或安全位置。</p>
@@ -349,7 +350,7 @@
     return imported;
   }
   function parseBackupText(text){
-    const trimmed=String(text||'').trim();if(!trimmed)throw new Error('请先粘贴备份文本。');
+    const trimmed=String(text||'').replace(/&#x0*20;|&#0*32;|&nbsp;/gi,' ').trim();if(!trimmed)throw new Error('请先粘贴备份文本。');
     if(trimmed.length>5*1024*1024)throw new Error('备份文本超过5MB，无法恢复。');
     let jsonText=trimmed;const marker='数据：',markerIndex=trimmed.indexOf(marker);
     if(!/^[{\[]/.test(trimmed)&&markerIndex>=0)jsonText=trimmed.slice(markerIndex+marker.length).trim();
@@ -357,6 +358,14 @@
     return JSON.parse(jsonText);
   }
   function restoreImportedPlans(imported,source){
+    if(planStorageState.locked&&['missing','empty','blank'].includes(planStorageState.status)&&!plans.length){
+      let currentRaw;try{currentRaw=localStorage.getItem(PLAN_STORAGE_KEY)}catch(error){setBackupStatus('当前浏览器无法访问本地存储，不能恢复客户数据。',true);return false}
+      if(currentRaw!==planStorageState.raw){setBackupStatus('原始存储在恢复前发生变化，已停止操作，请先重新检查。',true);return false}
+      if(!confirm(`已校验备份中的 ${imported.length} 位客户。当前没有可用客户数据，确定将这份非空备份恢复到本机吗？`))return false;
+      const restored=JSON.parse(JSON.stringify(imported));restored.forEach(plan=>{plan.payments=plan.payments||[]});
+      const raw=JSON.stringify(restored);localStorage.setItem(PLAN_STORAGE_KEY,raw);plans=restored;planStorageState.raw=raw;planStorageState.status='ok';planStorageState.locked=false;planStorageState.sourceKey=PLAN_STORAGE_KEY;planStorageState.reason=`已从经校验的备份恢复 ${plans.length} 位客户。`;
+      setBackupDirty(true);renderStorageProtection();renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。请立即重新备份。`);return true;
+    }
     if(!ensureStorageWritable())return false;
     if(!confirm(`备份中有 ${imported.length} 位客户。恢复后将替换当前 ${plans.length} 位客户的数据，确定继续吗？`))return false;
     plans=JSON.parse(JSON.stringify(imported));plans.forEach(plan=>{plan.payments=plan.payments||[]});if(!savePlans(false))return false;setBackupDirty(false);renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。`);return true;
@@ -710,6 +719,7 @@
   $('import-backup').addEventListener('click',()=>$('backup-file').click());
   $('backup-file').addEventListener('change',async event=>{await importBackupFile(event.target.files?.[0]);event.target.value=''});
   $('open-storage-diagnostics').addEventListener('click',openRecoveryDialog);
+  $('open-recovery-backup').addEventListener('click',()=>{$('recovery-dialog').close();openBackupDialog();$('backup-text').focus()});
   $('refresh-storage-diagnostics').addEventListener('click',runStorageDiagnostics);
   $('copy-storage-evidence').addEventListener('click',copyStorageEvidence);
   $('close-recovery').addEventListener('click',()=>$('recovery-dialog').close());
