@@ -47,7 +47,7 @@
   <div class="data-safety"><strong>数据安全提示</strong>当前数据仅保存在本设备当前浏览器中。微信、Safari、Chrome之间数据不互通。换浏览器或清理缓存可能导致数据不可见。请定期复制备份文本。正式使用建议固定在手机默认浏览器或电脑浏览器中操作，不要长期在微信内录入正式客户数据。</div>
   <div class="recovery-alert" id="recovery-alert" hidden><strong>客户数据保护已启动</strong><span id="recovery-alert-message">系统已停止写入，请先检查并备份原始数据。</span><button type="button" id="open-storage-diagnostics">立即检查原始数据</button><button type="button" id="create-empty-test-environment" hidden>创建空白测试环境</button></div>
   <div class="data-safety" id="test-environment-label" hidden><strong>测试环境</strong>仅用于模拟客户实机验收，与正式版客户数据完全隔离。</div>
-  <div class="data-safety storage-debug-tools" id="storage-debug-tools" hidden><strong>P0-2 容量压力测试</strong>仅向独立临时存储项写入模拟数据，逐档测试后立即删除，不会替换当前客户、备份状态或历史快照。页面打开速度仍需用微信实机计时。<button type="button" id="run-storage-pressure-test">运行10/30/50客户安全测试</button><pre class="storage-pressure-results" id="storage-pressure-results">尚未运行。</pre><details><summary>微信实机验收顺序</summary><ol><li>新增1位模拟客户，确认 dirty=true、revision增加、快照增加。</li><li>连续编辑备注3次，每次保存后确认 revision和快照持续增加，观察卡顿。</li><li>登记1笔模拟收款，刷新后确认客户和收款仍在，快照增加。</li><li>复制备份文本，确认 dirty与lastBackupAt不变，再粘贴到文件传输助手或备忘录。</li><li>返回点击“我已另行保存备份”并最终确认，检查 dirty=false、备份时间、revision和hash。</li><li>再次修改客户并生成备份；确认前再修改一次，然后确认旧备份，必须被拒绝。</li><li>打开本地历史版本，查看多个版本，确认仅查看不改变当前客户。</li><li>恢复较早版本，检查预览、恢复前快照、revision继续增加且dirty=true。</li><li>关闭微信网页后重新进入，检查客户、收款、快照和备份状态仍在。</li></ol></details></div>
+  <div class="data-safety storage-debug-tools" id="storage-debug-tools" hidden><strong>P0-3 强提醒实机辅助</strong>以下按钮只修改隔离测试版的备份状态，不会修改、增加或删除客户数据。<button type="button" id="simulate-overdue-backup">模拟超过24小时未备份</button><button class="secondary" type="button" id="restore-normal-backup-state">恢复正常备份状态</button><pre class="storage-pressure-results" id="backup-debug-action-status">尚未执行强提醒模拟。</pre><div class="backup-divider"></div><strong>P0-2 容量压力测试</strong>仅向独立临时存储项写入模拟数据，逐档测试后立即删除，不会替换当前客户、备份状态或历史快照。页面打开速度仍需用微信实机计时。<button type="button" id="run-storage-pressure-test">运行10/30/50客户安全测试</button><pre class="storage-pressure-results" id="storage-pressure-results">尚未运行。</pre><details><summary>微信实机验收顺序</summary><ol><li>新增1位模拟客户，确认 dirty=true、revision增加、快照增加。</li><li>连续编辑备注3次，每次保存后确认 revision和快照持续增加，观察卡顿。</li><li>登记1笔模拟收款，刷新后确认客户和收款仍在，快照增加。</li><li>复制备份文本，确认 dirty与lastBackupAt不变，再粘贴到文件传输助手或备忘录。</li><li>返回点击“我已另行保存备份”并最终确认，检查 dirty=false、备份时间、revision和hash。</li><li>再次修改客户并生成备份；确认前再修改一次，然后确认旧备份，必须被拒绝。</li><li>打开本地历史版本，查看多个版本，确认仅查看不改变当前客户。</li><li>恢复较早版本，检查预览、恢复前快照、revision继续增加且dirty=true。</li><li>关闭微信网页后重新进入，检查客户、收款、快照和备份状态仍在。</li></ol></details></div>
 
   <div class="panel active" id="reminders-panel">
     <section>
@@ -481,6 +481,24 @@
   function simulatedPressurePlans(count){
     return Array.from({length:count},(_,customerIndex)=>({id:`pressure-customer-${customerIndex}`,name:`容量测试客户${customerIndex+1}`,plate:`测A${String(customerIndex+1).padStart(5,'0')}`,vehicle:'模拟测试车辆',vehiclePrice:120000,downPaymentRate:20,depositMonths:1,monthlyRate:1,loanAmount:96000,amount:4960,dueDay:5,rate:.005,startDate:'2026-08-05',totalTerms:24,completedTerms:10,openingCompletedTerms:0,notes:'仅用于隔离容量测试，不包含正式客户数据。'.repeat(3),payments:Array.from({length:10},(_,paymentIndex)=>({id:`pressure-payment-${customerIndex}-${paymentIndex}`,date:`2026-${String((paymentIndex%9)+1).padStart(2,'0')}-05`,total:4960,lateFee:0,principal:4960,startTermIndex:paymentIndex,allocations:[{termIndex:paymentIndex,amount:4960}]}))}));
   }
+  async function simulateOverdueBackupDebug(){
+    if(!isIsolatedTestEnvironment||!backupDebugEnabled()||!backupStateModuleAvailable)return false;
+    const status=$('backup-debug-action-status'),mainBefore=localStorage.getItem(PLAN_STORAGE_KEY);await backupStateManager.whenIdle();
+    const nowMs=backupStateManager.now();if(!Number.isFinite(nowMs)){status.textContent='模拟失败：当前设备时间异常。';return false}
+    backupStateManager.state.dirtySinceBackup=true;backupStateManager.state.lastBackupAt=new Date(nowMs-25*60*60*1000).toISOString();backupStateManager.state.backupGraceUntil=null;
+    if(!backupStateManager.persist()||localStorage.getItem(PLAN_STORAGE_KEY)!==mainBefore){backupStateManager.state.dirtySinceBackup=true;status.textContent='模拟失败：状态写入异常，客户主数据未修改。';renderBackupDebug();return false}
+    backupStateManager.notify();const state=backupStateManager.snapshot(),ok=state.dirtySinceBackup===true&&state.needsBackup===true&&state.graceActive===false&&state.shouldBlockBackup===true;
+    status.textContent=ok?'已模拟超过25小时未备份。客户主数据未修改。':'模拟未达到预期状态，请查看右下角调试信息。';renderBackupDebug();return ok;
+  }
+  async function restoreNormalBackupDebug(){
+    if(!isIsolatedTestEnvironment||!backupDebugEnabled()||!backupStateModuleAvailable)return false;
+    const status=$('backup-debug-action-status'),mainBefore=localStorage.getItem(PLAN_STORAGE_KEY);await Promise.all([backupStateManager.whenIdle(),businessChangePending]);
+    let hash;try{hash=await window.DajinBackupState.sha256Text(mainBefore??'')}catch(error){status.textContent='恢复失败：无法计算当前测试数据哈希。';return false}
+    const previous={...backupStateManager.state};backupStateManager.state.lastBackupAt=new Date(backupStateManager.now()).toISOString();backupStateManager.state.lastBackedUpRevision=backupStateManager.state.dataRevision;backupStateManager.state.lastBackupHash=hash;backupStateManager.state.lastBackupMethod='debug-reset';backupStateManager.state.dirtySinceBackup=false;backupStateManager.state.backupGraceUntil=null;backupStateManager.metadataInvalid=false;
+    try{localStorage.removeItem(BACKUP_DIRTY_KEY)}catch(error){backupStateManager.state={...previous,dirtySinceBackup:true};backupStateManager.persist();status.textContent='恢复失败：测试备份状态无法写入。';return false}
+    if(!backupStateManager.persist()||localStorage.getItem(PLAN_STORAGE_KEY)!==mainBefore){backupStateManager.state={...previous,dirtySinceBackup:true};backupStateManager.persist();status.textContent='恢复失败：客户主数据未修改，状态保持待备份。';return false}
+    if($('backup-required-dialog').open)$('backup-required-dialog').close();if($('backup-grace-dialog').open)$('backup-grace-dialog').close();backupStateManager.notify();status.textContent='已恢复正常测试备份状态。客户主数据未修改。';renderBackupDebug();return true;
+  }
   async function runStoragePressureTest(){
     if(!isIsolatedTestEnvironment||!backupDebugEnabled())return [];
     const output=$('storage-pressure-results'),button=$('run-storage-pressure-test');button.disabled=true;output.textContent='正在安全测试，请勿关闭页面……';const rows=[];
@@ -494,7 +512,7 @@
     }finally{button.disabled=false;renderBackupDebug()}
     output.textContent=['安全压力测试结果（每客户10条收款）',...rows.map(row=>`${row.customers}客户｜主数据 ${formatBytes(row.mainBytes)}｜10份快照 ${formatBytes(row.snapshotsBytes)}｜解析 ${row.parseMs.toFixed(1)}ms｜临时写入 ${row.writeMs===null?'失败':`${row.writeMs.toFixed(1)}ms`}｜${row.error||'无Quota错误'}`),'页面真实打开速度：需微信实机计时'].join('\n');return rows;
   }
-  if(backupDebugEnabled())window.DajinBackupStateDebug={manager:backupStateManager,snapshots:localSnapshotManager,whenIdle:()=>Promise.all([backupStateManager.whenIdle(),businessChangePending,localSnapshotManager?.whenIdle?.()]),getState:()=>backupStateManager.snapshot(),getSnapshots:()=>localSnapshotManager?.read()||[],getStorageUsage:storageUsageDiagnostics,runStoragePressureTest};
+  if(backupDebugEnabled())window.DajinBackupStateDebug={manager:backupStateManager,snapshots:localSnapshotManager,whenIdle:()=>Promise.all([backupStateManager.whenIdle(),businessChangePending,localSnapshotManager?.whenIdle?.()]),getState:()=>backupStateManager.snapshot(),getSnapshots:()=>localSnapshotManager?.read()||[],getStorageUsage:storageUsageDiagnostics,simulateOverdueBackupDebug,restoreNormalBackupDebug,runStoragePressureTest};
   function inspectStoredValue(key,raw){
     const item={key,raw,length:typeof raw==='string'?raw.length:0,format:'无法识别',customers:null,candidate:key===PLAN_STORAGE_KEY};
     if(raw===null){item.format='存储项不存在';return item}
@@ -1032,6 +1050,8 @@
   $('open-recovery-backup').addEventListener('click',()=>{$('recovery-dialog').close();openBackupDialog();$('backup-text').focus()});
   $('refresh-storage-diagnostics').addEventListener('click',runStorageDiagnostics);
   $('run-storage-pressure-test').addEventListener('click',runStoragePressureTest);
+  $('simulate-overdue-backup').addEventListener('click',simulateOverdueBackupDebug);
+  $('restore-normal-backup-state').addEventListener('click',restoreNormalBackupDebug);
   $('copy-storage-evidence').addEventListener('click',copyStorageEvidence);
   $('close-recovery').addEventListener('click',()=>$('recovery-dialog').close());
   $('storage-debug-tools').hidden=!(isIsolatedTestEnvironment&&backupDebugEnabled());
