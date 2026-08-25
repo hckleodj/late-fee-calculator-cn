@@ -229,6 +229,7 @@
     <div class="dialog-actions"><button class="secondary" type="button" id="close-recovery">关闭</button></div>
   </div>
 </dialog>
+<script src="./backup-state.js"></script>
 <script>
   const $=id=>document.getElementById(id);
   const money=n=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -238,8 +239,17 @@
   let financeMode='quote';
   const PLAN_STORAGE_KEY='lateFeePaymentPlansV1';
   const BACKUP_DIRTY_KEY='lateFeeBackupDirtyV1';
+  const BACKUP_STATE_KEY='dajinBackupStateV1';
   const planStorageState={status:'unknown',raw:null,locked:true,reason:'正在检查客户数据。',sourceKey:PLAN_STORAGE_KEY};
+  if(!window.DajinBackupState?.BackupStateManager){
+    const alertBox=$('recovery-alert');
+    if(alertBox){alertBox.hidden=false;$('recovery-alert-message').textContent='备份状态保护模块加载失败。系统已停止初始化和写入，请刷新重试；原客户数据未被修改。';const action=$('open-storage-diagnostics');if(action)action.hidden=true}
+    throw new Error('备份状态保护模块未加载，已停止初始化。');
+  }
   let plans=loadPlans();
+  const backupStateManager=new window.DajinBackupState.BackupStateManager({storage:localStorage});
+  backupStateManager.onChange=()=>{renderBackupDebug();renderBackupReminder()};
+  const backupStateReady=backupStateManager.initialize(planStorageState.raw);
 
   function parseLocalDate(value){const [y,m,d]=String(value).split('-').map(Number);return new Date(y,m-1,d,12)}
   function todayNoon(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate(),12)}
@@ -254,7 +264,7 @@
     try{
       const matches=[];
       for(let index=0;index<localStorage.length;index++){
-        const key=localStorage.key(index);if(!key||key===PLAN_STORAGE_KEY||key===BACKUP_DIRTY_KEY)continue;
+        const key=localStorage.key(index);if(!key||key===PLAN_STORAGE_KEY||key===BACKUP_DIRTY_KEY||key===BACKUP_STATE_KEY)continue;
         try{const value=JSON.parse(localStorage.getItem(key)),list=customerArray(value);if(list)matches.push({key,plans:list})}catch(error){}
       }
       return matches.length===1?matches[0]:null;
@@ -289,9 +299,33 @@
     }catch(error){planStorageState.status='inaccessible';planStorageState.locked=true;planStorageState.reason=`保存前无法访问客户数据：${error.message||'未知错误'}。`;renderStorageProtection();openRecoveryDialog();return false}
     return true;
   }
-  function renderBackupReminder(){const reminder=$('backup-reminder');if(!reminder)return;try{reminder.hidden=planStorageState.locked||localStorage.getItem(BACKUP_DIRTY_KEY)!=='1'}catch(error){reminder.hidden=true}}
+  function renderBackupReminder(){const reminder=$('backup-reminder');if(!reminder)return;try{reminder.hidden=planStorageState.locked||!backupStateManager.state.dirtySinceBackup}catch(error){reminder.hidden=true}}
   function setBackupDirty(dirty){if(planStorageState.locked)return false;if(dirty)localStorage.setItem(BACKUP_DIRTY_KEY,'1');else localStorage.removeItem(BACKUP_DIRTY_KEY);renderBackupReminder();return true}
-  function savePlans(markDirty=true){if(!ensureStorageWritable())return false;const raw=JSON.stringify(plans);localStorage.setItem(PLAN_STORAGE_KEY,raw);planStorageState.raw=raw;if(markDirty)setBackupDirty(true);return true}
+  function savePlans(){
+    if(!ensureStorageWritable())return false;
+    const raw=JSON.stringify(plans);if(raw===planStorageState.raw)return true;
+    localStorage.setItem(PLAN_STORAGE_KEY,raw);planStorageState.raw=raw;setBackupDirty(true);backupStateManager.recordDataChange(raw);return true;
+  }
+  function backupDebugEnabled(){return new URLSearchParams(location.search).get('backupDebug')==='1'}
+  function renderBackupDebug(){
+    if(!backupDebugEnabled())return;
+    let panel=$('backup-state-debug');
+    if(!panel){panel=document.createElement('pre');panel.id='backup-state-debug';panel.style.cssText='position:fixed;right:8px;bottom:8px;z-index:9999;max-width:min(480px,calc(100vw - 16px));max-height:46vh;overflow:auto;margin:0;padding:12px;border:1px solid #245785;border-radius:9px;background:#fffffff2;color:#17212b;font:12px/1.55 ui-monospace,monospace;box-shadow:0 6px 24px #0002';document.body.appendChild(panel)}
+    const state=backupStateManager.snapshot();panel.textContent=[
+      'P0-1 备份状态调试',
+      `dataRevision: ${state.dataRevision}`,
+      `lastBackedUpRevision: ${state.lastBackedUpRevision}`,
+      `dirtySinceBackup: ${state.dirtySinceBackup}`,
+      `lastDataChangeAt: ${state.lastDataChangeAt}`,
+      `lastBackupAt: ${state.lastBackupAt}`,
+      `currentDataHash: ${state.currentDataHash}`,
+      `lastBackupHash: ${state.lastBackupHash}`,
+      `needsBackup: ${state.needsBackup}`,
+      `metadataInvalid: ${state.metadataInvalid}`,
+      `lastError: ${state.lastError}`
+    ].join('\n');
+  }
+  if(backupDebugEnabled())window.DajinBackupStateDebug={manager:backupStateManager,whenIdle:()=>backupStateManager.whenIdle(),getState:()=>backupStateManager.snapshot()};
   function inspectStoredValue(key,raw){
     const item={key,raw,length:typeof raw==='string'?raw.length:0,format:'无法识别',customers:null,candidate:key===PLAN_STORAGE_KEY};
     if(raw===null){item.format='存储项不存在';return item}
@@ -339,7 +373,7 @@
     if(planStorageState.locked&&!plans.length){openRecoveryDialog();return}
     const text=backupTextContent(),box=prepareBackupTextarea(text,false);let copied=false;
     try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);copied=true}}catch(error){}
-    if(copied){setBackupDirty(false);setBackupStatus(`备份文本已复制，共 ${plans.length} 位客户。请粘贴到微信文件传输助手或备忘录保存。`);return}
+    if(copied){setBackupStatus(`备份文本已复制，共 ${plans.length} 位客户。复制不代表正式备份完成，请继续粘贴并妥善保存。`);return}
     prepareBackupTextarea(text,true);box.focus();box.select();box.scrollIntoView({behavior:'smooth',block:'center'});setBackupStatus('微信限制了自动复制。备份文本已生成并选中，请在文本框内长按，选择“全选”后复制。',true);
   }
   function normalizeImportedPlans(value){
@@ -394,11 +428,11 @@
       if(!confirm(`${notice?notice+'\n\n':''}已校验备份中的 ${imported.length} 位客户。当前没有可用客户数据，确定将这份非空备份恢复到本机吗？`))return false;
       const restored=JSON.parse(JSON.stringify(imported));restored.forEach(plan=>{plan.payments=plan.payments||[]});
       const raw=JSON.stringify(restored);localStorage.setItem(PLAN_STORAGE_KEY,raw);plans=restored;planStorageState.raw=raw;planStorageState.status='ok';planStorageState.locked=false;planStorageState.sourceKey=PLAN_STORAGE_KEY;planStorageState.reason=`已从经校验的备份恢复 ${plans.length} 位客户。`;
-      setBackupDirty(true);renderStorageProtection();renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。请立即重新备份。`);return true;
+      setBackupDirty(true);backupStateManager.recordDataChange(raw);renderStorageProtection();renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。请立即重新备份。`);return true;
     }
     if(!ensureStorageWritable())return false;
     if(!confirm(`${notice?notice+'\n\n':''}备份中有 ${imported.length} 位客户。恢复后将替换当前 ${plans.length} 位客户的数据，确定继续吗？`))return false;
-    plans=JSON.parse(JSON.stringify(imported));plans.forEach(plan=>{plan.payments=plan.payments||[]});if(!savePlans(false))return false;setBackupDirty(false);renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。`);return true;
+    plans=JSON.parse(JSON.stringify(imported));plans.forEach(plan=>{plan.payments=plan.payments||[]});if(!savePlans())return false;renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。请立即重新备份。`);return true;
   }
   function restoreBackupText(){
     const text=$('backup-text').value;
@@ -416,7 +450,7 @@
     const payload=backupPayload(),content=JSON.stringify(payload,null,2),fileName=`车辆还款数据备份-${toISO(todayNoon())}.json`,blob=new Blob([content],{type:'application/json'});
     try{
       const file=new File([blob],fileName,{type:'application/json'});
-      if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({title:'车辆还款数据备份',files:[file]});setBackupDirty(false);setBackupStatus(`已生成备份文件，共 ${plans.length} 位客户。`);return}
+      if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({title:'车辆还款数据备份',files:[file]});setBackupStatus(`已把备份文件交给分享功能，共 ${plans.length} 位客户。分享返回不代表正式备份完成。`);return}
     }catch(error){if(error?.name==='AbortError')return}
     const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setBackupStatus(`已尝试导出备份文件，共 ${plans.length} 位客户。若微信提示跳转，请改用“复制备份文本”。`);
   }
@@ -751,7 +785,7 @@
   $('copy-backup-text').addEventListener('click',copyBackupText);
   $('restore-backup-text').addEventListener('click',restoreBackupText);
   $('backup-text').addEventListener('input',event=>{delete event.currentTarget.dataset.generatedBackup;event.currentTarget.classList.remove('manual-copy')});
-  $('backup-text').addEventListener('copy',event=>{if(event.currentTarget.dataset.generatedBackup==='1'){setBackupDirty(false);event.currentTarget.classList.remove('manual-copy');setBackupStatus(`备份文本已手动复制，共 ${plans.length} 位客户。请粘贴到微信文件传输助手或备忘录保存。`)}});
+  $('backup-text').addEventListener('copy',event=>{if(event.currentTarget.dataset.generatedBackup==='1'){event.currentTarget.classList.remove('manual-copy');setBackupStatus(`备份文本已手动复制，共 ${plans.length} 位客户。复制不代表正式备份完成，请继续粘贴并妥善保存。`)}});
   $('export-backup').addEventListener('click',exportBackup);
   $('import-backup').addEventListener('click',()=>$('backup-file').click());
   $('backup-file').addEventListener('change',async event=>{await importBackupFile(event.target.files?.[0]);event.target.value=''});
