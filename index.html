@@ -349,30 +349,67 @@
     const ids=imported.map(plan=>plan.id);if(new Set(ids).size!==ids.length)throw new Error('备份中存在重复客户记录，无法恢复。');
     return imported;
   }
-  function parseBackupText(text){
+  function backupJsonSource(text){
     const trimmed=String(text||'').replace(/&#x0*20;|&#0*32;|&nbsp;/gi,' ').trim();if(!trimmed)throw new Error('请先粘贴备份文本。');
     if(trimmed.length>5*1024*1024)throw new Error('备份文本超过5MB，无法恢复。');
     let jsonText=trimmed;const marker='数据：',markerIndex=trimmed.indexOf(marker);
     if(!/^[{\[]/.test(trimmed)&&markerIndex>=0)jsonText=trimmed.slice(markerIndex+marker.length).trim();
     else if(!/^[{\[]/.test(trimmed)){const objectStart=trimmed.indexOf('{'),arrayStart=trimmed.indexOf('['),starts=[objectStart,arrayStart].filter(index=>index>=0);if(!starts.length)throw new Error('没有识别到JSON数据，请粘贴完整备份文本。');const start=Math.min(...starts),end=Math.max(trimmed.lastIndexOf('}'),trimmed.lastIndexOf(']'));if(end<start)throw new Error('备份文本中的JSON不完整。');jsonText=trimmed.slice(start,end+1)}
-    return JSON.parse(jsonText);
+    return jsonText;
   }
-  function restoreImportedPlans(imported,source){
+  function parseBackupText(text){return JSON.parse(backupJsonSource(text))}
+  function scanCompleteJsonObjects(source){
+    const objects=[];let start=-1,quoted=false,escaped=false;const stack=[];
+    for(let index=0;index<source.length;index++){
+      const char=source[index];
+      if(quoted){if(escaped)escaped=false;else if(char==='\\')escaped=true;else if(char==='"')quoted=false;continue}
+      if(char==='"'){quoted=true;continue}
+      if(char==='{'||char==='['){if(!stack.length&&char==='{')start=index;stack.push(char);continue}
+      if(char==='}'||char===']'){
+        if(!stack.length){if(char===']')break;continue}
+        const expected=char==='}'?'{':'[';if(stack[stack.length-1]!==expected)break;stack.pop();
+        if(!stack.length&&start>=0){try{objects.push(JSON.parse(source.slice(start,index+1)))}catch(error){}start=-1}
+      }
+    }
+    return {objects,incomplete:start>=0?source.slice(start):''};
+  }
+  function salvageTruncatedBackup(text){
+    const source=backupJsonSource(text),match=/"plans"\s*:\s*\[/.exec(source);
+    if(!match)throw new Error('没有找到可抢救的客户列表。');
+    const scanned=scanCompleteJsonObjects(source.slice(match.index+match[0].length)),complete=scanned.objects.filter(validBackupPlan),recovered=complete.slice();let repairedCustomer=false,droppedPayment=false;
+    if(scanned.incomplete){
+      const paymentsMatch=/"payments"\s*:\s*\[/.exec(scanned.incomplete);
+      if(paymentsMatch){
+        const opening=paymentsMatch.index+paymentsMatch[0].lastIndexOf('['),paymentScan=scanCompleteJsonObjects(scanned.incomplete.slice(opening+1)),prefix=scanned.incomplete.slice(0,opening);
+        try{const customer=JSON.parse(`${prefix}${JSON.stringify(paymentScan.objects)}}`);if(validBackupPlan(customer)){recovered.push(customer);repairedCustomer=true;droppedPayment=Boolean(paymentScan.incomplete)}}catch(error){}
+      }
+    }
+    if(!recovered.length)throw new Error('备份文本中的JSON格式不正确，也没有找到完整的客户资料。');
+    return {plans:recovered,completeCustomers:complete.length,repairedCustomer,droppedPayment};
+  }
+  function restoreImportedPlans(imported,source,notice=''){
     if(planStorageState.locked&&['missing','empty','blank'].includes(planStorageState.status)&&!plans.length){
       let currentRaw;try{currentRaw=localStorage.getItem(PLAN_STORAGE_KEY)}catch(error){setBackupStatus('当前浏览器无法访问本地存储，不能恢复客户数据。',true);return false}
       if(currentRaw!==planStorageState.raw){setBackupStatus('原始存储在恢复前发生变化，已停止操作，请先重新检查。',true);return false}
-      if(!confirm(`已校验备份中的 ${imported.length} 位客户。当前没有可用客户数据，确定将这份非空备份恢复到本机吗？`))return false;
+      if(!confirm(`${notice?notice+'\n\n':''}已校验备份中的 ${imported.length} 位客户。当前没有可用客户数据，确定将这份非空备份恢复到本机吗？`))return false;
       const restored=JSON.parse(JSON.stringify(imported));restored.forEach(plan=>{plan.payments=plan.payments||[]});
       const raw=JSON.stringify(restored);localStorage.setItem(PLAN_STORAGE_KEY,raw);plans=restored;planStorageState.raw=raw;planStorageState.status='ok';planStorageState.locked=false;planStorageState.sourceKey=PLAN_STORAGE_KEY;planStorageState.reason=`已从经校验的备份恢复 ${plans.length} 位客户。`;
       setBackupDirty(true);renderStorageProtection();renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。请立即重新备份。`);return true;
     }
     if(!ensureStorageWritable())return false;
-    if(!confirm(`备份中有 ${imported.length} 位客户。恢复后将替换当前 ${plans.length} 位客户的数据，确定继续吗？`))return false;
+    if(!confirm(`${notice?notice+'\n\n':''}备份中有 ${imported.length} 位客户。恢复后将替换当前 ${plans.length} 位客户的数据，确定继续吗？`))return false;
     plans=JSON.parse(JSON.stringify(imported));plans.forEach(plan=>{plan.payments=plan.payments||[]});if(!savePlans(false))return false;setBackupDirty(false);renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。`);return true;
   }
   function restoreBackupText(){
-    try{const value=parseBackupText($('backup-text').value),imported=normalizeImportedPlans(value);restoreImportedPlans(imported,'文本备份')}
-    catch(error){setBackupStatus(error instanceof SyntaxError?'备份文本中的JSON格式不正确，请确认复制完整。':error.message,true)}
+    const text=$('backup-text').value;
+    try{const value=parseBackupText(text),imported=normalizeImportedPlans(value);restoreImportedPlans(imported,'文本备份')}
+    catch(error){
+      if(!(error instanceof SyntaxError)){setBackupStatus(error.message,true);return}
+      try{
+        const result=salvageTruncatedBackup(text),imported=normalizeImportedPlans(result.plans),notice=`备份文本已截断。已找回 ${result.completeCustomers} 位完整客户${result.repairedCustomer?'，并抢救出最后一位客户的完整合同和已完整的收款记录':''}。${result.droppedPayment?'末尾那条未写完的收款记录无法恢复，未做任何编造。':''}`;
+        restoreImportedPlans(imported,'截断备份抢救',notice);
+      }catch(recoveryError){setBackupStatus(recoveryError.message||'备份文本中的JSON格式不正确，请确认复制完整。',true)}
+    }
   }
   function openBackupDialog(){const dialog=$('backup-dialog');if(!dialog.open)dialog.showModal()}
   async function exportBackup(){
