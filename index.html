@@ -41,7 +41,8 @@
   </nav>
   <div class="backup-reminder" id="backup-reminder" hidden><span>数据已变更，建议立即复制备份文本。</span><button type="button" id="backup-reminder-action">立即备份</button></div>
   <div class="data-safety"><strong>数据安全提示</strong>当前数据仅保存在本设备当前浏览器中。微信、Safari、Chrome之间数据不互通。换浏览器或清理缓存可能导致数据不可见。请定期复制备份文本。正式使用建议固定在手机默认浏览器或电脑浏览器中操作，不要长期在微信内录入正式客户数据。</div>
-  <div class="recovery-alert" id="recovery-alert" hidden><strong>客户数据保护已启动</strong><span id="recovery-alert-message">系统已停止写入，请先检查并备份原始数据。</span><button type="button" id="open-storage-diagnostics">立即检查原始数据</button></div>
+  <div class="recovery-alert" id="recovery-alert" hidden><strong>客户数据保护已启动</strong><span id="recovery-alert-message">系统已停止写入，请先检查并备份原始数据。</span><button type="button" id="open-storage-diagnostics">立即检查原始数据</button><button type="button" id="create-empty-test-environment" hidden>创建空白测试环境</button></div>
+  <div class="data-safety" id="test-environment-label" hidden><strong>测试环境</strong>仅用于模拟客户实机验收，与正式版客户数据完全隔离。</div>
 
   <div class="panel active" id="reminders-panel">
     <section>
@@ -240,6 +241,9 @@
   const PLAN_STORAGE_KEY='lateFeePaymentPlansV1';
   const BACKUP_DIRTY_KEY='lateFeeBackupDirtyV1';
   const BACKUP_STATE_KEY='dajinBackupStateV1';
+  const TEST_ENVIRONMENT_HOSTNAME='dajin-p0-1-backup-test.hckleoliu.chatgpt.site';
+  const TEST_ENVIRONMENT_KEY='dajinP01TestEnvironmentV1';
+  const isIsolatedTestEnvironment=location.hostname===TEST_ENVIRONMENT_HOSTNAME;
   const planStorageState={status:'unknown',raw:null,locked:true,reason:'正在检查客户数据。',sourceKey:PLAN_STORAGE_KEY};
   if(!window.DajinBackupState?.BackupStateManager){
     const alertBox=$('recovery-alert');
@@ -282,7 +286,11 @@
       if(!raw.trim()){planStorageState.status='blank';planStorageState.reason='原客户数据为空字符串，已禁止覆盖。';return recoverAlternatePlans()}
       let value;try{value=JSON.parse(raw)}catch(error){planStorageState.status='invalid-json';planStorageState.reason='原客户数据仍存在，但JSON无法解析，已禁止覆盖。';return recoverAlternatePlans()}
       if(Array.isArray(value)){
-        if(!value.length){planStorageState.status='empty';planStorageState.reason='原客户存储项存在，但客户列表为空，已禁止继续覆盖。';return recoverAlternatePlans()}
+        if(!value.length){
+          let confirmedTestEnvironment=false;try{confirmedTestEnvironment=isIsolatedTestEnvironment&&localStorage.getItem(TEST_ENVIRONMENT_KEY)==='1'}catch(error){}
+          if(confirmedTestEnvironment){planStorageState.status='ok';planStorageState.locked=false;planStorageState.reason='空白测试环境已初始化。';return []}
+          planStorageState.status='empty';planStorageState.reason='原客户存储项存在，但客户列表为空，已禁止继续覆盖。';return recoverAlternatePlans()
+        }
         if(!value.every(validBackupPlan)){planStorageState.status='invalid-records';planStorageState.reason='原客户数据仍存在，但部分客户记录格式异常，已禁止覆盖。';return recoverAlternatePlans()}
         planStorageState.status='ok';planStorageState.locked=false;planStorageState.reason='客户数据正常。';return value;
       }
@@ -291,7 +299,29 @@
       planStorageState.status='unsupported';planStorageState.reason='原客户数据仍存在，但结构不是可识别的客户列表，已禁止覆盖。';return recoverAlternatePlans();
     }catch(error){planStorageState.status='inaccessible';planStorageState.reason=`当前浏览器拒绝访问本地客户数据：${error.message||'未知错误'}。`;return []}
   }
-  function renderStorageProtection(){const alertBox=$('recovery-alert');if(!alertBox)return;alertBox.hidden=!planStorageState.locked;$('recovery-alert-message').textContent=planStorageState.reason}
+  function renderTestEnvironmentControls(){
+    const createButton=$('create-empty-test-environment'),label=$('test-environment-label');
+    if(createButton)createButton.hidden=!(isIsolatedTestEnvironment&&planStorageState.locked&&planStorageState.status==='missing'&&!plans.length);
+    let initialized=false;try{initialized=isIsolatedTestEnvironment&&localStorage.getItem(TEST_ENVIRONMENT_KEY)==='1'&&!planStorageState.locked}catch(error){}
+    if(label)label.hidden=!initialized;
+  }
+  function renderStorageProtection(){const alertBox=$('recovery-alert');if(!alertBox)return;alertBox.hidden=!planStorageState.locked;$('recovery-alert-message').textContent=planStorageState.reason;renderTestEnvironmentControls()}
+  async function createEmptyTestEnvironment(){
+    if(!isIsolatedTestEnvironment||!planStorageState.locked||planStorageState.status!=='missing'||plans.length)return false;
+    try{if(localStorage.getItem(PLAN_STORAGE_KEY)!==null)return false}catch(error){return false}
+    const accepted=confirm('当前是隔离测试环境。此操作只会创建空白测试数据，用于实机验收，不会读取、修改或影响正式版客户数据。');
+    if(!accepted)return false;
+    try{
+      localStorage.setItem(TEST_ENVIRONMENT_KEY,'1');
+      localStorage.setItem(PLAN_STORAGE_KEY,'[]');
+      if(localStorage.getItem(TEST_ENVIRONMENT_KEY)!=='1'||localStorage.getItem(PLAN_STORAGE_KEY)!=='[]')throw new Error('测试数据写入后校验失败。');
+    }catch(error){
+      try{localStorage.removeItem(TEST_ENVIRONMENT_KEY);if(localStorage.getItem(PLAN_STORAGE_KEY)==='[]')localStorage.removeItem(PLAN_STORAGE_KEY)}catch(rollbackError){}
+      planStorageState.reason=`创建空白测试环境失败：${error.message||'浏览器拒绝写入'}。原有保护仍然有效。`;renderStorageProtection();return false;
+    }
+    plans=[];planStorageState.raw='[]';planStorageState.status='ok';planStorageState.locked=false;planStorageState.sourceKey=PLAN_STORAGE_KEY;planStorageState.reason='空白测试环境已初始化。';
+    setBackupDirty(true);await backupStateManager.recordDataChange('[]');renderPlanModule();resetPlanForm();renderStorageProtection();return true;
+  }
   function ensureStorageWritable(){
     if(planStorageState.locked){renderStorageProtection();openRecoveryDialog();return false}
     try{
@@ -790,6 +820,7 @@
   $('import-backup').addEventListener('click',()=>$('backup-file').click());
   $('backup-file').addEventListener('change',async event=>{await importBackupFile(event.target.files?.[0]);event.target.value=''});
   $('open-storage-diagnostics').addEventListener('click',openRecoveryDialog);
+  $('create-empty-test-environment').addEventListener('click',createEmptyTestEnvironment);
   $('open-recovery-backup').addEventListener('click',()=>{$('recovery-dialog').close();openBackupDialog();$('backup-text').focus()});
   $('refresh-storage-diagnostics').addEventListener('click',runStorageDiagnostics);
   $('copy-storage-evidence').addEventListener('click',copyStorageEvidence);
