@@ -10,6 +10,7 @@
   const LEGACY_DIRTY_KEY = 'lateFeeBackupDirtyP02TestV1';
   const BACKUP_VERSION = 1;
   const DAY_MS = 24 * 60 * 60 * 1000;
+  const GRACE_MS = 30 * 60 * 1000;
 
   function defaultState() {
     return {
@@ -20,7 +21,8 @@
       dataRevision: 0,
       lastBackedUpRevision: 0,
       lastBackupHash: null,
-      lastBackupMethod: null
+      lastBackupMethod: null,
+      backupGraceUntil: null
     };
   }
 
@@ -46,7 +48,7 @@
       return { state: fallback, invalid: true };
     }
 
-    const required = Object.keys(fallback);
+    const required = Object.keys(fallback).filter(key => key !== 'backupGraceUntil');
     let invalid = required.some(key => !Object.prototype.hasOwnProperty.call(input, key));
     const state = {
       lastBackupAt: isIsoTimeOrNull(input.lastBackupAt) ? input.lastBackupAt : null,
@@ -56,7 +58,8 @@
       dataRevision: isRevision(input.dataRevision) ? input.dataRevision : 0,
       lastBackedUpRevision: isRevision(input.lastBackedUpRevision) ? input.lastBackedUpRevision : 0,
       lastBackupHash: isHashOrNull(input.lastBackupHash) ? input.lastBackupHash : null,
-      lastBackupMethod: input.lastBackupMethod === null || typeof input.lastBackupMethod === 'string' ? input.lastBackupMethod : null
+      lastBackupMethod: input.lastBackupMethod === null || typeof input.lastBackupMethod === 'string' ? input.lastBackupMethod : null,
+      backupGraceUntil: isIsoTimeOrNull(input.backupGraceUntil ?? null) ? (input.backupGraceUntil ?? null) : null
     };
 
     invalid ||= !isIsoTimeOrNull(input.lastBackupAt);
@@ -67,6 +70,7 @@
     invalid ||= !isRevision(input.lastBackedUpRevision);
     invalid ||= !isHashOrNull(input.lastBackupHash);
     invalid ||= !(input.lastBackupMethod === null || typeof input.lastBackupMethod === 'string');
+    invalid ||= Object.prototype.hasOwnProperty.call(input, 'backupGraceUntil') && !isIsoTimeOrNull(input.backupGraceUntil);
     invalid ||= state.lastBackedUpRevision > state.dataRevision;
 
     if (invalid) {
@@ -246,6 +250,7 @@
         this.state.lastBackupHash = hash;
         this.state.lastBackupMethod = method;
         this.state.dirtySinceBackup = false;
+        this.state.backupGraceUntil = null;
         this.metadataInvalid = false;
         if (!this.persist()) {
           this.state = previous;
@@ -293,11 +298,42 @@
       return nowMs - lastBackupTime >= DAY_MS;
     }
 
+    isGraceActive(nowMs = this.now()) {
+      if (!Number.isFinite(nowMs) || !this.state || !this.state.backupGraceUntil) return false;
+      const graceUntil = Date.parse(this.state.backupGraceUntil);
+      if (!Number.isFinite(graceUntil) || graceUntil <= nowMs) return false;
+      return graceUntil - nowMs <= GRACE_MS;
+    }
+
+    shouldBlockBackup(nowMs = this.now()) {
+      return this.needsBackup(nowMs) && !this.isGraceActive(nowMs);
+    }
+
+    grantGrace(durationMs = GRACE_MS) {
+      const nowMs = this.now();
+      if (!Number.isFinite(nowMs) || !Number.isFinite(durationMs) || durationMs <= 0 || durationMs > GRACE_MS) {
+        return { ok: false, reason: 'invalid-time', state: this.snapshot() };
+      }
+      const previous = this.state.backupGraceUntil;
+      this.state.backupGraceUntil = new Date(nowMs + durationMs).toISOString();
+      if (!this.persist()) {
+        this.state.backupGraceUntil = previous;
+        this.state.dirtySinceBackup = true;
+        this.persist();
+        this.notify();
+        return { ok: false, reason: 'state-write-failed', state: this.snapshot() };
+      }
+      this.notify();
+      return { ok: true, state: this.snapshot() };
+    }
+
     snapshot() {
       return {
         ...this.state,
         currentDataHash: this.currentDataHash,
         needsBackup: this.needsBackup(),
+        graceActive: this.isGraceActive(),
+        shouldBlockBackup: this.shouldBlockBackup(),
         metadataInvalid: this.metadataInvalid,
         lastError: this.lastError ? String(this.lastError.message || this.lastError) : null
       };
@@ -312,6 +348,7 @@
     BackupStateManager,
     BACKUP_VERSION,
     DAY_MS,
+    GRACE_MS,
     LEGACY_DIRTY_KEY,
     PLAN_KEY,
     STATE_KEY,
