@@ -39,7 +39,7 @@
   }
 
   function isBackupMethod(value) {
-    return value === 'text' || value === 'json';
+    return value === 'text' || value === 'json' || value === 'json-file' || value === 'segmented-text';
   }
 
   function normalizeState(input) {
