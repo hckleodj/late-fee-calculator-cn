@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#245785" />
+  <meta name="application-name" content="大进车贷助手" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <title>大进车贷助手</title>
+  <style>
+    :root{--blue:#245785;--blue-dark:#183f61;--light:#eef5fb;--yellow:#fff3c7;--green:#287a4b;--line:#d6e0e8;--text:#17212b;--muted:#637786;--danger:#a23a29}
+    *{box-sizing:border-box}html{background:#f4f7f9}body{margin:0;background:#f4f7f9;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+    main{max-width:780px;margin:32px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px #16344d14;overflow:hidden}
+    header{background:var(--blue);color:#fff;padding:24px 28px}h1{font-size:25px;margin:0 0 7px}header p{margin:0;opacity:.88;font-size:14px;line-height:1.55}
+    .nav{display:grid;grid-template-columns:repeat(4,1fr);background:#edf3f7;border-bottom:1px solid var(--line);padding:8px;gap:8px}.nav button{margin:0;height:46px;background:transparent;color:var(--blue-dark);font-size:15px;padding:0 6px}.nav button.active{background:#fff;box-shadow:0 2px 8px #16344d17;color:var(--blue)}
+    .panel{display:none}.panel.active{display:block}section{padding:24px 28px}.mode-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:22px;padding:5px;background:#eef3f6;border-radius:12px}.mode-tabs button{margin:0;height:43px;background:transparent;color:#466175;font-size:15px}.mode-tabs button.active{background:var(--blue);color:#fff;box-shadow:none}
+    .section-title{margin:0 0 5px;font-size:20px}.section-help{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.55}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field label{display:block;font-weight:650;margin-bottom:7px;font-size:14px}.field input{width:100%;height:46px;border:1px solid #b8c7d3;border-radius:8px;padding:0 12px;font-size:16px;background:var(--yellow);color:var(--text)}.field input:focus{outline:3px solid #24578522;border-color:var(--blue)}.field-hint{margin-top:6px;color:var(--muted);font-size:12px}
+    .summary{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:22px 0}.metric{background:var(--light);border-radius:10px;padding:14px;text-align:center;min-height:79px}.metric span{display:block;color:#587083;font-size:13px}.metric strong{display:block;margin-top:5px;font-size:20px;color:var(--blue);overflow-wrap:anywhere}.metric.wide{grid-column:1/-1}.metric.wide strong{font-size:23px}
+    .output-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.output-label strong{font-size:16px}.tip{font-size:12px;color:var(--muted);text-align:right}
+    textarea{width:100%;min-height:280px;resize:vertical;border:1px solid #b8c7d3;border-radius:10px;background:#fafcfd;padding:17px;font:15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text)}
+    button{width:100%;height:50px;margin-top:14px;border:0;border-radius:10px;background:var(--green);color:#fff;font-size:17px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}button:hover{filter:brightness(.96)}button:active{transform:translateY(1px)}button.ok{background:#156a3b}
+    .note{margin:12px 0 0;color:var(--muted);font-size:13px;text-align:center;line-height:1.5}.warning{background:#fff1eb;color:#8f321f;border-top:1px solid #f0d0c5;padding:13px 28px;font-size:13px;line-height:1.55}.error{display:none;margin:14px 0 0;color:var(--danger);font-size:13px}.error.show{display:block}
+    .reminder-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0 24px}.reminder-summary button{margin:0;height:auto;min-height:72px;background:var(--light);color:var(--blue);padding:10px 5px}.reminder-summary button.overdue{background:#fff0ec;color:var(--danger)}.reminder-summary button.upcoming{background:#fff7e8;color:#9a5b0a}.reminder-summary strong{display:block;font-size:23px}.reminder-summary span{font-size:12px}
+    .reminder-group{margin:24px 0;scroll-margin-top:70px}.group-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:11px}.group-head h3{font-size:17px;margin:0}.count{background:var(--light);color:var(--blue);border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700}.reminder-list,.plans-list{display:grid;gap:11px}.empty{border:1px dashed #b7c8d5;border-radius:11px;padding:17px;text-align:center;color:var(--muted);font-size:13px;background:#fafcfd}
+    .reminder-item,.plan-item{border:1px solid var(--line);border-radius:11px;padding:14px}.reminder-item.today{border-left:5px solid var(--blue)}.reminder-item.overdue{border-left:5px solid var(--danger)}.reminder-item.upcoming{border-left:5px solid #b36a0a}.item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.item-top h4{margin:0;font-size:16px}.item-sub{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.5}.badge{flex:0 0 auto;background:var(--light);color:var(--blue);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700}.overdue .badge{background:#fff0ec;color:var(--danger)}.upcoming .badge{background:#fff7e8;color:#9a5b0a}.item-money{display:flex;flex-wrap:wrap;gap:7px 15px;margin:12px 0;font-size:13px;color:#496172}.item-money strong{color:var(--text)}
+    .item-actions,.plan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.item-actions button,.plan-actions button,.form-actions button{margin:0;height:42px;font-size:14px}.secondary{background:#e9f1f6;color:var(--blue)}.danger{background:#fff0ec;color:var(--danger)}
+    .plan-form{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.field.full{grid-column:1/-1}.form-actions{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:15px}.local-note{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.plan-item .plan-actions{display:flex;flex-wrap:wrap;margin-top:11px}.plan-actions button{width:auto;padding:0 16px}.plan-actions .danger{margin-left:auto}.plan-meta{display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:9px;color:#496172;font-size:13px}.plan-meta strong{color:var(--text)}
+    .section-heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}.section-heading-row .section-help{margin-bottom:0}.section-tools{display:flex;gap:8px;flex:0 0 auto}.compact-tool{width:auto;height:38px;margin:0;padding:0 14px;background:#e9f1f6;color:var(--blue);font-size:13px;white-space:nowrap}.compact-tool.primary{background:var(--green);color:#fff}#plan-form-section[hidden]{display:none}.danger-zone{margin-top:11px;text-align:right}.danger-zone summary{display:inline-block;color:var(--muted);font-size:12px;cursor:pointer;list-style:none}.danger-zone summary::-webkit-details-marker{display:none}.danger-zone button{width:auto;height:36px;margin:8px 0 0;padding:0 13px;background:#fff0ec;color:var(--danger);font-size:12px}.data-safety{margin:14px 28px 0;border:1px solid #e8cf91;border-radius:11px;background:#fff9e8;color:#76520c;padding:13px 15px;font-size:13px;line-height:1.65}.data-safety strong{display:block;color:#654300;margin-bottom:2px}.backup-reminder{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff0ec;color:var(--danger);border-bottom:1px solid #f0d0c5;padding:10px 28px;font-size:13px;font-weight:700}.backup-reminder[hidden]{display:none}.backup-reminder button{flex:0 0 auto;width:auto;height:34px;margin:0;padding:0 12px;border-radius:8px;background:var(--danger);font-size:13px}.backup-box{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:17px}.backup-section-title{margin:0 0 5px;font-size:16px}.backup-section-help{margin:0 0 12px;color:var(--muted);font-size:12px;line-height:1.6}.backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.backup-actions button{margin:0;height:44px;font-size:14px}.backup-primary{margin-bottom:16px}.backup-divider{height:1px;background:var(--line);margin:18px 0}.backup-text-label{display:block;margin:14px 0 7px;font-size:13px;font-weight:700}.backup-textarea{min-height:190px;background:#fff;font-size:13px;line-height:1.55;padding:12px}.backup-textarea.manual-copy{border-color:var(--danger);box-shadow:0 0 0 3px #a23a2917}.backup-status{margin:11px 0 0;color:var(--blue);font-size:13px;line-height:1.5}.backup-warning{margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+    .safety-status{background:#f8fafb;border-color:var(--line);color:var(--muted)}.safety-status strong{color:var(--green)}.safety-status.pending strong{color:#9a5b0a}.safety-status.required{background:#fff1eb;border-color:#e6b5a7}.safety-status.required strong{color:var(--danger)}.required-dialog{width:min(460px,calc(100% - 24px))}.required-dialog .dialog-body{padding:26px}.required-dialog .dialog-actions{grid-template-columns:1fr}.required-dialog .secondary{background:#e9f1f6;color:var(--blue)}
+    .recovery-alert{margin:14px 28px 0;border:1px solid #e6b5a7;border-radius:11px;background:#fff1eb;color:#8f321f;padding:14px 15px;font-size:13px;line-height:1.65}.recovery-alert[hidden]{display:none}.recovery-alert strong{display:block;margin-bottom:4px}.recovery-alert button{height:40px;margin-top:10px;background:var(--danger);font-size:14px}.recovery-report{margin:13px 0 0;padding:13px;border:1px solid var(--line);border-radius:10px;background:#fff;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.7;color:var(--text)}.recovery-status{margin:0;color:var(--blue);font-size:13px;line-height:1.65}.recovery-status.danger{color:var(--danger);background:none}.recovery-textarea[hidden]{display:none}
+    .backup-confirm-step[hidden]{display:none}.backup-confirm-step{margin-top:14px;padding:13px;border-radius:10px;background:#fff7e8;color:#76520c;font-size:13px;line-height:1.6}.backup-confirm-step button{height:44px;margin-top:10px;font-size:14px}.snapshot-list{display:grid;gap:9px}.snapshot-item{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}.snapshot-item strong{display:block;font-size:14px}.snapshot-meta{margin-top:5px;color:var(--muted);font-size:12px;line-height:1.55}.snapshot-item button{width:auto;height:36px;margin-top:8px;padding:0 14px;font-size:13px}.snapshot-empty{color:var(--muted);font-size:13px}.restore-preview{background:var(--light);border-radius:10px;padding:13px;font-size:13px;line-height:1.7}.restore-danger{color:var(--danger);font-weight:700}.snapshot-notice{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.6}
+    .wechat-notice{margin:14px 28px 0;border:1px solid #e6b5a7;border-radius:11px;background:#fff1eb;color:#8f321f;padding:14px 15px;font-size:13px;line-height:1.65}.wechat-notice[hidden]{display:none}.wechat-notice strong{display:block;font-size:15px;margin-bottom:4px}.wechat-notice button{height:42px;margin-top:10px;background:var(--danger);font-size:14px}.migration-progress{margin:12px 0;padding:12px;border-radius:10px;background:var(--light);color:var(--blue);font-weight:700;font-size:14px}.migration-segment{min-height:220px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}.migration-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.migration-controls button{height:42px;margin:0;font-size:13px}.migration-summary{margin-top:13px;padding:13px;border-radius:10px;background:#eef7f1;color:#205f3a;font-size:13px;line-height:1.7}.migration-summary[hidden]{display:none}.migration-complete{margin-top:14px;padding:14px;border-radius:10px;background:#eef7f1;color:#205f3a}.migration-complete[hidden]{display:none}.migration-complete strong{display:block;margin-bottom:5px}.migration-complete button{height:44px;font-size:14px}.desktop-guide{margin-top:14px}.desktop-guide summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:13px}.desktop-guide p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.6}
+    .fee-choice{border:0;padding:0;margin:0;min-width:0}.fee-choice.full{grid-column:1/-1}.fee-choice legend{font-weight:700;margin-bottom:10px;font-size:15px}.fee-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fee-options label{position:relative;min-height:88px;border:1px solid #c5d2dc;border-radius:12px;background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s,transform .18s}.fee-options label:hover{border-color:#8fa9bc;transform:translateY(-1px)}.fee-options label:has(input:checked){border-color:var(--blue);background:linear-gradient(135deg,#f1f7fc,#e8f2f9);box-shadow:0 0 0 1px var(--blue),0 8px 20px #24578514}.fee-options input{width:20px;height:20px;margin:0;accent-color:var(--blue);flex:0 0 auto}.fee-option-copy{min-width:0}.fee-option-title{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--text);font-size:16px;font-weight:750;line-height:1.35}.fee-options label:has(input:checked) .fee-option-title{color:var(--blue)}.fee-option-desc{display:block;margin-top:5px;color:var(--muted);font-size:12px;font-weight:500;line-height:1.45}.fee-option-badge{display:inline-flex;align-items:center;height:21px;border-radius:999px;background:#e5f0f8;color:var(--blue);padding:0 8px;font-size:11px;font-style:normal;font-weight:700}.fee-options label:has(input:checked) .fee-option-badge{background:var(--blue);color:#fff}.formula-note{grid-column:1/-1;background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:13px 14px;color:#496172;font-size:13px;line-height:1.65}.formula-note strong{display:block;color:var(--blue);margin-bottom:3px}
+    dialog{width:min(620px,calc(100% - 24px));max-height:90vh;border:0;border-radius:16px;padding:0;color:var(--text);box-shadow:0 18px 60px #102c4260}dialog::backdrop{background:#102c4270}.dialog-body{padding:22px;overflow:auto;max-height:90vh}.dialog-body h2{margin:0 0 5px;font-size:21px}.dialog-context{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.55}.payment-preview{background:var(--light);border-radius:11px;padding:13px;margin-top:15px}.preview-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14px}.preview-row strong{text-align:right}.preview-row.total{border-top:1px solid #cad9e4;margin-top:5px;padding-top:10px}.allocation-preview{margin-top:10px;color:#496172;font-size:13px;line-height:1.65}.payment-error{color:var(--danger);font-size:13px;margin:10px 0 0}.dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}.dialog-actions button{margin:0}#backup-dialog .dialog-actions{grid-template-columns:1fr}.payment-history{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.payment-history summary{cursor:pointer;color:var(--blue);font-size:13px;font-weight:700}.history-row{padding:10px 0;border-bottom:1px dashed var(--line);font-size:12px;color:#496172;line-height:1.55}.history-row:last-child{border-bottom:0}.history-actions{display:flex;gap:7px;margin-top:7px}.history-actions button{width:auto;height:32px;margin:0;padding:0 12px;border-radius:8px;font-size:12px}.history-actions .undo{background:#fff0ec;color:var(--danger)}
+    @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full,.formula-note,.fee-choice.full{grid-column:auto}.fee-options{grid-template-columns:1fr;gap:9px}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.data-safety,.recovery-alert,.wechat-notice{margin:12px 18px 0}.backup-reminder{padding:10px 18px}.mode-tabs{gap:4px}.mode-tabs button{font-size:13px;padding:0 4px}.output-label{align-items:flex-start}textarea{min-height:300px}.backup-textarea{min-height:210px}.item-actions{grid-template-columns:1fr}.form-actions,.backup-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}.section-heading-row{flex-direction:column}.section-tools{width:100%}.section-tools .compact-tool{flex:1}.migration-controls{grid-template-columns:1fr 1fr}.migration-controls #copy-migration-segment{grid-column:1/-1}}
+  </style>
+</head>
+<body>
+<main><div class="card">
+  <header><h1>大进车贷助手 · RC1隔离测试</h1><p>管理还款提醒、测算以租代购方案和滞纳金。</p></header>
+  <nav class="nav" aria-label="工具选择">
+    <button class="active" type="button" data-panel="reminders">还款提醒</button>
+    <button type="button" data-panel="customers">客户管理</button>
+    <button type="button" data-panel="finance">方案测算</button>
+    <button type="button" data-panel="late-fee">滞纳金计算</button>
+  </nav>
+  <div class="backup-reminder" id="backup-reminder" hidden><span>数据已变更，请下载完整 JSON 备份。</span><button type="button" id="backup-reminder-action">立即备份</button></div>
+  <div class="data-safety safety-status" id="backup-safety-status"><strong id="backup-safety-title">数据安全 · 正在检查</strong><span id="backup-safety-detail">正在核对本地备份状态。</span></div>
+  <div class="wechat-notice" id="wechat-notice" hidden><strong>当前在微信内打开</strong>微信可能限制文件下载，并且网页缓存可能被微信清理。正式客户数据建议使用手机系统浏览器管理。请通过微信右上角菜单选择“在浏览器打开”。<button type="button" id="open-migration-export">迁移到系统浏览器</button></div>
+  <div class="data-safety"><strong>数据安全提示</strong>正式经营数据请固定在 OPPO 系统浏览器中使用。当前数据只保存在本设备当前浏览器；换浏览器或清理数据后不会自动同步。请定期下载完整 JSON 备份。</div>
+  <div class="data-safety"><strong>RC1 隔离测试环境</strong>这里只使用独立测试存储，不会读取或覆盖正式客户数据。首次测试请主动创建空白测试环境。<button type="button" id="create-empty-rc1-test">创建空白测试环境</button></div>
+  <div class="recovery-alert" id="recovery-alert" hidden><strong>客户数据保护已启动</strong><span id="recovery-alert-message">系统已停止写入，请先检查并备份原始数据。</span><button type="button" id="open-storage-diagnostics">立即检查原始数据</button></div>
+
+  <div class="panel active" id="reminders-panel">
+    <section>
+      <h2 class="section-title">今日还款提醒</h2>
+      <p class="section-help" id="today-label">打开页面后，系统按当天日期自动列出需要处理的客户。</p>
+      <div class="reminder-summary">
+        <button type="button" data-scroll="today-group"><strong id="today-total">0</strong><span>今日应还</span></button>
+        <button class="overdue" type="button" data-scroll="overdue-group"><strong id="overdue-total">0</strong><span>已逾期</span></button>
+        <button class="upcoming" type="button" data-scroll="upcoming-group"><strong id="upcoming-total">0</strong><span>未来3天</span></button>
+      </div>
+      <div class="reminder-group" id="today-group"><div class="group-head"><h3>今日应还</h3><span class="count" id="today-count">0</span></div><div class="reminder-list" id="today-list"></div></div>
+      <div class="reminder-group" id="overdue-group"><div class="group-head"><h3>已逾期</h3><span class="count" id="overdue-count">0</span></div><div class="reminder-list" id="overdue-list"></div></div>
+      <div class="reminder-group" id="upcoming-group"><div class="group-head"><h3>未来3天即将到期</h3><span class="count" id="upcoming-count">0</span></div><div class="reminder-list" id="upcoming-list"></div></div>
+    </section>
+  </div>
+
+  <div class="panel" id="customers-panel">
+    <section>
+      <div class="section-heading-row"><div><h2 class="section-title">客户与合同管理</h2><p class="section-help">新增客户、修改合同和删除资料集中在这里。日常催款和收款请使用“还款提醒”。</p></div><div class="section-tools"><button class="compact-tool" type="button" id="open-backup">数据备份</button><button class="compact-tool primary" type="button" id="show-plan-form">新增客户</button></div></div>
+      <div class="plans-list" id="plans-list"></div>
+    </section>
+    <section id="plan-form-section" hidden>
+      <h2 class="section-title" id="plan-form-title">新增客户还款计划</h2>
+      <p class="section-help">这里只用于新增客户或合同资料确实发生变更时操作，保存前请再次核对期数、日期和金额。</p>
+      <form class="plan-form" id="plan-form">
+        <input id="plan-id" type="hidden">
+        <div class="inputs">
+          <div class="field"><label for="customer-name">客户姓名</label><input id="customer-name" required placeholder="例如：张三"></div>
+          <div class="field"><label for="plate">车牌号</label><input id="plate" placeholder="例如：湘A12345"></div>
+          <div class="field"><label for="vehicle">车辆</label><input id="vehicle" placeholder="例如：奔驰E300L"></div>
+          <div class="field"><label for="contract-price">合同车辆价格（元）</label><input id="contract-price" type="number" min="0.01" step="0.01" required value="91800"></div>
+          <div class="field"><label for="contract-down-rate">合同首付比例（%）</label><input id="contract-down-rate" type="number" min="0" max="100" step="0.1" required value="15"></div>
+          <div class="field"><label for="contract-deposit-months">合同押金（月）</label><input id="contract-deposit-months" type="number" min="0" max="120" step="1" required value="1"><div class="field-hint">仅用于合同留档，不参与月供和结清计算</div></div>
+          <div class="field"><label for="contract-monthly-rate">合同固定月利率（%）</label><input id="contract-monthly-rate" type="number" min="0" step="0.01" required value="1.25"><div class="field-hint">例如1.25代表每月1.25%</div></div>
+          <div class="field"><label for="plan-amount">合同月供（元）</label><input id="plan-amount" type="number" readonly value="3142.88"><div class="field-hint" id="contract-preview">贷款78,030.00元＝每期本金2,167.50元＋利息975.38元</div></div>
+          <div class="field"><label for="due-day">每月还款日</label><input id="due-day" type="number" min="1" max="31" required value="5"></div>
+          <div class="field"><label for="plan-rate">参考日滞纳金比例（小数）</label><input id="plan-rate" type="number" min="0" step="0.0001" required value="0.005"><div class="field-hint">登记收款时再决定是否收取及实际金额</div></div>
+          <div class="field"><label for="start-date">合同第1期应付月份</label><input id="start-date" type="date" required><div class="field-hint">请填写合同第1期原定还款所在月份，不是本次录入日期；后续期数会从这里逐月顺延</div></div>
+          <div class="field"><label for="total-terms">总期数</label><input id="total-terms" type="number" min="1" max="360" required value="36"></div>
+          <div class="field"><label for="completed-terms">已完成期数</label><input id="completed-terms" type="number" min="0" max="360" required value="0"></div>
+          <div class="field full"><label for="plan-notes">备注</label><input id="plan-notes" placeholder="微信名、电话或其他说明（选填）"></div>
+        </div>
+        <div class="form-actions"><button type="submit" id="save-plan">保存还款计划</button><button class="secondary" type="button" id="cancel-edit" hidden>取消编辑</button></div>
+      </form>
+      <p class="local-note">数据只保存在当前浏览器。换手机或清除浏览器数据后不会自动同步。</p>
+    </section>
+  </div>
+
+  <div class="panel" id="finance-panel">
+    <section>
+      <h2 class="section-title">以租代购方案计算器</h2>
+      <p class="section-help">先选择合同使用的计息口径，再进行方案报价或按月供倒推。默认使用以租代购常见的平息 / 固定月息。</p>
+      <div class="mode-tabs" aria-label="计算模式">
+        <button class="active" type="button" data-mode="quote">客户方案报价</button>
+        <button type="button" data-mode="reverse">按月供倒推</button>
+      </div>
+
+      <div class="inputs">
+        <fieldset class="fee-choice full">
+          <legend>计息方式</legend>
+          <div class="fee-options">
+            <label><input type="radio" name="finance-method" value="flat" checked><span class="fee-option-copy"><span class="fee-option-title">平息 / 固定月息 <em class="fee-option-badge">业务常用</em></span><span class="fee-option-desc">等本等息 · 每期按原贷款金额计息</span></span></label>
+            <label><input type="radio" name="finance-method" value="annuity"><span class="fee-option-copy"><span class="fee-option-title">标准等额本息</span><span class="fee-option-desc">银行常用 · 每期按剩余本金递减计息</span></span></label>
+          </div>
+        </fieldset>
+        <div class="formula-note" id="finance-method-note" aria-live="polite"></div>
+        <div class="field quote-reverse-field"><label for="car-price">车辆价格（元）</label><input id="car-price" inputmode="decimal" type="number" min="0" step="100" value="200000"></div>
+        <div class="field quote-field"><label for="down-payment-rate">首付比例（%）</label><input id="down-payment-rate" inputmode="decimal" type="number" min="0" max="100" step="0.1" value="25"><div class="field-hint" id="down-payment-preview">自动换算：50,000.00 元</div></div>
+        <div class="field reverse-field" hidden><label for="target-payment">可接受月供（元）</label><input id="target-payment" inputmode="decimal" type="number" min="0" step="10" value="4500"></div>
+        <div class="field"><label for="term">贷款期限（月）</label><input id="term" inputmode="numeric" type="number" min="1" max="120" step="1" value="36"></div>
+        <div class="field"><label for="deposit-months">押金（月）</label><input id="deposit-months" inputmode="numeric" type="number" min="0" max="120" step="1" value="1"><div class="field-hint">仅用于方案展示，不参与贷款和月供计算</div></div>
+        <div class="field quote-reverse-field"><label for="monthly-rate">月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"><div class="field-hint" id="finance-rate-hint">例如1.29代表每月1.29%</div></div>
+      </div>
+      <p class="error" id="finance-error" role="alert"></p>
+
+      <div class="summary" aria-live="polite">
+        <div class="metric"><span>贷款金额</span><strong id="loan-amount">0.00 元</strong></div>
+        <div class="metric"><span id="primary-result-label">每月还款</span><strong id="primary-result">0.00 元</strong></div>
+        <div class="metric"><span id="secondary-result-label">分期总还款</span><strong id="secondary-result">0.00 元</strong></div>
+        <div class="metric"><span id="tertiary-result-label">总利息</span><strong id="tertiary-result">0.00 元</strong></div>
+      </div>
+
+      <div class="output-label"><strong id="finance-output-title">客户方案文字</strong><span class="tip">金额按测算结果保留2位</span></div>
+      <textarea id="finance-message" readonly aria-label="客户方案文字"></textarea>
+      <button id="finance-copy" type="button">复制客户方案</button>
+      <p class="note" id="finance-status">复制后可直接粘贴到微信。实际方案以双方合同约定为准。</p>
+    </section>
+    <div class="warning" id="finance-method-warning">本区域只用于新方案报价；已有客户请从“客户还款计划”进入合同结清核算。</div>
+  </div>
+
+  <div class="panel" id="late-fee-panel">
+    <section>
+      <h2 class="section-title">滞纳金计算器</h2>
+      <p class="section-help">填写四项，自动计算并生成可直接发送的纯文字。</p>
+      <div class="inputs">
+        <div class="field"><label for="due">应付日期</label><input id="due" type="date" value="2026-06-05"></div>
+        <div class="field"><label for="pay">实际付款日期</label><input id="pay" type="date" value="2026-07-15"></div>
+        <div class="field"><label for="amount">应付金额（元）</label><input id="amount" inputmode="decimal" type="number" min="0" step="0.01" value="8222.50"></div>
+        <div class="field"><label for="rate">日滞纳金比例（%）</label><input id="rate" inputmode="decimal" type="number" min="0" step="0.001" value="0.5"></div>
+      </div>
+      <div class="summary">
+        <div class="metric"><span>逾期天数</span><strong id="days">40 天</strong></div>
+        <div class="metric"><span>滞纳金</span><strong id="fee">1,644.50 元</strong></div>
+        <div class="metric wide"><span>应付合计</span><strong id="total">9,867.00 元</strong></div>
+      </div>
+      <div class="output-label"><strong>发给客户的话术</strong><span class="tip">也可在框内手动全选复制</span></div>
+      <textarea id="late-fee-message" readonly aria-label="发给客户的话术"></textarea>
+      <button id="late-fee-copy" type="button">复制纯文字</button>
+      <p class="note" id="late-fee-status">复制后直接到微信粘贴，不会带表格或图片格式。</p>
+    </section>
+    <div class="warning">计费口径：逾期天数＝实际付款日期－应付日期，应付日当天不计逾期。请以合同约定为准。</div>
+  </div>
+</div></main>
+<dialog id="payment-dialog">
+  <form class="dialog-body" id="payment-form">
+    <input id="payment-plan-id" type="hidden"><input id="payment-term-index" type="hidden"><input id="payment-id" type="hidden">
+    <h2 id="payment-dialog-title">登记本期收款</h2><p class="dialog-context" id="payment-context"></p>
+    <div class="inputs">
+      <div class="field"><label for="payment-date">实际收款日期</label><input id="payment-date" type="date" required></div>
+      <div class="field"><label for="payment-total">本次到账总额（元）</label><input id="payment-total" type="number" min="0.01" step="0.01" required></div>
+      <fieldset class="fee-choice full"><legend>这笔钱是否包含滞纳金</legend><div class="fee-options"><label><input type="radio" name="payment-fee-mode" value="no" checked>不包含</label><label><input type="radio" name="payment-fee-mode" value="yes">包含</label></div></fieldset>
+      <div class="field full" id="payment-fee-field" hidden><label for="payment-fee">其中滞纳金金额（元）</label><input id="payment-fee" type="number" min="0" step="0.01" value="0"></div>
+    </div>
+    <div class="payment-preview">
+      <div class="preview-row"><span>计入滞纳金</span><strong id="preview-fee">0.00 元</strong></div>
+      <div class="preview-row"><span>冲抵本期应付款</span><strong id="preview-principal">0.00 元</strong></div>
+      <div class="preview-row total"><span>本期账单状态</span><strong id="preview-status">等待填写</strong></div>
+      <div class="allocation-preview" id="allocation-preview"></div>
+    </div>
+    <p class="payment-error" id="payment-error"></p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="cancel-payment">取消</button><button type="submit" id="save-payment">保存收款记录</button></div>
+  </form>
+</dialog>
+<dialog id="settlement-dialog">
+  <div class="dialog-body">
+    <h2>合同结清核算</h2><p class="dialog-context" id="settlement-context"></p>
+    <div class="summary" aria-live="polite">
+      <div class="metric"><span>合同贷款金额</span><strong id="settlement-loan-result">0.00 元</strong></div>
+      <div class="metric"><span>合同总利息</span><strong id="settlement-total-interest">0.00 元</strong></div>
+      <div class="metric"><span>已归还本金</span><strong id="settlement-paid-principal">0.00 元</strong></div>
+      <div class="metric"><span>已支付利息</span><strong id="settlement-paid-interest">0.00 元</strong></div>
+      <div class="metric"><span>剩余未还本金</span><strong id="settlement-remaining-principal">0.00 元</strong></div>
+      <div class="metric"><span>剩余合同利息</span><strong id="settlement-remaining-interest">0.00 元</strong></div>
+    </div>
+    <div class="output-label"><strong>合同核算文字</strong><span class="tip">可直接复制给客户核对</span></div>
+    <textarea id="settlement-message" readonly aria-label="合同结清核算文字"></textarea>
+    <p class="note" id="settlement-status">剩余本金与剩余合同利息分开显示，最终结清口径以合同为准。</p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="close-settlement">关闭</button><button type="button" id="copy-settlement">复制核算结果</button></div>
+  </div>
+</dialog>
+<dialog id="backup-dialog">
+  <div class="dialog-body">
+    <h2>数据备份与恢复</h2><p class="dialog-context">所有操作只在当前浏览器本地完成，不会上传服务器。</p>
+    <div class="backup-box">
+      <div class="backup-primary">
+        <h3 class="backup-section-title">完整 JSON 文件备份</h3>
+        <p class="backup-section-help">请在 OPPO 系统浏览器中下载完整文件。下载动作不代表备份完成，还需要到“文件管理 / 下载”确认文件存在。</p>
+        <button type="button" id="export-backup">立即下载完整备份</button>
+      </div>
+      <div class="backup-confirm-step" id="backup-confirm-step" hidden>请确认备份文件已经保存到手机“文件管理 / 下载”。<button type="button" id="confirm-backup-saved">我已确认备份文件已保存</button></div>
+      <p class="backup-status" id="backup-status">备份和恢复都只在当前设备处理，不会上传客户数据。</p>
+      <p class="backup-warning">备份文件包含客户、车辆及收款记录，请妥善保管，不要发送给无关人员。</p>
+      <div class="backup-divider"></div>
+      <div class="backup-actions"><button class="secondary" type="button" id="import-backup">导入旧版或完整 JSON 备份</button><button class="secondary" type="button" id="open-migration-import">导入微信旧数据</button></div>
+      <input id="backup-file" type="file" accept=".json,application/json" hidden>
+      <details class="desktop-guide"><summary>添加到 OPPO 手机桌面</summary><p>请使用 OPPO 浏览器菜单中的“添加到桌面”或“添加至主屏幕”。是否显示该入口取决于当前 ColorOS 和浏览器版本。</p></details>
+      <details class="desktop-guide"><summary>其他备份方式</summary><p>微信无法下载文件时，可使用“分段文本应急备份”。它仅用于一次性迁移或紧急导出，不作为日常备份。</p><button class="secondary" type="button" id="open-emergency-segments">分段文本应急备份</button></details>
+      <div class="backup-divider"></div>
+      <button class="secondary" type="button" id="open-local-snapshots">本地历史版本</button>
+      <p class="backup-warning">本地历史版本仅用于误删、误改时的应急恢复，与当前浏览器处于同一存储环境，不能替代外部备份。</p>
+    </div>
+    <div class="dialog-actions"><button class="secondary" type="button" id="close-backup">关闭</button></div>
+  </div>
+</dialog>
+<dialog class="required-dialog" id="backup-required-dialog">
+  <div class="dialog-body">
+    <h2>重要数据需要备份</h2>
+    <p class="dialog-context">你有新的客户或还款数据尚未完成备份，距离上一次备份已经超过24小时。<br><br>为避免客户资料、还款记录再次丢失，请先完成备份后继续使用。</p>
+    <p class="backup-status" id="backup-required-last-time">最近备份：尚未完成</p>
+    <div class="dialog-actions"><button type="button" id="required-backup-now">立即下载备份</button><button class="secondary" type="button" id="request-backup-grace">紧急进入30分钟</button></div>
+  </div>
+</dialog>
+<dialog class="required-dialog" id="backup-grace-dialog">
+  <div class="dialog-body">
+    <h2>确认暂时跳过备份？</h2>
+    <p class="dialog-context">仅建议在当前无法完成备份、但必须立即处理业务时使用。<br><br>临时进入不会把数据标记为已备份。30分钟后系统会再次提醒。</p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="cancel-backup-grace">返回备份</button><button type="button" id="confirm-backup-grace">确认紧急进入</button></div>
+  </div>
+</dialog>
+<dialog id="backup-confirm-dialog">
+  <div class="dialog-body">
+    <h2>确认备份文件已保存？</h2>
+    <p class="dialog-context">请确认你已经在手机“文件管理 / 下载”中看到本次完整 JSON 备份文件。仅触发下载但没有看到文件，不算完成备份。</p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="continue-saving-backup">返回继续检查</button><button type="button" id="finish-backup-confirmation">确认文件已保存</button></div>
+  </div>
+</dialog>
+<dialog id="snapshots-dialog">
+  <div class="dialog-body">
+    <h2>本地历史版本</h2>
+    <p class="snapshot-notice">仅用于当前浏览器内误删、误改后的应急恢复，不能替代外部备份。最多保留最近10个版本。</p>
+    <div class="snapshot-list" id="snapshot-list"></div>
+    <div class="dialog-actions"><button class="secondary" type="button" id="close-snapshots">关闭</button></div>
+  </div>
+</dialog>
+<dialog id="snapshot-preview-dialog">
+  <div class="dialog-body">
+    <h2>恢复预览</h2>
+    <div class="restore-preview" id="snapshot-preview"></div>
+    <p class="restore-danger">恢复会覆盖当前客户数据。恢复前系统会先自动保存一份“恢复前快照”。</p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="cancel-snapshot-restore">取消</button><button class="danger" type="button" id="restore-snapshot">确认恢复此版本</button></div>
+  </div>
+</dialog>
+<dialog id="recovery-dialog">
+  <div class="dialog-body">
+    <h2>客户数据只读诊断</h2>
+    <p class="dialog-context">只读取当前网页可访问的本地数据，不初始化、不迁移、不删除，也不会上传客户资料。</p>
+    <p class="recovery-status" id="recovery-status">准备检查原始数据。</p>
+    <pre class="recovery-report" id="recovery-report"></pre>
+    <button type="button" id="copy-storage-evidence">复制全部原始数据</button>
+    <button class="secondary" type="button" id="open-recovery-backup">我有客户备份，前往恢复</button>
+    <button class="secondary" type="button" id="refresh-storage-diagnostics">重新检查</button>
+    <textarea class="backup-textarea recovery-textarea" id="recovery-text" hidden placeholder="自动复制受限时，请长按全选并复制原始数据。"></textarea>
+    <p class="backup-warning">原始数据可能包含客户信息以及同一网站下其他工具的数据，请仅保存到自己的文件传输助手或安全位置。</p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="close-recovery">关闭</button></div>
+  </div>
+</dialog>
+<dialog id="migration-export-dialog">
+  <div class="dialog-body">
+    <h2 id="migration-export-title">迁移到系统浏览器</h2>
+    <p class="dialog-context">这是微信旧数据的一次性迁移流程。每段需要分别复制并暂存到微信文件传输助手或电脑，不能一次复制全部。</p>
+    <div class="migration-progress" id="migration-export-progress">尚未生成迁移分段</div>
+    <textarea class="migration-segment" id="migration-segment-text" readonly aria-label="当前迁移分段"></textarea>
+    <div class="migration-controls"><button class="secondary" type="button" id="previous-migration-segment">上一段</button><button type="button" id="copy-migration-segment">复制本段</button><button class="secondary" type="button" id="next-migration-segment">下一段</button></div>
+    <p class="backup-status" id="migration-export-status">生成后将显示迁移数据总段数。</p>
+    <div class="dialog-actions"><button class="secondary" type="button" id="close-migration-export">关闭</button></div>
+  </div>
+</dialog>
+<dialog id="migration-import-dialog">
+  <div class="dialog-body">
+    <h2>导入微信旧数据</h2>
+    <p class="dialog-context">可以一次粘贴一段或多段，顺序可以打乱。系统会逐段校验，全部完整后才允许导入。</p>
+    <textarea class="backup-textarea" id="migration-import-text" placeholder="粘贴一个或多个迁移分段"></textarea>
+    <button type="button" id="add-migration-segments">加入这些分段</button>
+    <div class="migration-progress" id="migration-import-progress">已收到 0 / ? 段</div>
+    <p class="backup-status" id="migration-import-status">等待迁移分段。</p>
+    <div class="migration-summary" id="migration-preview" hidden></div>
+    <button type="button" id="confirm-migration-import" hidden>确认导入微信旧数据</button>
+    <button class="secondary" type="button" id="clear-migration-import">清空已接收分段</button>
+    <div class="migration-complete" id="migration-complete" hidden><strong>迁移完成，请立即下载第一份完整基准备份。</strong><span>下载后请到 OPPO 文件管理确认文件存在，再返回完成确认。</span><button type="button" id="download-baseline-backup">下载完整 JSON 基准备份</button><button class="secondary" type="button" id="confirm-baseline-saved" hidden>我已确认基准备份已保存</button><p class="backup-status" id="migration-complete-status"></p></div>
+    <div class="dialog-actions"><button class="secondary" type="button" id="close-migration-import">关闭</button></div>
+  </div>
+</dialog>
+<script src="./backup-state.js"></script>
+<script src="./local-snapshots.js"></script>
+<script src="./migration-transfer.js"></script>
+<script>
+  const $=id=>document.getElementById(id);
+  const money=n=>Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const shortMoney=n=>String(Math.round(Number(n)*100)/100);
+  const cnDate=value=>{const d=value instanceof Date?value:parseLocalDate(value);return `${d.getMonth()+1}月${d.getDate()}日`};
+  const round2=n=>Math.round((n+Number.EPSILON)*100)/100;
+  let financeMode='quote';
+  const PLAN_STORAGE_KEY='lateFeePaymentPlansRc1MigrationTestV1';
+  const BACKUP_DIRTY_KEY='lateFeeBackupDirtyRc1MigrationTestV1';
+  const BACKUP_STATE_KEY='dajinBackupStateRc1MigrationTestV1';
+  const LOCAL_SNAPSHOTS_KEY='dajinLocalSnapshotsRc1MigrationTestV1';
+  const planStorageState={status:'unknown',raw:null,locked:true,reason:'正在检查客户数据。',sourceKey:PLAN_STORAGE_KEY};
+  const backupStateModuleAvailable=Boolean(window.DajinBackupState?.BackupStateManager);
+  if(!backupStateModuleAvailable){
+    const alertBox=$('recovery-alert');
+    if(alertBox){alertBox.hidden=false;$('recovery-alert-message').textContent='备份状态模块加载失败。客户主数据未被初始化或改动；正式备份确认已停用，可在强提醒中紧急进入30分钟。';const action=$('open-storage-diagnostics');if(action)action.hidden=true}
+    class EmergencyBackupStateManager{
+      constructor(options={}){this.storage=options.storage;this.stateKey=options.stateKey||BACKUP_STATE_KEY;this.legacyDirtyKey=options.legacyDirtyKey||BACKUP_DIRTY_KEY;this.onChange=()=>{};this.currentDataHash=null;this.metadataInvalid=true;this.lastError=new Error('备份状态模块未加载');this.lastStorageWriteError=null;this.now=()=>Date.now();let saved={};try{saved=JSON.parse(this.storage.getItem(this.stateKey)||'{}')}catch(error){}this.state={lastBackupAt:typeof saved.lastBackupAt==='string'?saved.lastBackupAt:null,lastDataChangeAt:typeof saved.lastDataChangeAt==='string'?saved.lastDataChangeAt:null,dirtySinceBackup:true,backupVersion:1,dataRevision:Number.isInteger(saved.dataRevision)&&saved.dataRevision>=0?saved.dataRevision:0,lastBackedUpRevision:Number.isInteger(saved.lastBackedUpRevision)&&saved.lastBackedUpRevision>=0?saved.lastBackedUpRevision:0,lastBackupHash:typeof saved.lastBackupHash==='string'?saved.lastBackupHash:null,lastBackupMethod:typeof saved.lastBackupMethod==='string'?saved.lastBackupMethod:null,backupGraceUntil:typeof saved.backupGraceUntil==='string'?saved.backupGraceUntil:null}}
+      initialize(){return Promise.resolve(this.snapshot())}whenIdle(){return Promise.resolve(this.snapshot())}needsBackup(){return true}isGraceActive(nowMs=this.now()){const until=Date.parse(this.state.backupGraceUntil);return Number.isFinite(nowMs)&&Number.isFinite(until)&&until>nowMs&&until-nowMs<=30*60*1000}shouldBlockBackup(nowMs=this.now()){return !this.isGraceActive(nowMs)}
+      snapshot(){return {...this.state,currentDataHash:null,needsBackup:true,graceActive:this.isGraceActive(),shouldBlockBackup:this.shouldBlockBackup(),metadataInvalid:true,lastError:'备份状态模块未加载'}}
+      persist(){try{this.storage.setItem(this.stateKey,JSON.stringify(this.state));this.lastStorageWriteError=null;return true}catch(error){this.lastStorageWriteError=error;this.lastError=error;return false}}
+      recordDataChange(){this.state.dirtySinceBackup=true;this.state.lastDataChangeAt=new Date(this.now()).toISOString();this.state.dataRevision=Math.max(this.state.dataRevision,this.state.lastBackedUpRevision)+1;try{this.storage.setItem(this.legacyDirtyKey,'1')}catch(error){this.lastStorageWriteError=error}this.persist();this.onChange(this.snapshot());return Promise.resolve(this.snapshot())}
+      grantGrace(){this.state.backupGraceUntil=new Date(this.now()+30*60*1000).toISOString();if(!this.persist())return {ok:false,reason:'state-write-failed',state:this.snapshot()};this.onChange(this.snapshot());return {ok:true,state:this.snapshot()}}
+      confirmBackup(){this.state.dirtySinceBackup=true;this.persist();this.onChange(this.snapshot());return Promise.resolve({ok:false,reason:'module-unavailable',state:this.snapshot()})}
+    }
+    window.DajinBackupState={BackupStateManager:EmergencyBackupStateManager,sha256Text:async()=>{throw new Error('备份状态模块未加载，无法生成可校验的备份。')}};
+  }
+  let plans=loadPlans();
+  const backupStateManager=new window.DajinBackupState.BackupStateManager({storage:localStorage});
+  const localSnapshotManager=window.DajinLocalSnapshots?.LocalSnapshotManager?new window.DajinLocalSnapshots.LocalSnapshotManager({storage:localStorage,hashText:window.DajinBackupState.sha256Text}):null;
+  let businessChangePending=Promise.resolve(),activeBackupSession=null,selectedSnapshot=null,backupBlockTimer=null;
+  let activeMigrationExport=null,migrationImportSegments=[],validatedMigration=null,migrationBaselinePending=false;
+  backupStateManager.onChange=()=>{renderBackupReminder();refreshBackupAccess()};
+  const backupStateReady=backupStateManager.initialize(planStorageState.raw);
+
+  function parseLocalDate(value){const [y,m,d]=String(value).split('-').map(Number);return new Date(y,m-1,d,12)}
+  function todayNoon(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate(),12)}
+  function dateDiff(later,earlier){return Math.round((later-earlier)/86400000)}
+  function pad(value){return String(value).padStart(2,'0')}
+  function toISO(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`}
+  function fullCnDate(date){return `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日`}
+  function localDateTime(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`}
+  function recentBackupLabel(value){if(!value)return '尚未完成';const date=new Date(value);if(!Number.isFinite(date.getTime()))return '状态异常';const now=new Date();return date.toDateString()===now.toDateString()?`今天 ${pad(date.getHours())}:${pad(date.getMinutes())}`:localDateTime(date)}
+  function trackedSetItem(key,value){localStorage.setItem(key,value);return true}
+  function trackedRemoveItem(key){localStorage.removeItem(key);return true}
+  function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]))}
+  function customerArray(value){const list=Array.isArray(value)?value:Array.isArray(value?.plans)?value.plans:null;return list&&list.length&&list.every(validBackupPlan)?list:null}
+  function findAlternatePlans(){
+    try{
+      const matches=[];
+      for(let index=0;index<localStorage.length;index++){
+        const key=localStorage.key(index);if(!key||key===PLAN_STORAGE_KEY||key===BACKUP_DIRTY_KEY||key===BACKUP_STATE_KEY||key===LOCAL_SNAPSHOTS_KEY)continue;
+        try{const value=JSON.parse(localStorage.getItem(key)),list=customerArray(value);if(list)matches.push({key,plans:list})}catch(error){}
+      }
+      return matches.length===1?matches[0]:null;
+    }catch(error){return null}
+  }
+  function recoverAlternatePlans(){
+    const alternate=findAlternatePlans();if(!alternate)return [];
+    planStorageState.sourceKey=alternate.key;planStorageState.reason+=` 已在其他存储项中找到 ${alternate.plans.length} 位客户，目前仅以只读方式显示。`;
+    return alternate.plans;
+  }
+  function loadPlans(){
+    try{
+      const raw=localStorage.getItem(PLAN_STORAGE_KEY);planStorageState.raw=raw;
+      if(raw===null){planStorageState.status='missing';planStorageState.reason='原客户数据存储项不存在，已禁止新增和覆盖。';return recoverAlternatePlans()}
+      if(!raw.trim()){planStorageState.status='blank';planStorageState.reason='原客户数据为空字符串，已禁止覆盖。';return recoverAlternatePlans()}
+      let value;try{value=JSON.parse(raw)}catch(error){planStorageState.status='invalid-json';planStorageState.reason='原客户数据仍存在，但JSON无法解析，已禁止覆盖。';return recoverAlternatePlans()}
+      if(Array.isArray(value)){
+        if(!value.length){planStorageState.status='empty';planStorageState.reason='原客户存储项存在，但客户列表为空，已禁止继续覆盖。';return recoverAlternatePlans()}
+        if(!value.every(validBackupPlan)){planStorageState.status='invalid-records';planStorageState.reason='原客户数据仍存在，但部分客户记录格式异常，已禁止覆盖。';return recoverAlternatePlans()}
+        planStorageState.status='ok';planStorageState.locked=false;planStorageState.reason='客户数据正常。';return value;
+      }
+      const wrapped=customerArray(value);
+      if(wrapped){planStorageState.status='wrapped';planStorageState.reason=`找到 ${wrapped.length} 位旧格式客户，已只读显示，未改动原始数据。`;return wrapped}
+      planStorageState.status='unsupported';planStorageState.reason='原客户数据仍存在，但结构不是可识别的客户列表，已禁止覆盖。';return recoverAlternatePlans();
+    }catch(error){planStorageState.status='inaccessible';planStorageState.reason=`当前浏览器拒绝访问本地客户数据：${error.message||'未知错误'}。`;return []}
+  }
+  function renderStorageProtection(){const alertBox=$('recovery-alert');if(!alertBox)return;if(!backupStateModuleAvailable){alertBox.hidden=false;$('recovery-alert-message').textContent='备份状态模块加载失败。客户主数据未被初始化或改动；正式备份确认已停用，可在强提醒中紧急进入30分钟。'}else{alertBox.hidden=!planStorageState.locked;$('recovery-alert-message').textContent=planStorageState.reason}}
+  function hasStoredBusinessData(){try{const value=JSON.parse(planStorageState.raw);return Array.isArray(value)&&value.length>0}catch(error){return false}}
+  function backupAccessBlocked(){
+    try{if(!hasStoredBusinessData()||!backupStateManager.shouldBlockBackup())return false}catch(error){}
+    refreshBackupAccess();return true;
+  }
+  function ensureStorageWritable(){
+    if(backupAccessBlocked())return false;
+    if(planStorageState.locked){renderStorageProtection();openRecoveryDialog();return false}
+    try{
+      if(localStorage.getItem(PLAN_STORAGE_KEY)!==planStorageState.raw){planStorageState.status='changed';planStorageState.locked=true;planStorageState.reason='客户原始数据在页面打开后发生变化，已停止写入，避免覆盖。';renderStorageProtection();openRecoveryDialog();return false}
+    }catch(error){planStorageState.status='inaccessible';planStorageState.locked=true;planStorageState.reason=`保存前无法访问客户数据：${error.message||'未知错误'}。`;renderStorageProtection();openRecoveryDialog();return false}
+    return true;
+  }
+  function renderBackupReminder(){const reminder=$('backup-reminder');if(!reminder)return;try{reminder.hidden=planStorageState.locked||!backupStateManager.state.dirtySinceBackup}catch(error){reminder.hidden=true}}
+  function refreshBackupAccess(){
+    let state;try{state=backupStateManager.snapshot()}catch(error){return}
+    const box=$('backup-safety-status'),title=$('backup-safety-title'),detail=$('backup-safety-detail'),required=$('backup-required-dialog');
+    box.classList.remove('pending','required');
+    if(!state.dirtySinceBackup&&!state.needsBackup){title.textContent='数据安全 · 已备份';detail.textContent=`最近备份：${recentBackupLabel(state.lastBackupAt)}`}
+    else if(!state.needsBackup){box.classList.add('pending');title.textContent='数据安全 · 有新数据待备份';detail.textContent=`最近备份：${recentBackupLabel(state.lastBackupAt)}`}
+    else{box.classList.add('required');title.textContent='数据安全 · 需要立即备份';detail.textContent=`最近备份：${recentBackupLabel(state.lastBackupAt)}`}
+    $('backup-required-last-time').textContent=`最近备份：${state.lastBackupAt?localDateTime(new Date(state.lastBackupAt)):'尚未完成'}`;
+    if(backupBlockTimer){clearTimeout(backupBlockTimer);backupBlockTimer=null}
+    if(state.graceActive&&state.backupGraceUntil){const delay=Math.max(0,Date.parse(state.backupGraceUntil)-backupStateManager.now()+50);backupBlockTimer=setTimeout(refreshBackupAccess,delay);backupBlockTimer?.unref?.()}
+    const shouldBlock=state.shouldBlockBackup&&hasStoredBusinessData();
+    if(shouldBlock&&!planStorageState.locked&&!$('backup-dialog').open&&!$('backup-confirm-dialog').open&&!$('backup-grace-dialog').open){if(!required.open)required.showModal()}
+    else if(required.open&&!shouldBlock)required.close();
+  }
+  function requestBackupGrace(){const required=$('backup-required-dialog'),dialog=$('backup-grace-dialog');if(required.open)required.close();if(!dialog.open)dialog.showModal()}
+  function cancelBackupGrace(){const dialog=$('backup-grace-dialog');if(dialog.open)dialog.close();refreshBackupAccess()}
+  function confirmBackupGrace(){const result=backupStateManager.grantGrace();if(!result.ok){$('backup-grace-dialog').close();refreshBackupAccess();return false}$('backup-grace-dialog').close();if($('backup-required-dialog').open)$('backup-required-dialog').close();refreshBackupAccess();return true}
+  function setBackupDirty(dirty){if(planStorageState.locked)return false;if(dirty)trackedSetItem(BACKUP_DIRTY_KEY,'1');else trackedRemoveItem(BACKUP_DIRTY_KEY);renderBackupReminder();return true}
+  function recordSuccessfulBusinessWrite(raw){
+    setBackupDirty(true);
+    const statePromise=backupStateManager.recordDataChange(raw),revision=backupStateManager.snapshot().dataRevision;
+    const snapshotPromise=localSnapshotManager?localSnapshotManager.capture(raw,revision,null,'business-change'):Promise.resolve({ok:false,reason:'module-unavailable'});
+    businessChangePending=Promise.all([statePromise,snapshotPromise]);
+    return businessChangePending;
+  }
+  function savePlans(){
+    if(!ensureStorageWritable())return false;
+    const raw=JSON.stringify(plans);if(raw===planStorageState.raw)return true;
+    trackedSetItem(PLAN_STORAGE_KEY,raw);planStorageState.raw=raw;recordSuccessfulBusinessWrite(raw);return true;
+  }
+  function inspectStoredValue(key,raw){
+    const item={key,raw,length:typeof raw==='string'?raw.length:0,format:'无法识别',customers:null,candidate:key===PLAN_STORAGE_KEY};
+    if(raw===null){item.format='存储项不存在';return item}
+    if(!String(raw).trim()){item.format='空字符串';return item}
+    try{
+      const value=JSON.parse(raw),list=Array.isArray(value)?value:Array.isArray(value?.plans)?value.plans:null;
+      if(list){item.customers=list.length;item.candidate=item.candidate||list.some(entry=>entry&&typeof entry==='object'&&typeof entry.name==='string'&&('amount'in entry||'totalTerms'in entry));item.format=Array.isArray(value)?'JSON数组':'包含plans的JSON对象'}
+      else item.format=value===null?'JSON null':`JSON ${typeof value}`;
+    }catch(error){item.format=`JSON解析失败：${error.message}`;item.candidate=item.candidate||/late|fee|plan|customer|repay|payment/i.test(key)}
+    return item;
+  }
+  function inspectStorageArea(areaName){
+    const result={name:areaName,items:[],error:null};
+    try{const area=window[areaName];for(let index=0;index<area.length;index++){const key=area.key(index);if(key!==null)result.items.push(inspectStoredValue(key,area.getItem(key)))}}
+    catch(error){result.error=error.message||String(error)}
+    return result;
+  }
+  function collectStorageEvidence(){return {app:'车辆还款数据只读诊断',checkedAt:new Date().toISOString(),origin:location.origin,url:location.href,userAgent:navigator.userAgent,expectedKey:PLAN_STORAGE_KEY,status:planStorageState.status,reason:planStorageState.reason,visibleCustomers:plans.length,areas:[inspectStorageArea('localStorage'),inspectStorageArea('sessionStorage')]}}
+  function runStorageDiagnostics(){
+    const evidence=collectStorageEvidence(),localArea=evidence.areas[0],main=localArea.items.find(item=>item.key===PLAN_STORAGE_KEY),candidates=evidence.areas.flatMap(area=>area.items.filter(item=>item.candidate&&item.customers>0).map(item=>({area:area.name,item})));
+    const report=[`检查时间：${localDateTime(new Date())}`,`当前网址：${evidence.url}`,`微信环境：${/MicroMessenger/i.test(evidence.userAgent)?'是':'否'}`,`应使用的客户存储键：${PLAN_STORAGE_KEY}`,`当前页面可显示客户：${plans.length} 位`,`保护状态：${planStorageState.locked?'只读锁定，禁止覆盖':'正常'}`,`客户主存储：${main?`${main.format}，${main.length} 字符${main.customers===null?'':`，${main.customers} 位客户`}`:'不存在'}`,''];
+    evidence.areas.forEach(area=>{report.push(`${area.name}：${area.error?`访问失败：${area.error}`:`共 ${area.items.length} 项`}`);area.items.forEach(item=>report.push(`- ${item.key}：${item.format}，${item.length} 字符${item.customers===null?'':`，${item.customers} 条记录`}`));report.push('')});
+    const status=$('recovery-status');
+    if(candidates.length){status.textContent=`发现 ${candidates.length} 个包含客户记录的本地存储项。请立即点击“复制全部原始数据”并保存。`;status.classList.remove('danger')}
+    else if(main&&main.length){status.textContent='客户原始内容仍存在，但没有成功识别出有效客户。请先复制全部原始数据，再进一步分析。';status.classList.add('danger')}
+    else{status.textContent='当前微信可访问的本地存储中没有找到客户原始数据；请先截图诊断结果，不要清缓存或卸载微信。';status.classList.add('danger')}
+    $('recovery-report').textContent=report.join('\n');return evidence;
+  }
+  function openRecoveryDialog(){runStorageDiagnostics();const dialog=$('recovery-dialog');if(dialog&&!dialog.open)dialog.showModal()}
+  async function copyStorageEvidence(){
+    const evidence=collectStorageEvidence(),text=JSON.stringify(evidence,null,2),box=$('recovery-text');box.value=text;box.hidden=false;
+    try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);$('recovery-status').textContent='全部原始数据已复制。请立刻粘贴到微信文件传输助手保存。';$('recovery-status').classList.remove('danger');return}}
+    catch(error){}
+    box.focus();box.select();box.scrollIntoView({behavior:'smooth',block:'center'});$('recovery-status').textContent='微信限制自动复制。请在下方文本框内长按，选择全选后复制，并保存到文件传输助手。';$('recovery-status').classList.add('danger');
+  }
+  function setBackupStatus(message,isError=false){$('backup-status').textContent=message;$('backup-status').style.color=isError?'var(--danger)':'var(--blue)'}
+  function validBackupPlan(plan){
+    const safeId=value=>typeof value==='string'&&/^[A-Za-z0-9._:-]+$/.test(value),validPayments=Array.isArray(plan?.payments)&&(plan.payments||[]).every(payment=>safeId(payment.id)&&Number.isFinite(Number(payment.total))&&Number.isFinite(Number(payment.lateFee))&&Number.isFinite(Number(payment.principal))&&Array.isArray(payment.allocations));
+    return plan&&typeof plan==='object'&&safeId(plan.id)&&typeof plan.name==='string'&&Number.isFinite(Number(plan.amount))&&Number(plan.amount)>0&&Number.isInteger(Number(plan.totalTerms))&&Number(plan.totalTerms)>0&&Number.isInteger(Number(plan.completedTerms))&&Number(plan.completedTerms)>=0&&(plan.depositMonths===undefined||(Number.isInteger(Number(plan.depositMonths))&&Number(plan.depositMonths)>=0&&Number(plan.depositMonths)<=120))&&typeof plan.startDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(plan.startDate)&&(plan.payments===undefined||validPayments);
+  }
+  function backupPayload(date=new Date(),sourcePlans=plans,revision=backupStateManager.snapshot().dataRevision,checksum=null){return {app:'大进车贷助手',version:1,exportedAt:date.toISOString(),dataRevision:revision,checksum,plans:sourcePlans}}
+  async function createBackupArtifact(method){
+    await Promise.all([backupStateManager.whenIdle(),businessChangePending]);
+    let raw;try{raw=localStorage.getItem(PLAN_STORAGE_KEY)}catch(error){throw new Error('当前浏览器无法读取客户数据，未生成备份。')}
+    if(raw===null||raw!==planStorageState.raw)throw new Error('客户数据在备份前发生变化，请刷新检查后重试。');
+    const sourcePlans=JSON.parse(raw),state=backupStateManager.snapshot(),hash=await window.DajinBackupState.sha256Text(raw),date=new Date();
+    if(state.dataRevision!==backupStateManager.snapshot().dataRevision)throw new Error('客户数据在备份生成期间发生变化，请重新生成。');
+    activeBackupSession={method,dataRevision:state.dataRevision,hash};
+    const payload=backupPayload(date,sourcePlans,state.dataRevision,hash);
+    return {payload,compactJson:JSON.stringify(payload),date,hash};
+  }
+  function showBackupConfirmationStep(){const step=$('backup-confirm-step');if(step)step.hidden=false}
+  function normalizeImportedPlans(value){
+    const imported=Array.isArray(value)?value:value?.plans;
+    if(!Array.isArray(imported)||!imported.every(validBackupPlan))throw new Error('这不是有效的车辆还款数据备份。');
+    if(!imported.length)throw new Error('备份没有客户记录，已阻止用空数据覆盖原始资料。');
+    const ids=imported.map(plan=>plan.id);if(new Set(ids).size!==ids.length)throw new Error('备份中存在重复客户记录，无法恢复。');
+    return imported;
+  }
+  function backupJsonSource(text){
+    const trimmed=String(text||'').replace(/&#x0*20;|&#0*32;|&nbsp;/gi,' ').trim();if(!trimmed)throw new Error('请先粘贴备份文本。');
+    if(trimmed.length>5*1024*1024)throw new Error('备份文本超过5MB，无法恢复。');
+    let jsonText=trimmed;const marker='数据：',markerIndex=trimmed.indexOf(marker);
+    if(!/^[{\[]/.test(trimmed)&&markerIndex>=0)jsonText=trimmed.slice(markerIndex+marker.length).trim();
+    else if(!/^[{\[]/.test(trimmed)){const objectStart=trimmed.indexOf('{'),arrayStart=trimmed.indexOf('['),starts=[objectStart,arrayStart].filter(index=>index>=0);if(!starts.length)throw new Error('没有识别到JSON数据，请粘贴完整备份文本。');const start=Math.min(...starts),end=Math.max(trimmed.lastIndexOf('}'),trimmed.lastIndexOf(']'));if(end<start)throw new Error('备份文本中的JSON不完整。');jsonText=trimmed.slice(start,end+1)}
+    return jsonText;
+  }
+  function parseBackupText(text){return JSON.parse(backupJsonSource(text))}
+  function scanCompleteJsonObjects(source){
+    const objects=[];let start=-1,quoted=false,escaped=false;const stack=[];
+    for(let index=0;index<source.length;index++){
+      const char=source[index];
+      if(quoted){if(escaped)escaped=false;else if(char==='\\')escaped=true;else if(char==='"')quoted=false;continue}
+      if(char==='"'){quoted=true;continue}
+      if(char==='{'||char==='['){if(!stack.length&&char==='{')start=index;stack.push(char);continue}
+      if(char==='}'||char===']'){
+        if(!stack.length){if(char===']')break;continue}
+        const expected=char==='}'?'{':'[';if(stack[stack.length-1]!==expected)break;stack.pop();
+        if(!stack.length&&start>=0){try{objects.push(JSON.parse(source.slice(start,index+1)))}catch(error){}start=-1}
+      }
+    }
+    return {objects,incomplete:start>=0?source.slice(start):''};
+  }
+  function salvageTruncatedBackup(text){
+    const source=backupJsonSource(text),match=/"plans"\s*:\s*\[/.exec(source);
+    if(!match)throw new Error('没有找到可抢救的客户列表。');
+    const scanned=scanCompleteJsonObjects(source.slice(match.index+match[0].length)),complete=scanned.objects.filter(validBackupPlan),recovered=complete.slice();let repairedCustomer=false,droppedPayment=false;
+    if(scanned.incomplete){
+      const paymentsMatch=/"payments"\s*:\s*\[/.exec(scanned.incomplete);
+      if(paymentsMatch){
+        const opening=paymentsMatch.index+paymentsMatch[0].lastIndexOf('['),paymentScan=scanCompleteJsonObjects(scanned.incomplete.slice(opening+1)),prefix=scanned.incomplete.slice(0,opening);
+        try{const customer=JSON.parse(`${prefix}${JSON.stringify(paymentScan.objects)}}`);if(validBackupPlan(customer)){recovered.push(customer);repairedCustomer=true;droppedPayment=Boolean(paymentScan.incomplete)}}catch(error){}
+      }
+    }
+    if(!recovered.length)throw new Error('备份文本中的JSON格式不正确，也没有找到完整的客户资料。');
+    return {plans:recovered,completeCustomers:complete.length,repairedCustomer,droppedPayment};
+  }
+  function restoreImportedPlans(imported,source,notice=''){
+    if(planStorageState.locked&&['missing','empty','blank'].includes(planStorageState.status)&&!plans.length){
+      let currentRaw;try{currentRaw=localStorage.getItem(PLAN_STORAGE_KEY)}catch(error){setBackupStatus('当前浏览器无法访问本地存储，不能恢复客户数据。',true);return false}
+      if(currentRaw!==planStorageState.raw){setBackupStatus('原始存储在恢复前发生变化，已停止操作，请先重新检查。',true);return false}
+      if(!confirm(`${notice?notice+'\n\n':''}已校验备份中的 ${imported.length} 位客户。当前没有可用客户数据，确定将这份非空备份恢复到本机吗？`))return false;
+      const restored=JSON.parse(JSON.stringify(imported));restored.forEach(plan=>{plan.payments=plan.payments||[]});
+      const raw=JSON.stringify(restored);trackedSetItem(PLAN_STORAGE_KEY,raw);plans=restored;planStorageState.raw=raw;planStorageState.status='ok';planStorageState.locked=false;planStorageState.sourceKey=PLAN_STORAGE_KEY;planStorageState.reason=`已从经校验的备份恢复 ${plans.length} 位客户。`;
+      setBackupDirty(true);backupStateManager.recordDataChange(raw);renderStorageProtection();renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。请立即重新备份。`);return true;
+    }
+    if(!ensureStorageWritable())return false;
+    if(!confirm(`${notice?notice+'\n\n':''}备份中有 ${imported.length} 位客户。恢复后将替换当前 ${plans.length} 位客户的数据，确定继续吗？`))return false;
+    plans=JSON.parse(JSON.stringify(imported));plans.forEach(plan=>{plan.payments=plan.payments||[]});if(!savePlans())return false;renderPlanModule();resetPlanForm();setBackupStatus(`${source}恢复完成，已导入 ${plans.length} 位客户。请立即重新备份。`);return true;
+  }
+  function restoreBackupText(){
+    const text=$('backup-text').value;
+    try{const value=parseBackupText(text),imported=normalizeImportedPlans(value);restoreImportedPlans(imported,'文本备份')}
+    catch(error){
+      if(!(error instanceof SyntaxError)){setBackupStatus(error.message,true);return}
+      try{
+        const result=salvageTruncatedBackup(text),imported=normalizeImportedPlans(result.plans),notice=`备份文本已截断。已找回 ${result.completeCustomers} 位完整客户${result.repairedCustomer?'，并抢救出最后一位客户的完整合同和已完整的收款记录':''}。${result.droppedPayment?'末尾那条未写完的收款记录无法恢复，未做任何编造。':''}`;
+        restoreImportedPlans(imported,'截断备份抢救',notice);
+      }catch(recoveryError){setBackupStatus(recoveryError.message||'备份文本中的JSON格式不正确，请确认复制完整。',true)}
+    }
+  }
+  function openBackupDialog(){const dialog=$('backup-dialog');if(!dialog.open)dialog.showModal()}
+  function backupFileName(date,prefix='大进车贷助手备份'){return `${prefix}_${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}.json`}
+  function triggerJsonDownload(content,fileName){
+    if(typeof Blob!=='function'||!URL?.createObjectURL)throw new Error('当前浏览器不支持完整 JSON 文件下载。');
+    const blob=new Blob([content],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+    if(!('download'in link)){URL.revokeObjectURL(url);throw new Error('当前浏览器不支持直接保存 JSON 文件。')}
+    link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return {blob,fileName};
+  }
+  async function exportBackup(options={}){
+    let artifact;try{artifact=await createBackupArtifact('json-download')}catch(error){setBackupStatus(error.message,true);return false}
+    try{triggerJsonDownload(artifact.compactJson,backupFileName(artifact.date,options.baseline?'大进车贷助手基准备份':'大进车贷助手备份'))}
+    catch(error){activeBackupSession=null;setBackupStatus(`${error.message} 请使用分段文本应急备份。`,true);return false}
+    if(options.baseline){migrationBaselinePending=true;$('confirm-baseline-saved').hidden=false;$('migration-complete-status').textContent='已触发基准备份下载，请先到文件管理确认文件存在。'}
+    else showBackupConfirmationStep();
+    setBackupStatus(`已触发完整 JSON 下载，共 ${plans.length} 位客户。下载不代表备份完成，请到文件管理确认。`);return true;
+  }
+  function openBackupSavedConfirmation(){
+    if(!activeBackupSession){setBackupStatus('请先重新下载最新完整 JSON 备份。',true);return}
+    const dialog=$('backup-confirm-dialog');if(!dialog.open)dialog.showModal();
+  }
+  async function finishBackupConfirmation(){
+    if(!activeBackupSession){$('backup-confirm-dialog').close();setBackupStatus('备份会话已失效，请重新生成最新备份。',true);return false}
+    let raw;try{raw=localStorage.getItem(PLAN_STORAGE_KEY)}catch(error){raw=null}
+    const session={...activeBackupSession},result=await backupStateManager.confirmBackup({rawData:raw,expectedRevision:session.dataRevision,expectedHash:session.hash,method:session.method});
+    $('backup-confirm-dialog').close();
+    if(!result.ok){activeBackupSession=null;if(migrationBaselinePending){migrationBaselinePending=false;$('confirm-baseline-saved').hidden=true;$('migration-complete-status').textContent='数据已经发生变化，请重新下载最新基准备份。'}else showBackupConfirmationStep();setBackupStatus('数据已经发生变化，请重新下载最新备份。',true);refreshBackupAccess();return false}
+    activeBackupSession=null;$('backup-confirm-step').hidden=true;setBackupStatus(`本次备份已记录。最近备份：${localDateTime(new Date(result.state.lastBackupAt))}`);
+    if(migrationBaselinePending){migrationBaselinePending=false;$('confirm-baseline-saved').hidden=true;$('migration-complete-status').textContent='迁移完成。以后请统一从 OPPO 系统浏览器或桌面入口使用，不要再在微信内录入正式客户、收款或合同数据。'}
+    renderBackupReminder();refreshBackupAccess();return true;
+  }
+  async function createMigrationArtifact(){
+    if(!window.DajinMigrationTransfer?.buildMigrationSegments)throw new Error('迁移分段模块不可用，客户数据未被修改。');
+    await Promise.all([backupStateManager.whenIdle(),businessChangePending]);
+    let raw;try{raw=localStorage.getItem(PLAN_STORAGE_KEY)}catch(error){throw new Error('当前浏览器无法读取客户数据，未生成迁移分段。')}
+    if(raw===null||raw!==planStorageState.raw)throw new Error('客户数据在迁移生成前发生变化，请刷新检查后重试。');
+    const sourcePlans=JSON.parse(raw),state=backupStateManager.snapshot(),fullChecksum=await window.DajinBackupState.sha256Text(raw),date=new Date();
+    if(!Array.isArray(sourcePlans)||!sourcePlans.length||!sourcePlans.every(validBackupPlan))throw new Error('当前没有可安全迁移的完整客户数据。');
+    if(state.dataRevision!==backupStateManager.snapshot().dataRevision)throw new Error('客户数据在迁移生成期间发生变化，请重新生成。');
+    const value=backupPayload(date,sourcePlans,state.dataRevision,fullChecksum),compactJson=JSON.stringify(value);
+    return window.DajinMigrationTransfer.buildMigrationSegments({compactJson,dataRevision:state.dataRevision,fullChecksum,payloadBytes:8*1024,date,hashText:window.DajinBackupState.sha256Text});
+  }
+  function renderMigrationExport(){
+    if(!activeMigrationExport)return;
+    const segment=activeMigrationExport.segments[activeMigrationExport.index],copied=activeMigrationExport.copied.size,total=activeMigrationExport.segments.length;
+    $('migration-segment-text').value=segment.text;$('migration-export-progress').textContent=`第 ${segment.segmentIndex} 段 / 共 ${total} 段 · 已复制 ${copied} / ${total}`;
+    $('previous-migration-segment').disabled=activeMigrationExport.index===0;$('next-migration-segment').disabled=activeMigrationExport.index===total-1;
+    $('migration-export-status').textContent=copied===total?'全部分段都执行过复制。请确认已逐段粘贴保存，再到 OPPO 浏览器导入。':'请将每一段分别粘贴保存到微信文件传输助手或电脑。复制不代表已安全保存。';
+  }
+  async function startMigrationExport(emergency=false){
+    let built;try{built=await createMigrationArtifact()}catch(error){setBackupStatus(error.message,true);return false}
+    activeMigrationExport={segments:built.segments,index:0,copied:new Set()};
+    $('migration-export-title').textContent=emergency?'分段文本应急备份':'迁移到系统浏览器';
+    renderMigrationExport();if($('backup-dialog').open)$('backup-dialog').close();const dialog=$('migration-export-dialog');if(!dialog.open)dialog.showModal();return true;
+  }
+  function markMigrationSegmentCopied(){if(!activeMigrationExport)return;activeMigrationExport.copied.add(activeMigrationExport.segments[activeMigrationExport.index].segmentIndex);renderMigrationExport()}
+  async function copyCurrentMigrationSegment(){
+    if(!activeMigrationExport)return;const text=activeMigrationExport.segments[activeMigrationExport.index].text,box=$('migration-segment-text');
+    try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);markMigrationSegmentCopied();return}}
+    catch(error){}
+    box.focus();box.select();$('migration-export-status').textContent='自动复制受限。请在文本框内长按全选复制；完成复制操作后本段会记录进度。';
+  }
+  function moveMigrationSegment(offset){if(!activeMigrationExport)return;activeMigrationExport.index=Math.max(0,Math.min(activeMigrationExport.segments.length-1,activeMigrationExport.index+offset));renderMigrationExport()}
+  function resetMigrationImport(){
+    migrationImportSegments=[];validatedMigration=null;$('migration-import-text').value='';$('migration-import-progress').textContent='已收到 0 / ? 段';$('migration-import-status').textContent='等待迁移分段。';$('migration-preview').hidden=true;$('migration-preview').textContent='';$('confirm-migration-import').hidden=true;
+  }
+  function migrationSummary(value){
+    const imported=value.plans,paymentCount=imported.reduce((sum,plan)=>sum+(plan.payments||[]).length,0),allocationCount=imported.reduce((sum,plan)=>sum+(plan.payments||[]).reduce((part,payment)=>part+(payment.allocations||[]).length,0),0),completedTerms=imported.reduce((sum,plan)=>sum+Number(plan.completedTerms||0),0),vehicleKeys=new Set(imported.map(plan=>String(plan.plate||plan.vehicle||'').trim()).filter(Boolean));
+    return {customers:imported.length,contracts:imported.length,payments:paymentCount,allocations:allocationCount,completedTerms,vehicles:vehicleKeys.size,exportedAt:value.exportedAt};
+  }
+  async function addMigrationSegments(){
+    if(!window.DajinMigrationTransfer?.parseMigrationSegments){$('migration-import-status').textContent='迁移模块不可用，客户数据未被修改。';return false}
+    try{
+      const added=window.DajinMigrationTransfer.parseMigrationSegments($('migration-import-text').value);
+      for(const segment of added){const actual=await window.DajinBackupState.sha256Text(segment.payload);if(actual!==segment.segmentChecksum)throw new window.DajinMigrationTransfer.MigrationTransferError('segment-checksum',`第${segment.segmentIndex}段校验失败。`,{segmentIndex:segment.segmentIndex})}
+      const combined=[...migrationImportSegments,...added],meta=window.DajinMigrationTransfer.validateSegmentSet(combined,{allowIncomplete:true});
+      migrationImportSegments=combined.sort((a,b)=>a.segmentIndex-b.segmentIndex);$('migration-import-text').value='';$('migration-import-progress').textContent=`已收到 ${combined.length} / ${meta.segmentTotal} 段`;
+      if(meta.missing.length){$('migration-import-status').textContent=`还缺少第${meta.missing.join('段、第')}段。请继续逐段加入。`;return true}
+      validatedMigration=await window.DajinMigrationTransfer.restoreMigrationSegments(migrationImportSegments,{hashText:window.DajinBackupState.sha256Text});
+      const imported=normalizeImportedPlans(validatedMigration.value),summary=migrationSummary(validatedMigration.value),hasCurrent=hasStoredBusinessData();
+      $('migration-preview').innerHTML=`客户总数：<strong>${summary.customers}</strong><br>合同总数：<strong>${summary.contracts}</strong><br>收款记录：<strong>${summary.payments}</strong><br>收款分配记录：<strong>${summary.allocations}</strong><br>已完成期数合计：<strong>${summary.completedTerms}</strong><br>车辆数量：<strong>${summary.vehicles}</strong><br>数据导出时间：<strong>${escapeHtml(summary.exportedAt||'未知')}</strong><br>当前浏览器客户数：<strong>${plans.length}</strong>${hasCurrent?'<br><span class="restore-danger">当前浏览器已有数据，禁止静默覆盖，必须再次明确确认。</span>':''}`;
+      $('migration-preview').hidden=false;$('confirm-migration-import').hidden=false;$('migration-import-status').textContent='全部分段和完整数据校验通过。请核对摘要后再导入。';return imported;
+    }catch(error){validatedMigration=null;$('confirm-migration-import').hidden=true;$('migration-preview').hidden=true;$('migration-import-status').textContent=error.message||'迁移分段校验失败，禁止导入。';return false}
+  }
+  async function confirmMigrationImport(){
+    if(!validatedMigration)return false;
+    let imported;try{imported=normalizeImportedPlans(validatedMigration.value)}catch(error){$('migration-import-status').textContent=error.message;return false}
+    const hasCurrent=hasStoredBusinessData(),message=hasCurrent?`当前 OPPO 浏览器已有 ${plans.length} 位客户。导入将覆盖为微信迁移数据中的 ${imported.length} 位客户。确定继续吗？`:`已完整校验 ${imported.length} 位微信旧客户数据。确定写入当前 OPPO 浏览器吗？`;
+    if(!confirm(message))return false;
+    await Promise.all([backupStateManager.whenIdle(),businessChangePending]);
+    if(hasCurrent){
+      if(!localSnapshotManager){$('migration-import-status').textContent='本地快照模块不可用，已停止覆盖当前数据。';return false}
+      const currentState=backupStateManager.snapshot(),before=await localSnapshotManager.capture(planStorageState.raw,currentState.dataRevision,currentState.currentDataHash,'before-restore');
+      if(!before.ok){$('migration-import-status').textContent='无法创建导入前快照，已停止覆盖当前数据。';return false}
+    }
+    const restored=JSON.parse(JSON.stringify(imported));restored.forEach(plan=>{plan.payments=plan.payments||[]});const raw=JSON.stringify(restored);
+    try{trackedSetItem(PLAN_STORAGE_KEY,raw)}catch(error){$('migration-import-status').textContent='浏览器拒绝写入，迁移未完成。';return false}
+    plans=restored;planStorageState.raw=raw;planStorageState.status='ok';planStorageState.locked=false;planStorageState.sourceKey=PLAN_STORAGE_KEY;planStorageState.reason=`已迁移 ${plans.length} 位客户。`;
+    recordSuccessfulBusinessWrite(raw);await businessChangePending;renderStorageProtection();renderPlanModule();resetPlanForm();
+    $('confirm-migration-import').hidden=true;$('migration-complete').hidden=false;$('migration-import-status').textContent='客户、合同和收款数据已写入并标记为待备份。';refreshBackupAccess();return true;
+  }
+  async function renderLocalSnapshots(){
+    const list=$('snapshot-list');
+    if(!localSnapshotManager){list.innerHTML='<div class="snapshot-empty">本地历史版本模块未加载。当前客户数据未被修改。</div>';return []}
+    const snapshots=await localSnapshotManager.listValid();
+    list.innerHTML=snapshots.length?snapshots.map(item=>`<div class="snapshot-item"><strong>${localDateTime(new Date(item.createdAt))}${item.reason==='before-restore'?'（恢复前）':''}</strong><div class="snapshot-meta">数据版本 ${item.dataRevision} · ${item.plans.length} 位客户 · ${item.hash.slice(7,19)}…</div><button class="secondary" type="button" data-view-snapshot="${escapeHtml(item.id)}">查看</button></div>`).join(''):'<div class="snapshot-empty">暂无可用的本地历史版本。</div>';
+    return snapshots;
+  }
+  async function openLocalSnapshots(){await renderLocalSnapshots();const dialog=$('snapshots-dialog');if(!dialog.open)dialog.showModal()}
+  async function previewSnapshot(id){
+    selectedSnapshot=localSnapshotManager?await localSnapshotManager.getValidSnapshot(id):null;
+    if(!selectedSnapshot){setBackupStatus('这个历史版本已损坏或无法读取，当前客户数据未被修改。',true);await renderLocalSnapshots();return false}
+    $('snapshot-preview').innerHTML=`历史版本时间：<strong>${escapeHtml(localDateTime(new Date(selectedSnapshot.createdAt)))}</strong><br>当前客户数：<strong>${plans.length}</strong><br>历史版本客户数：<strong>${selectedSnapshot.plans.length}</strong><br>历史数据版本：<strong>${selectedSnapshot.dataRevision}</strong><br>哈希：<strong>${escapeHtml(selectedSnapshot.hash.slice(0,23))}…</strong>`;
+    const dialog=$('snapshot-preview-dialog');if(!dialog.open)dialog.showModal();return true;
+  }
+  async function restoreSelectedSnapshot(){
+    if(!selectedSnapshot||!localSnapshotManager||!ensureStorageWritable())return false;
+    const target=await localSnapshotManager.getValidSnapshot(selectedSnapshot.id);if(!target){setBackupStatus('这个历史版本已损坏，已停止恢复。当前数据未被修改。',true);return false}
+    await Promise.all([backupStateManager.whenIdle(),businessChangePending]);
+    const currentRaw=planStorageState.raw,currentState=backupStateManager.snapshot();
+    const before=await localSnapshotManager.capture(currentRaw,currentState.dataRevision,currentState.currentDataHash,'before-restore');
+    if(!before.ok){setBackupStatus('无法创建恢复前快照，已停止恢复。当前数据未被修改。',true);return false}
+    const restored=JSON.parse(JSON.stringify(target.plans)),raw=JSON.stringify(restored);
+    try{trackedSetItem(PLAN_STORAGE_KEY,raw)}catch(error){setBackupStatus('浏览器拒绝写入，恢复未完成。',true);return false}
+    plans=restored;planStorageState.raw=raw;recordSuccessfulBusinessWrite(raw);await businessChangePending;
+    selectedSnapshot=null;$('snapshot-preview-dialog').close();$('snapshots-dialog').close();renderPlanModule();resetPlanForm();setBackupStatus('历史版本已恢复并标记为待备份。');return true;
+  }
+  async function importBackupFile(file){
+    if(!file)return;if(file.size>5*1024*1024){setBackupStatus('备份文件超过5MB，无法导入。',true);return}
+    try{
+      const value=JSON.parse(await file.text()),imported=normalizeImportedPlans(value);
+      if(value&&!Array.isArray(value)&&value.checksum){const actual=await window.DajinBackupState.sha256Text(JSON.stringify(imported));if(actual!==value.checksum)throw new Error('备份文件完整性校验失败，禁止导入。')}
+      restoreImportedPlans(imported,'备份文件');
+    }catch(error){setBackupStatus(error.message||'备份文件无法读取，请确认选择的是本工具导出的JSON文件。',true)}
+  }
+  function contractData(plan){
+    const price=Number(plan.vehiclePrice),downRate=Number(plan.downPaymentRate),monthlyRatePct=Number(plan.monthlyRate),term=Number(plan.totalTerms);
+    if(!Number.isFinite(price)||price<=0||!Number.isFinite(downRate)||downRate<0||downRate>=100||!Number.isFinite(monthlyRatePct)||monthlyRatePct<0||!Number.isInteger(term)||term<=0)return null;
+    const downPayment=price*downRate/100,loan=price-downPayment,monthlyPrincipal=loan/term,monthlyInterest=loan*monthlyRatePct/100,monthlyPayment=monthlyPrincipal+monthlyInterest,totalInterest=monthlyInterest*term;
+    return {price,downRate,monthlyRatePct,term,downPayment,loan,monthlyPrincipal,monthlyInterest,monthlyPayment,totalInterest,totalRepayment:loan+totalInterest};
+  }
+  function updateContractPreview(){
+    const data=contractData({vehiclePrice:$('contract-price').value,downPaymentRate:$('contract-down-rate').value,monthlyRate:$('contract-monthly-rate').value,totalTerms:$('total-terms').value});
+    if(!data){$('contract-preview').textContent='请完整填写车价、0%至100%之间的首付比例、月利率和总期数。';$('plan-amount').value='';return null}
+    $('plan-amount').value=money(data.monthlyPayment).replace(/,/g,'');$('contract-preview').textContent=`贷款${money(data.loan)}元＝每期本金${money(data.monthlyPrincipal)}元＋利息${money(data.monthlyInterest)}元`;return data;
+  }
+  function getDueDate(plan,termIndex){
+    const start=parseLocalDate(plan.startDate),first=new Date(start.getFullYear(),start.getMonth()+termIndex,1,12);
+    const lastDay=new Date(first.getFullYear(),first.getMonth()+1,0,12).getDate();
+    return new Date(first.getFullYear(),first.getMonth(),Math.min(Number(plan.dueDay),lastDay),12);
+  }
+  function principalPaidFor(plan,termIndex){return round2((plan.payments||[]).flatMap(payment=>payment.allocations||[]).filter(item=>Number(item.termIndex)===Number(termIndex)).reduce((sum,item)=>sum+Number(item.principal||0),0))}
+  function installmentItem(plan,termIndex){
+    const dueDate=getDueDate(plan,termIndex),delta=dateDiff(dueDate,todayNoon()),daysOverdue=Math.max(0,-delta),paid=principalPaidFor(plan,termIndex),remaining=round2(Math.max(0,Number(plan.amount)-paid));
+    const fee=round2(remaining*Number(plan.rate)*daysOverdue);
+    const contract=contractData(plan),isPaid=paid+.005>=Number(plan.amount);let interestPaid=0,principalPaid=paid;
+    if(contract){interestPaid=isPaid?contract.monthlyInterest:Math.min(round2(contract.monthlyInterest),paid);principalPaid=isPaid?contract.monthlyPrincipal:Math.min(contract.monthlyPrincipal,Math.max(0,paid-interestPaid))}
+    return {plan,termIndex,dueDate,delta,daysOverdue,paid,remaining,fee,total:round2(remaining+fee),interestPaid,principalPaid};
+  }
+  function openInstallments(plan){const items=[];for(let index=Number(plan.completedTerms);index<Number(plan.totalTerms);index++){const item=installmentItem(plan,index);if(item.remaining>.005)items.push(item)}return items}
+  function nextInstallment(plan){return openInstallments(plan)[0]||null}
+  function planIdentity(plan){return [plan.plate,plan.vehicle].filter(Boolean).join(' · ')||'未填写车辆信息'}
+  function reminderMessage(item,type){
+    const {plan,dueDate,daysOverdue,fee,total}=item,name=plan.name?`${plan.name}，`:'';
+    const vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'';
+    const payable=item.remaining;
+    if(type==='today')return `您好，${name}提醒您一下，您本期车辆款项今天到期。\n\n本期剩余应付款：${shortMoney(payable)}元\n应付日期：${cnDate(dueDate)}${infoLine}\n\n请您今天安排付款，谢谢。`;
+    if(type==='upcoming')return `您好，${name}提醒您一下，您本期车辆款项将在${cnDate(dueDate)}到期。\n\n本期剩余应付款：${shortMoney(payable)}元${infoLine}\n\n请您提前安排一下，避免逾期产生滞纳金，谢谢。`;
+    const pct=shortMoney(Number(plan.rate)*100),rateLabel=Math.abs(Number(plan.rate)-.005)<.0000001?'每日千分之五（0.5%）':`每日 ${pct}%`;
+    return `您好，${name}您本期剩余应付款为 ${shortMoney(payable)}元，原定付款日为 ${cnDate(dueDate)}。${infoLine}\n\n截止到今天 ${cnDate(todayNoon())}，已逾期 ${daysOverdue}天。\n按照合同约定，参考滞纳金按${rateLabel}计算：\n\n${shortMoney(payable)}元 × ${pct}% × ${daysOverdue}天 = ${shortMoney(fee)}元\n\n当前参考金额为：\n\n本期剩余应付款：${shortMoney(payable)}元\n参考滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+  }
+  function reminderCard(item,type){
+    const {plan,dueDate,termIndex,daysOverdue,fee,total,delta}=item;
+    const status=type==='today'?'今天到期':type==='overdue'?`逾期 ${daysOverdue} 天`:`${delta} 天后到期`;
+    const amounts=type==='overdue'?`<span>本期剩余应付款 <strong>${money(item.remaining)} 元</strong></span><span>参考滞纳金 <strong>${money(fee)} 元</strong></span><span>参考合计 <strong>${money(total)} 元</strong></span>`:`<span>本期剩余 <strong>${money(item.remaining)} 元</strong></span><span>应付日期 <strong>${cnDate(dueDate)}</strong></span>`;
+    return `<article class="reminder-item ${type}"><div class="item-top"><div><h4>${escapeHtml(plan.name)} · 第 ${termIndex+1}/${plan.totalTerms} 期</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${item.paid>0?` · 已还本期款 ${money(item.paid)} 元`:''}</div></div><span class="badge">${status}</span></div><div class="item-money">${amounts}</div><div class="item-actions"><button type="button" data-copy-reminder="${plan.id}" data-term-index="${termIndex}" data-reminder-type="${type}">复制提醒话术</button><button class="secondary" type="button" data-receive="${plan.id}" data-term-index="${termIndex}">登记本期收款</button></div></article>`;
+  }
+  function overdueAccount(plan){
+    const items=openInstallments(plan).filter(item=>item.delta<0);if(!items.length)return null;
+    return {plan,items,remaining:round2(items.reduce((sum,item)=>sum+item.remaining,0)),fee:round2(items.reduce((sum,item)=>sum+item.fee,0)),total:round2(items.reduce((sum,item)=>sum+item.total,0)),maxDays:Math.max(...items.map(item=>item.daysOverdue))};
+  }
+  function overdueAccountMessage(account){
+    const {plan,items,remaining,fee,total}=account,name=plan.name?`${plan.name}，`:'',vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'';
+    return `您好，${name}您目前有${items.length}期车辆款项已逾期。${infoLine}\n\n截至今天 ${cnDate(todayNoon())}：\n未付合同款：${shortMoney(remaining)}元\n滞纳金：${shortMoney(fee)}元\n合计应付：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+  }
+  function overdueAccountCard(account){
+    const {plan,items,remaining,fee,total,maxDays}=account,paid=round2(items.reduce((sum,item)=>sum+item.paid,0));
+    return `<article class="reminder-item overdue"><div class="item-top"><div><h4>${escapeHtml(plan.name)} · 逾期 ${items.length} 期</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${paid>0?` · 已登记合同款 ${money(paid)} 元`:''}</div></div><span class="badge">最早逾期 ${maxDays} 天</span></div><div class="item-money"><span>逾期未付合同款 <strong>${money(remaining)} 元</strong></span><span>滞纳金 <strong>${money(fee)} 元</strong></span><span>截至今天应付 <strong>${money(total)} 元</strong></span></div><div class="item-actions"><button type="button" data-copy-overdue="${plan.id}">复制总催款文案</button><button class="secondary" type="button" data-receive="${plan.id}" data-term-index="${items[0].termIndex}">登记收款</button></div></article>`;
+  }
+  function renderReminders(){
+    const items=plans.flatMap(openInstallments).filter(item=>item.delta<=3).sort((a,b)=>a.dueDate-b.dueDate);
+    const groups={today:items.filter(item=>item.delta===0),overdue:plans.map(overdueAccount).filter(Boolean).sort((a,b)=>b.maxDays-a.maxDays),upcoming:items.filter(item=>item.delta>0&&item.delta<=3)};
+    const emptyText={today:'今天没有到期客户。',overdue:'目前没有逾期客户。',upcoming:'未来3天没有即将到期客户。'};
+    Object.entries(groups).forEach(([type,list])=>{
+      $(`${type}-list`).innerHTML=list.length?list.map(item=>type==='overdue'?overdueAccountCard(item):reminderCard(item,type)).join(''):`<div class="empty">${emptyText[type]}</div>`;
+      $(`${type}-count`).textContent=list.length;$(`${type}-total`).textContent=list.length;
+    });
+    $('today-label').textContent=`今天是 ${fullCnDate(todayNoon())}，逾期客户会自动汇总各期欠款和滞纳金。`;
+  }
+  function paymentHistoryHtml(plan){
+    const payments=[...(plan.payments||[])].reverse();if(!payments.length)return '';
+    return `<details class="payment-history"><summary>查看收款记录（${payments.length}笔）</summary>${payments.map(payment=>`<div class="history-row"><strong>${escapeHtml(payment.date)}</strong> 收款 ${money(payment.total)} 元<br>滞纳金 ${money(payment.lateFee)} 元 · 冲抵合同款 ${money(payment.principal)} 元${payment.allocations?.length?` · ${payment.allocations.map(item=>`第${Number(item.termIndex)+1}期 ${money(item.principal)}元`).join('，')}`:''}<div class="history-actions"><button class="secondary" type="button" data-edit-payment="${payment.id}" data-payment-plan="${plan.id}">修改</button><button class="undo" type="button" data-undo-payment="${payment.id}" data-payment-plan="${plan.id}">撤销此笔</button></div></div>`).join('')}</details>`;
+  }
+  function renderPlans(){
+    if(!plans.length){$('plans-list').innerHTML='<div class="empty">还没有客户计划，请点击“新增客户”录入。</div>';return}
+    $('plans-list').innerHTML=plans.map(plan=>{
+      const item=nextInstallment(plan),nextStatus=item?(item.delta<0?`已逾期 ${item.daysOverdue} 天`:item.delta===0?'今天到期':`${item.delta} 天后到期`):'',next=item?`${fullCnDate(item.dueDate)} · 第 ${item.termIndex+1} 期 · ${nextStatus}`:'已全部完成';
+      const overdueCount=openInstallments(plan).filter(entry=>entry.delta<0).length,contract=contractData(plan);
+      const contractMeta=contract?`<span>合同贷款 <strong>${money(contract.loan)} 元</strong></span><span>押金 <strong>${Number(plan.depositMonths)||0} 个月</strong></span><span>固定月息 <strong>${shortMoney(contract.monthlyRatePct)}%</strong></span>`:'<span><strong>合同金融资料待补充</strong></span>';
+      return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta">${contractMeta}<span>合同月供 <strong>${money(plan.amount)} 元</strong></span><span>每月 <strong>${plan.dueDay} 日</strong></span><span>逾期 <strong>${overdueCount} 期</strong></span><span>下一期 <strong>${next}</strong></span></div>${paymentHistoryHtml(plan)}<div class="plan-actions"><button type="button" data-settle-plan="${plan.id}">结清核算</button><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑合同</button></div><details class="danger-zone"><summary>更多管理操作</summary><button type="button" data-delete-plan="${plan.id}">删除客户资料</button></details></article>`;
+    }).join('');
+  }
+  function renderPlanModule(){renderReminders();renderPlans()}
+  function resetPlanForm(){
+    $('plan-form').reset();$('plan-id').value='';$('start-date').value=toISO(todayNoon());$('plan-form-title').textContent='新增客户还款计划';$('save-plan').textContent='保存还款计划';$('cancel-edit').hidden=false;$('cancel-edit').textContent='取消';updateContractPreview();
+  }
+  function editPlan(id){
+    const plan=plans.find(item=>item.id===id);if(!plan)return;
+    $('plan-form-section').hidden=false;
+    $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('contract-price').value=plan.vehiclePrice??'';$('contract-down-rate').value=plan.downPaymentRate??'';$('contract-deposit-months').value=plan.depositMonths??0;$('contract-monthly-rate').value=plan.monthlyRate??'';$('due-day').value=plan.dueDay;$('plan-rate').value=plan.rate;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';updateContractPreview();
+    $('plan-form-title').textContent='编辑客户还款计划';$('save-plan').textContent='保存修改';$('cancel-edit').hidden=false;$('plan-form-section').scrollIntoView({behavior:'smooth'});
+  }
+  async function copyReminderText(text,button){
+    let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch(e){}
+    if(!ok){const box=document.createElement('textarea');box.value=text;box.style.position='fixed';box.style.opacity='0';document.body.appendChild(box);box.focus();box.select();try{ok=document.execCommand('copy')}catch(e){}box.remove()}
+    if(ok){const old=button.textContent;button.classList.add('ok');button.textContent='已复制';setTimeout(()=>{button.classList.remove('ok');button.textContent=old},1600)}else{window.prompt('请手动复制下面的文字：',text)}
+  }
+  function allocatePrincipal(plan,startIndex,principal){
+    let left=round2(principal);const allocations=[];
+    openInstallments(plan).filter(item=>item.termIndex>=startIndex).forEach(item=>{if(left<=.005)return;const amount=round2(Math.min(left,item.remaining));if(amount>0){allocations.push({termIndex:item.termIndex,principal:amount});left=round2(left-amount)}});
+    return {allocations,unallocated:left};
+  }
+  function openingCompletedTerms(plan){
+    if(Number.isInteger(Number(plan.openingCompletedTerms)))return Number(plan.openingCompletedTerms);
+    const terms=(plan.payments||[]).flatMap(payment=>payment.allocations||[]).map(item=>Number(item.termIndex)).filter(Number.isInteger);
+    return terms.length?Math.min(Number(plan.completedTerms)||0,...terms):Number(plan.completedTerms)||0;
+  }
+  function settlementBreakdown(plan){
+    const contract=contractData(plan);if(!contract)return null;
+    const opening=Math.max(0,Math.min(contract.term,openingCompletedTerms(plan)));let paidPrincipal=0,paidInterest=0;
+    for(let index=0;index<contract.term;index++){
+      if(index<opening){paidPrincipal+=contract.monthlyPrincipal;paidInterest+=contract.monthlyInterest;continue}
+      const item=installmentItem(plan,index);paidPrincipal+=item.principalPaid;paidInterest+=item.interestPaid;
+    }
+    paidPrincipal=Math.min(contract.loan,paidPrincipal);paidInterest=Math.min(contract.totalInterest,paidInterest);
+    return {contract,paidPrincipal,paidInterest,remainingPrincipal:Math.max(0,contract.loan-paidPrincipal),remainingInterest:Math.max(0,contract.totalInterest-paidInterest)};
+  }
+  function openSettlementDialog(planId){
+    const plan=plans.find(item=>item.id===planId),result=plan&&settlementBreakdown(plan);if(!plan)return;
+    if(!result){alert('该客户还没有完整的合同车价、首付比例和月利率，请先点击“编辑合同”补充。');editPlan(planId);return}
+    const {contract,paidPrincipal,paidInterest,remainingPrincipal,remainingInterest}=result;
+    $('settlement-context').textContent=`${plan.name} · ${planIdentity(plan)} · 已完成 ${plan.completedTerms}/${plan.totalTerms} 期`;
+    $('settlement-loan-result').textContent=money(contract.loan)+' 元';$('settlement-total-interest').textContent=money(contract.totalInterest)+' 元';$('settlement-paid-principal').textContent=money(paidPrincipal)+' 元';$('settlement-paid-interest').textContent=money(paidInterest)+' 元';$('settlement-remaining-principal').textContent=money(remainingPrincipal)+' 元';$('settlement-remaining-interest').textContent=money(remainingInterest)+' 元';
+    $('settlement-message').value=`您好，${plan.name}的车辆以租代购合同核算如下：\n\n车辆信息：${planIdentity(plan)}\n合同车辆价格：${money(contract.price)}元\n首付比例：${shortMoney(contract.downRate)}%\n首付款：${money(contract.downPayment)}元\n押金：${Number(plan.depositMonths)||0}个月\n合同贷款金额：${money(contract.loan)}元\n合同期限：${contract.term}期\n固定月利率：${shortMoney(contract.monthlyRatePct)}%\n合同月供：${money(contract.monthlyPayment)}元\n合同总利息：${money(contract.totalInterest)}元\n\n已归还本金：${money(paidPrincipal)}元\n已支付利息：${money(paidInterest)}元\n剩余未还本金：${money(remainingPrincipal)}元\n剩余合同利息：${money(remainingInterest)}元\n\n说明：剩余未还本金与剩余合同利息分开核算；提前结清是否收取剩余利息、违约金、滞纳金或其他费用，以合同约定及双方最终确认结果为准。`;
+    $('settlement-status').textContent='部分还款按先利息、后本金暂算；最终结清口径以合同为准。';$('copy-settlement').classList.remove('ok');$('copy-settlement').textContent='复制核算结果';$('settlement-dialog').showModal();
+  }
+  function recomputeCompletedTerms(plan){
+    plan.completedTerms=Math.max(0,Math.min(Number(plan.totalTerms),openingCompletedTerms(plan)));
+    while(Number(plan.completedTerms)<Number(plan.totalTerms)&&principalPaidFor(plan,Number(plan.completedTerms))+0.005>=Number(plan.amount))plan.completedTerms=Number(plan.completedTerms)+1;
+  }
+  function rebuildPaymentAllocations(plan){
+    plan.openingCompletedTerms=openingCompletedTerms(plan);
+    (plan.payments||[]).forEach(payment=>{if(!Number.isInteger(Number(payment.startTermIndex)))payment.startTermIndex=Number(payment.allocations?.[0]?.termIndex??plan.openingCompletedTerms);payment.allocations=[]});
+    plan.completedTerms=plan.openingCompletedTerms;let unallocated=0;
+    (plan.payments||[]).forEach(payment=>{const result=allocatePrincipal(plan,Number(payment.startTermIndex),Number(payment.principal)||0);payment.allocations=result.allocations;unallocated=round2(unallocated+result.unallocated);recomputeCompletedTerms(plan)});
+    return unallocated;
+  }
+  function previewPaymentChange(plan,paymentId,termIndex,draft){
+    const copy=JSON.parse(JSON.stringify(plan)),id=paymentId||'__payment_draft__';
+    copy.openingCompletedTerms=openingCompletedTerms(plan);
+    const candidate={id,date:$('payment-date').value,total:draft.total,lateFee:draft.lateFee,principal:draft.principal,startTermIndex:termIndex,allocations:[]};
+    const index=(copy.payments||[]).findIndex(payment=>payment.id===paymentId);
+    if(index>=0)copy.payments[index]=candidate;else(copy.payments||(copy.payments=[])).push(candidate);
+    const unallocated=rebuildPaymentAllocations(copy),saved=copy.payments.find(payment=>payment.id===id);
+    return {copy,candidate:saved,unallocated};
+  }
+  function paymentDraft(){
+    const total=Number($('payment-total').value)||0,includesFee=document.querySelector('input[name="payment-fee-mode"]:checked').value==='yes',lateFee=includesFee?(Number($('payment-fee').value)||0):0;
+    return {total:round2(total),lateFee:round2(lateFee),principal:round2(total-lateFee)};
+  }
+  function updatePaymentPreview(){
+    const plan=plans.find(item=>item.id===$('payment-plan-id').value),termIndex=Number($('payment-term-index').value),draft=paymentDraft();if(!plan)return;
+    const result=draft.principal>=0?previewPaymentChange(plan,$('payment-id').value,termIndex,draft):null,item=result?installmentItem(result.copy,termIndex):installmentItem(plan,termIndex);
+    $('preview-fee').textContent=money(Math.max(0,draft.lateFee))+' 元';$('preview-principal').textContent=money(Math.max(0,draft.principal))+' 元';
+    $('preview-status').textContent=draft.total<=0?'等待填写':draft.lateFee>draft.total?'滞纳金不能超过到账总额':item.remaining<=.005?'本期账单已还清':`部分还款，本期仍欠 ${money(item.remaining)} 元`;
+    const allocations=result?.candidate?.allocations||[];$('allocation-preview').innerHTML=allocations.length?`合同款冲抵明细：<br>${allocations.map(entry=>`第 ${entry.termIndex+1} 期：${money(entry.principal)} 元`).join('<br>')}${result.unallocated>.005?`<br>未分配金额：${money(result.unallocated)} 元`:''}`:'';
+    $('payment-error').textContent=draft.lateFee>draft.total?'其中滞纳金不能大于本次到账总额。':result?.unallocated>.005?'修改后会有合同款无法分配，请调整金额。':'';
+  }
+  function openPaymentDialog(planId,termIndex,paymentId=''){
+    const plan=plans.find(item=>item.id===planId),payment=paymentId&&(plan?.payments||[]).find(item=>item.id===paymentId),resolvedTerm=payment?Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??termIndex):termIndex,item=plan&&installmentItem(plan,resolvedTerm);if(!item)return;
+    $('payment-plan-id').value=planId;$('payment-term-index').value=resolvedTerm;$('payment-id').value=paymentId;$('payment-date').value=payment?.date||toISO(todayNoon());$('payment-total').value=payment?shortMoney(payment.total):shortMoney(item.remaining);$('payment-fee').value=payment?shortMoney(payment.lateFee):'0';
+    const includesFee=Number(payment?.lateFee)>0;document.querySelector(`input[name="payment-fee-mode"][value="${includesFee?'yes':'no'}"]`).checked=true;$('payment-fee-field').hidden=!includesFee;$('payment-dialog-title').textContent=payment?'修改收款记录':'登记本期收款';$('save-payment').textContent=payment?'保存修改':'保存收款记录';$('payment-context').textContent=`${plan.name} · 第 ${resolvedTerm+1} 期 · 本期剩余应付款 ${money(item.remaining)} 元 · 参考滞纳金 ${money(item.fee)} 元`;
+    updatePaymentPreview();$('payment-dialog').showModal();
+  }
+
+  function selectedFinanceMethod(){return document.querySelector('input[name="finance-method"]:checked')?.value||'flat'}
+  function financeMethodName(method){return method==='annuity'?'标准等额本息（按剩余本金递减计息）':'平息 / 固定月息（按原贷款金额计息）'}
+  function monthlyPayment(principal,rate,term,method='flat'){
+    if(rate===0)return principal/term;
+    if(method==='annuity'){
+      const factor=(1+rate)**term;
+      return principal*rate*factor/(factor-1);
+    }
+    return principal/term+principal*rate;
+  }
+  function principalFromPayment(payment,rate,term,method='flat'){
+    if(rate===0)return payment*term;
+    if(method==='annuity')return payment*(1-(1+rate)**(-term))/rate;
+    return payment/(1/term+rate);
+  }
+  function repaymentTotals(principal,payment,rate,term,method='flat'){
+    const totalInterest=method==='flat'?principal*rate*term:payment*term-principal;
+    return {totalInterest,totalRepayment:principal+totalInterest};
+  }
+  function updateFinanceMethodNote(){
+    const method=selectedFinanceMethod(),flat=method==='flat';
+    $('finance-method-note').innerHTML=flat
+      ?'<strong>当前计息方式：平息 / 固定月息</strong>月供＝贷款金额÷期数＋贷款金额×月利率；总利息＝贷款金额×月利率×期数。每期利息都按原贷款金额计算。'
+      :'<strong>当前计息方式：标准等额本息</strong>月供＝贷款金额×月利率×(1＋月利率)^期数÷[(1＋月利率)^期数－1]；总利息＝月供×期数－贷款金额。每期利息按剩余本金递减计算。';
+    $('finance-rate-hint').textContent=flat?'每期利息＝原贷款金额×月利率；例如1.29代表每月1.29%':'按剩余本金递减计息；例如0.6代表月利率0.6%';
+    $('finance-method-warning').textContent=`当前计息方式：${financeMethodName(method)}。押金仅用于展示，不参与贷款金额、月供或利息计算。本区域只用于新方案报价；已有客户请从“客户还款计划”进入合同结清核算。`;
+  }
+  function readPositive(id,allowZero=false){
+    const raw=$(id).value;if(raw==='')return null;const value=Number(raw);
+    return Number.isFinite(value)&&(allowZero?value>=0:value>0)?value:null;
+  }
+  function resetCopy(buttonId,statusId,defaultText){
+    $(buttonId).classList.remove('ok');$(buttonId).textContent=defaultText;
+    $(statusId).textContent='复制后可直接粘贴到微信。实际方案以双方合同约定为准。';
+  }
+  function showFinanceError(message){
+    const error=$('finance-error');error.textContent=message;error.classList.add('show');
+    ['loan-amount','primary-result','secondary-result','tertiary-result'].forEach(id=>$(id).textContent='—');
+    $('finance-message').value='请先完整填写有效的方案数据。';
+  }
+  function calculateFinance(){
+    const term=readPositive('term');
+    const depositMonths=readPositive('deposit-months',true);
+    const error=$('finance-error');error.classList.remove('show');error.textContent='';
+    if(term===null||!Number.isInteger(term)||term>120){
+      showFinanceError('贷款期限请填写1至120个月的整数。');return;
+    }
+    if(depositMonths===null||!Number.isInteger(depositMonths)||depositMonths>120){
+      showFinanceError('押金请填写0至120个月的整数。');return;
+    }
+    let loan,payment,totalInterest,totalRepayment,message;
+    const price=readPositive('car-price'),ratePct=readPositive('monthly-rate',true);
+    if(price===null||ratePct===null){showFinanceError('请填写有效的车辆价格和月利率。');return;}
+    const rate=ratePct/100,method=selectedFinanceMethod();updateFinanceMethodNote();
+    if(financeMode==='quote'){
+      const downRatePct=readPositive('down-payment-rate',true);
+      if(downRatePct===null||downRatePct>100){showFinanceError('首付比例请填写0%至100%。');return;}
+      const down=price*(downRatePct/100);$('down-payment-preview').textContent=`自动换算：${money(down)} 元`;
+      loan=price-down;payment=monthlyPayment(loan,rate,term,method);({totalInterest,totalRepayment}=repaymentTotals(loan,payment,rate,term,method));
+      $('primary-result-label').textContent='每月还款';$('secondary-result-label').textContent='分期总还款';$('tertiary-result-label').textContent='总利息';
+      $('primary-result').textContent=money(payment)+' 元';$('secondary-result').textContent=money(totalRepayment)+' 元';$('tertiary-result').textContent=money(totalInterest)+' 元';
+      message=`车辆价格：${money(price)}元\n首付：${shortMoney(downRatePct)}% / ${money(down)}元\n贷款金额：${money(loan)}元\n期数：${term}个月\n月供：${money(payment)}元\n押金：${depositMonths}个月`;
+    }else{
+      const target=readPositive('target-payment');
+      if(target===null){showFinanceError('请输入大于0的可接受月供。');return;}
+      const affordableLoan=principalFromPayment(target,rate,term,method);loan=Math.min(price,affordableLoan);
+      const down=Math.max(0,price-loan),downRatePct=price?down/price*100:0;payment=monthlyPayment(loan,rate,term,method);({totalInterest,totalRepayment}=repaymentTotals(loan,payment,rate,term,method));
+      $('primary-result-label').textContent='建议首付款';$('secondary-result-label').textContent='对应月供';$('tertiary-result-label').textContent='分期总还款';
+      $('primary-result').textContent=`${shortMoney(downRatePct)}% / ${money(down)} 元`;$('secondary-result').textContent=money(payment)+' 元';$('tertiary-result').textContent=money(totalRepayment)+' 元';
+      message=`车辆价格：${money(price)}元\n首付：${shortMoney(downRatePct)}% / ${money(down)}元\n贷款金额：${money(loan)}元\n期数：${term}个月\n月供：${money(payment)}元\n押金：${depositMonths}个月`;
+    }
+    $('loan-amount').textContent=money(loan)+' 元';$('finance-output-title').textContent='客户方案文字';$('finance-message').value=message;
+    resetCopy('finance-copy','finance-status','复制客户方案');
+  }
+
+  function calculateLateFee(){
+    const due=$('due').value,pay=$('pay').value,amount=Number($('amount').value),ratePct=Number($('rate').value);
+    if(!due||!pay||!Number.isFinite(amount)||!Number.isFinite(ratePct)){$('late-fee-message').value='请先完整填写日期、金额和日滞纳金比例。';return;}
+    const days=Math.max(0,Math.round((new Date(pay+'T00:00:00')-new Date(due+'T00:00:00'))/86400000));
+    const fee=round2(amount*(ratePct/100)*days),total=round2(amount+fee);
+    $('days').textContent=days+' 天';$('fee').textContent=money(fee)+' 元';$('total').textContent=money(total)+' 元';
+    $('late-fee-message').value=`您好，您本期应付款为 ${shortMoney(amount)}元，原定付款日为 ${cnDate(due)}。\n\n截止到 ${cnDate(pay)}，已逾期 ${days}天。\n按照合同约定，滞纳金按每日 ${ratePct}% 计算：\n\n${shortMoney(amount)}元 × ${ratePct}% × ${days}天 = ${shortMoney(fee)}元\n\n所以您本次应付金额为：\n\n本金：${shortMoney(amount)}元\n滞纳金：${shortMoney(fee)}元\n合计：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
+    $('late-fee-copy').classList.remove('ok');$('late-fee-copy').textContent='复制纯文字';$('late-fee-status').textContent='复制后直接到微信粘贴，不会带表格或图片格式。';
+  }
+  async function copyPlain(textareaId,buttonId,statusId){
+    const box=$(textareaId),text=box.value;let ok=false;
+    try{await navigator.clipboard.writeText(text);ok=true}catch(e){}
+    if(!ok){box.focus();box.select();ok=document.execCommand('copy');window.getSelection()?.removeAllRanges()}
+    if(ok){$(buttonId).classList.add('ok');$(buttonId).textContent='已复制';$(statusId).textContent='现在打开微信粘贴即可。'}
+    else{box.focus();box.select();$(statusId).textContent='浏览器阻止了自动复制，请手动复制选中的文字。'}
+  }
+
+  document.querySelectorAll('[data-panel]').forEach(button=>button.addEventListener('click',()=>{
+    if(button.dataset.panel==='customers'&&backupAccessBlocked())return;
+    document.querySelectorAll('[data-panel]').forEach(item=>item.classList.toggle('active',item===button));
+    document.querySelectorAll('.panel').forEach(panel=>panel.classList.toggle('active',panel.id===button.dataset.panel+'-panel'));
+  }));
+  document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{
+    financeMode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item===button));
+    document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');calculateFinance();
+  }));
+  document.querySelectorAll('input[name="finance-method"]').forEach(input=>input.addEventListener('change',calculateFinance));
+  $('plan-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    if(!ensureStorageWritable())return;
+    const totalTerms=Number($('total-terms').value),completedTerms=Number($('completed-terms').value),dueDay=Number($('due-day').value),depositMonths=Number($('contract-deposit-months').value);
+    if(completedTerms>totalTerms){alert('已完成期数不能大于总期数。');return}
+    if(!Number.isInteger(depositMonths)||depositMonths<0||depositMonths>120){alert('合同押金请填写0至120个月的整数。');return}
+    const contract=updateContractPreview();if(!contract){alert('请完整填写该客户合同中的车辆价格、首付比例、固定月利率和总期数。');return}
+    const id=$('plan-id').value||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const existing=plans.find(item=>item.id===id);
+    const plan={id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),vehiclePrice:contract.price,downPaymentRate:contract.downRate,depositMonths,monthlyRate:contract.monthlyRatePct,loanAmount:contract.loan,amount:round2(contract.monthlyPayment),dueDay,rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,openingCompletedTerms:existing?.payments?.length?openingCompletedTerms(existing):completedTerms,notes:$('plan-notes').value.trim(),payments:JSON.parse(JSON.stringify(existing?.payments||[]))};
+    if(plan.payments.length&&rebuildPaymentAllocations(plan)>.005){alert('修改后已有收款金额超过剩余合同应付款，请先修改或撤销相关收款记录。');return}
+    const index=plans.findIndex(item=>item.id===id);if(index>=0)plans[index]=plan;else plans.push(plan);
+    if(!savePlans())return;renderPlanModule();resetPlanForm();$('plan-form-section').hidden=true;
+  });
+  $('show-plan-form').addEventListener('click',()=>{if(!ensureStorageWritable())return;resetPlanForm();$('plan-form-section').hidden=false;$('plan-form-section').scrollIntoView({behavior:'smooth'})});
+  $('cancel-edit').addEventListener('click',()=>{resetPlanForm();$('plan-form-section').hidden=true});
+  document.querySelectorAll('input[name="payment-fee-mode"]').forEach(input=>input.addEventListener('change',()=>{
+    const includesFee=document.querySelector('input[name="payment-fee-mode"]:checked').value==='yes';
+    $('payment-fee-field').hidden=!includesFee;if(!includesFee)$('payment-fee').value='0';updatePaymentPreview();
+  }));
+  ['payment-total','payment-fee'].forEach(id=>$(id).addEventListener('input',updatePaymentPreview));
+  $('cancel-payment').addEventListener('click',()=>$('payment-dialog').close());
+  $('close-settlement').addEventListener('click',()=>$('settlement-dialog').close());
+  $('open-backup').addEventListener('click',openBackupDialog);
+  $('backup-reminder-action').addEventListener('click',openBackupDialog);
+  $('close-backup').addEventListener('click',()=>{$('backup-dialog').close();refreshBackupAccess()});
+  $('required-backup-now').addEventListener('click',()=>{$('backup-required-dialog').close();openBackupDialog()});
+  $('request-backup-grace').addEventListener('click',requestBackupGrace);
+  $('cancel-backup-grace').addEventListener('click',cancelBackupGrace);
+  $('confirm-backup-grace').addEventListener('click',confirmBackupGrace);
+  $('backup-required-dialog').addEventListener('cancel',event=>event.preventDefault());
+  $('backup-grace-dialog').addEventListener('cancel',event=>event.preventDefault());
+  $('backup-dialog').addEventListener('cancel',event=>{if(backupStateManager.shouldBlockBackup())event.preventDefault()});
+  $('copy-settlement').addEventListener('click',()=>copyPlain('settlement-message','copy-settlement','settlement-status'));
+  $('payment-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    if(!ensureStorageWritable())return;
+    const plan=plans.find(item=>item.id===$('payment-plan-id').value),termIndex=Number($('payment-term-index').value),paymentId=$('payment-id').value,draft=paymentDraft();
+    const error=$('payment-error');error.textContent='';
+    if(!plan||!Number.isInteger(termIndex)){error.textContent='没有找到对应的还款账单，请关闭后重新登记。';return}
+    if(!$('payment-date').value){error.textContent='请选择实际收款日期。';return}
+    if(!Number.isFinite(draft.total)||draft.total<=0){error.textContent='本次到账总额必须大于0。';return}
+    if(!Number.isFinite(draft.lateFee)||draft.lateFee<0||draft.lateFee>draft.total){error.textContent='其中滞纳金应为0至到账总额之间的金额。';return}
+    if(!Number.isFinite(draft.principal)||draft.principal<0){error.textContent='冲抵合同款金额不正确，请检查到账总额和滞纳金。';return}
+    const result=previewPaymentChange(plan,paymentId,termIndex,draft);
+    if(result.unallocated>.005){error.textContent=`修改后有 ${money(result.unallocated)} 元合同款无法分配，请调整到账总额或滞纳金金额。`;return}
+    if(draft.principal>.005&&!result.candidate?.allocations.length){error.textContent='当前没有可冲抵的剩余合同应付款。';return}
+    if(!paymentId)result.candidate.id=`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    plan.payments=result.copy.payments;plan.openingCompletedTerms=result.copy.openingCompletedTerms;plan.completedTerms=result.copy.completedTerms;
+    if(!savePlans())return;renderPlanModule();$('payment-dialog').close();
+  });
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('button');if(!button)return;
+    if((button.dataset.editPlan||button.dataset.deletePlan||button.dataset.receive||button.dataset.editPayment||button.dataset.undoPayment)&&backupAccessBlocked())return;
+    if(button.dataset.viewSnapshot){previewSnapshot(button.dataset.viewSnapshot);return}
+    if(button.dataset.scroll)$(button.dataset.scroll).scrollIntoView({behavior:'smooth'});
+    if(button.dataset.settlePlan)openSettlementDialog(button.dataset.settlePlan);
+    if(button.dataset.editPlan)editPlan(button.dataset.editPlan);
+    if(button.dataset.deletePlan){const plan=plans.find(item=>item.id===button.dataset.deletePlan);if(plan&&confirm(`确定删除“${plan.name}”的还款计划吗？`)){plans=plans.filter(item=>item.id!==plan.id);savePlans();renderPlanModule()}}
+    if(button.dataset.receive)openPaymentDialog(button.dataset.receive,Number(button.dataset.termIndex));
+    if(button.dataset.editPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.editPayment);if(payment)openPaymentDialog(plan.id,Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??plan.completedTerms),payment.id)}
+    if(button.dataset.undoPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.undoPayment);if(plan&&payment&&confirm(`确定撤销 ${payment.date} 收到的 ${money(payment.total)} 元记录吗？撤销后各期欠款会自动恢复。`)){plan.payments=plan.payments.filter(item=>item.id!==payment.id);rebuildPaymentAllocations(plan);savePlans();renderPlanModule()}}
+    if(button.dataset.copyOverdue){const plan=plans.find(item=>item.id===button.dataset.copyOverdue),account=plan&&overdueAccount(plan);if(account)copyReminderText(overdueAccountMessage(account),button)}
+    if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&installmentItem(plan,Number(button.dataset.termIndex));if(item&&item.remaining>.005)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
+  });
+  ['car-price','down-payment-rate','target-payment','term','deposit-months','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
+  ['contract-price','contract-down-rate','contract-monthly-rate','total-terms'].forEach(id=>$(id).addEventListener('input',updateContractPreview));
+  ['due','pay','amount','rate'].forEach(id=>$(id).addEventListener('input',calculateLateFee));
+  $('finance-copy').addEventListener('click',()=>copyPlain('finance-message','finance-copy','finance-status'));
+  $('late-fee-copy').addEventListener('click',()=>copyPlain('late-fee-message','late-fee-copy','late-fee-status'));
+  $('export-backup').addEventListener('click',exportBackup);
+  $('confirm-backup-saved').addEventListener('click',openBackupSavedConfirmation);
+  $('continue-saving-backup').addEventListener('click',()=>$('backup-confirm-dialog').close());
+  $('finish-backup-confirmation').addEventListener('click',finishBackupConfirmation);
+  $('open-local-snapshots').addEventListener('click',openLocalSnapshots);
+  $('close-snapshots').addEventListener('click',()=>$('snapshots-dialog').close());
+  $('cancel-snapshot-restore').addEventListener('click',()=>{$('snapshot-preview-dialog').close();selectedSnapshot=null});
+  $('restore-snapshot').addEventListener('click',restoreSelectedSnapshot);
+  $('import-backup').addEventListener('click',()=>$('backup-file').click());
+  $('backup-file').addEventListener('change',async event=>{await importBackupFile(event.target.files?.[0]);event.target.value=''});
+  $('open-migration-export').addEventListener('click',()=>startMigrationExport(false));
+  $('open-emergency-segments').addEventListener('click',()=>startMigrationExport(true));
+  $('previous-migration-segment').addEventListener('click',()=>moveMigrationSegment(-1));
+  $('next-migration-segment').addEventListener('click',()=>moveMigrationSegment(1));
+  $('copy-migration-segment').addEventListener('click',copyCurrentMigrationSegment);
+  $('migration-segment-text').addEventListener('copy',markMigrationSegmentCopied);
+  $('close-migration-export').addEventListener('click',()=>$('migration-export-dialog').close());
+  $('open-migration-import').addEventListener('click',()=>{if($('backup-dialog').open)$('backup-dialog').close();const dialog=$('migration-import-dialog');if(!dialog.open)dialog.showModal()});
+  $('add-migration-segments').addEventListener('click',addMigrationSegments);
+  $('clear-migration-import').addEventListener('click',resetMigrationImport);
+  $('confirm-migration-import').addEventListener('click',confirmMigrationImport);
+  $('download-baseline-backup').addEventListener('click',()=>exportBackup({baseline:true}));
+  $('confirm-baseline-saved').addEventListener('click',openBackupSavedConfirmation);
+  $('close-migration-import').addEventListener('click',()=>$('migration-import-dialog').close());
+  $('open-storage-diagnostics').addEventListener('click',openRecoveryDialog);
+  $('open-recovery-backup').addEventListener('click',()=>{$('recovery-dialog').close();openBackupDialog()});
+  $('refresh-storage-diagnostics').addEventListener('click',runStorageDiagnostics);
+  $('copy-storage-evidence').addEventListener('click',copyStorageEvidence);
+  $('close-recovery').addEventListener('click',()=>$('recovery-dialog').close());
+  $('create-empty-rc1-test').addEventListener('click',async()=>{
+    if(localStorage.getItem(PLAN_STORAGE_KEY)!==null){alert('隔离测试主数据已经存在，无需重复初始化。');return}
+    if(!confirm('当前是 RC1 隔离测试环境。此操作只会创建空白测试数据，不会读取、修改或影响正式版客户数据。'))return;
+    trackedSetItem(PLAN_STORAGE_KEY,'[]');plans=[];planStorageState.raw='[]';planStorageState.status='ok';planStorageState.locked=false;planStorageState.reason='RC1隔离测试数据正常。';
+    backupStateManager.metadataInvalid=false;backupStateManager.state.dirtySinceBackup=true;backupStateManager.persist();await backupStateManager.initialize('[]');renderStorageProtection();renderPlanModule();refreshBackupAccess();alert('空白测试环境已创建，可以新增模拟客户。');
+  });
+  $('wechat-notice').hidden=!/MicroMessenger/i.test(navigator.userAgent);
+  $('start-date').value=toISO(todayNoon());updateContractPreview();renderPlanModule();renderBackupReminder();renderStorageProtection();refreshBackupAccess();calculateFinance();calculateLateFee();
+  backupStateReady.then(refreshBackupAccess);
+  window.addEventListener('focus',renderReminders);
+</script>
+</body></html>
