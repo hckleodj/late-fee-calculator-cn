@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>OPPO微信 JSON 文件能力测试</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; background:#f5f6f8; color:#172033; }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    main { width:min(100%,680px); margin:0 auto; padding:18px 14px 40px; }
+    .card { margin-bottom:14px; padding:18px; border:1px solid #e4e7ec; border-radius:16px; background:#fff; box-shadow:0 6px 20px rgba(23,32,51,.05); }
+    h1 { margin:0 0 8px; font-size:24px; }
+    h2 { margin:0 0 8px; font-size:18px; }
+    p { margin:6px 0; line-height:1.55; }
+    .muted { color:#667085; font-size:14px; }
+    .warning { color:#9a5b00; }
+    .grid { display:grid; grid-template-columns:auto 1fr; gap:8px 12px; margin-top:12px; font-size:14px; }
+    .grid span:nth-child(odd) { color:#667085; }
+    label { display:block; margin-bottom:8px; font-size:14px; color:#475467; }
+    select,button { width:100%; min-height:46px; border-radius:12px; font-size:16px; }
+    select { padding:0 12px; border:1px solid #cfd4dc; background:#fff; }
+    button { margin-top:10px; padding:10px 14px; border:0; background:#1769e0; color:#fff; font-weight:650; }
+    button.secondary { background:#eef4ff; color:#174ea6; }
+    button:disabled { opacity:.5; }
+    .status { min-height:42px; margin-top:10px; padding:10px 12px; border-radius:10px; background:#f2f4f7; color:#344054; font-size:14px; line-height:1.5; word-break:break-word; }
+    .status.ok { background:#ecfdf3; color:#067647; }
+    .status.error { background:#fef3f2; color:#b42318; }
+    code { word-break:break-all; font-size:12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <h1>OPPO微信 JSON 文件能力测试</h1>
+      <p class="muted">只生成模拟客户、合同和收款记录，不读取、不写入任何正式客户数据，也不使用 localStorage。</p>
+      <p class="muted warning">分享面板返回成功、下载被触发或文件被打开，都不等于文件已经保存。请最后到手机文件管理中核对文件大小并尝试重新打开。</p>
+    </section>
+
+    <section class="card">
+      <h2>当前环境</h2>
+      <div class="grid">
+        <span>User-Agent</span><code id="ua">—</code>
+        <span>Web Share</span><strong id="share-support">—</strong>
+        <span>文件分享</span><strong id="file-share-support">—</strong>
+        <span>Blob创建</span><strong id="blob-support">—</strong>
+        <span>download属性</span><strong id="download-support">—</strong>
+        <span>模拟JSON字节数</span><strong id="json-bytes">—</strong>
+      </div>
+    </section>
+
+    <section class="card">
+      <label for="size-select">选择模拟备份大小</label>
+      <select id="size-select">
+        <option value="100">100KB</option>
+        <option value="150">150KB</option>
+        <option value="200">200KB</option>
+      </select>
+      <div id="generate-status" class="status">正在生成模拟JSON……</div>
+    </section>
+
+    <section class="card">
+      <h2>A. Web Share 文件分享</h2>
+      <p class="muted">调用系统分享面板后，请人工观察是否出现文件管理、保存、微信或其他可接收文件的目标。</p>
+      <button id="share-file">测试系统分享 JSON</button>
+      <div id="share-result" class="status">尚未测试。</div>
+    </section>
+
+    <section class="card">
+      <h2>B. Blob + download</h2>
+      <p class="muted">触发下载后，请到 OPPO 文件管理的下载目录寻找 <code>dajin-test-backup.json</code>。</p>
+      <button id="download-file">测试直接下载 JSON</button>
+      <div id="download-result" class="status">尚未测试。</div>
+    </section>
+
+    <section class="card">
+      <h2>C. Blob 打开 / 预览</h2>
+      <p class="muted">观察微信是否打开JSON，以及是否提供“用其他应用打开”“保存到文件”或系统分享入口。</p>
+      <button id="open-file" class="secondary">测试打开 JSON 文件</button>
+      <div id="open-result" class="status">尚未测试。</div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+      const encoder = new TextEncoder();
+      const fileName = 'dajin-test-backup.json';
+      let currentJson = '';
+      let currentFile = null;
+
+      const $ = id => document.getElementById(id);
+      const setResult = (id, message, type = '') => {
+        const node = $(id);
+        node.textContent = message;
+        node.className = `status${type ? ` ${type}` : ''}`;
+      };
+
+      function buildMockJson(targetKiB) {
+        const targetBytes = targetKiB * 1024;
+        const plans = [];
+        for (let customerIndex = 1; customerIndex <= 20; customerIndex += 1) {
+          const payments = [];
+          for (let paymentIndex = 1; paymentIndex <= 10; paymentIndex += 1) {
+            payments.push({
+              id: `pay-${customerIndex}-${paymentIndex}`,
+              paidAt: `2026-${String((paymentIndex % 12) + 1).padStart(2, '0')}-15T10:00:00.000Z`,
+              amount: 3000 + customerIndex * 10 + paymentIndex,
+              method: paymentIndex % 2 ? '微信模拟' : '银行卡模拟',
+              note: '仅用于OPPO微信JSON文件能力测试'
+            });
+          }
+          plans.push({
+            id: `mock-customer-${customerIndex}`,
+            name: `模拟客户${customerIndex}`,
+            plate: `测A${String(customerIndex).padStart(5, '0')}`,
+            vehicle: `模拟车辆${customerIndex}`,
+            contract: { amount: 100000 + customerIndex * 1000, terms: 36, monthlyRate: 0.0129 },
+            completedTerms: customerIndex % 12,
+            payments,
+            allocations: payments.map((payment, index) => ({ paymentId: payment.id, term: index + 1, amount: payment.amount }))
+          });
+        }
+        const envelope = {
+          app: '大进车贷助手文件能力测试',
+          version: 1,
+          generatedAt: new Date().toISOString(),
+          testOnly: true,
+          requestedSizeKiB: targetKiB,
+          plans,
+          padding: ''
+        };
+        let json = JSON.stringify(envelope);
+        const baseBytes = encoder.encode(json).byteLength;
+        if (baseBytes > targetBytes) throw new Error(`模拟结构已超过${targetKiB}KB，请停止测试。`);
+        envelope.padding = 'X'.repeat(targetBytes - baseBytes);
+        json = JSON.stringify(envelope);
+        const actualBytes = encoder.encode(json).byteLength;
+        if (actualBytes !== targetBytes) throw new Error(`模拟数据大小生成异常：${actualBytes}字节。`);
+        return json;
+      }
+
+      function makeFile() {
+        if (!currentJson) throw new Error('模拟JSON尚未生成。');
+        return new File([currentJson], fileName, { type: 'application/json', lastModified: Date.now() });
+      }
+
+      function detectFileShare(file) {
+        if (typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') return false;
+        try { return navigator.canShare({ files: [file] }) === true; }
+        catch (_error) { return false; }
+      }
+
+      function refreshData() {
+        const target = Number($('size-select').value);
+        setResult('generate-status', `正在生成${target}KB模拟JSON……`);
+        try {
+          currentJson = buildMockJson(target);
+          try { currentFile = makeFile(); }
+          catch (_error) { currentFile = null; }
+          const actualBytes = encoder.encode(currentJson).byteLength;
+          $('json-bytes').textContent = `${actualBytes.toLocaleString()} bytes（${(actualBytes / 1024).toFixed(0)}KB）`;
+          const fileShareSupported = currentFile ? detectFileShare(currentFile) : false;
+          $('file-share-support').textContent = fileShareSupported ? '支持' : '不支持/不可确认';
+          const fileSizeText = currentFile ? `；File.size=${currentFile.size.toLocaleString()} bytes` : '；当前环境不能创建File对象';
+          setResult('generate-status', `${target}KB模拟JSON已生成${fileSizeText}。`, 'ok');
+          $('share-file').disabled = !fileShareSupported;
+          $('download-file').disabled = !blobSupported;
+          $('open-file').disabled = !blobSupported;
+        } catch (error) {
+          currentJson = ''; currentFile = null;
+          setResult('generate-status', error.message, 'error');
+          $('share-file').disabled = true;
+          $('download-file').disabled = true;
+          $('open-file').disabled = true;
+        }
+      }
+
+      $('ua').textContent = navigator.userAgent;
+      $('share-support').textContent = typeof navigator.share === 'function' ? '支持' : '不支持';
+      let blobSupported = false;
+      try { blobSupported = new Blob(['test']).size === 4; } catch (_error) { blobSupported = false; }
+      $('blob-support').textContent = blobSupported ? '成功' : '失败';
+      $('download-support').textContent = 'download' in document.createElement('a') ? '存在' : '不存在';
+
+      $('size-select').addEventListener('change', () => {
+        refreshData();
+        setResult('share-result', '尚未测试。');
+        setResult('download-result', '尚未测试。');
+        setResult('open-result', '尚未测试。');
+      });
+
+      $('share-file').addEventListener('click', async () => {
+        try {
+          currentFile = makeFile();
+          if (!detectFileShare(currentFile)) throw new Error('当前微信环境不支持通过Web Share分享文件。');
+          await navigator.share({ files: [currentFile], title: '大进车贷助手模拟备份', text: '这是设备能力测试生成的模拟JSON文件。' });
+          setResult('share-result', 'share()已返回。请注意：这只代表分享流程结束，不能证明文件已经保存；请到文件管理中核对。', 'ok');
+        } catch (error) {
+          const message = error && error.name === 'AbortError' ? '用户取消了分享面板，未判定为保存成功。' : `分享失败：${error.message || error}`;
+          setResult('share-result', message, 'error');
+        }
+      });
+
+      $('download-file').addEventListener('click', () => {
+        try {
+          const blob = new Blob([currentJson], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url; link.download = fileName;
+          document.body.appendChild(link); link.click(); link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+          setResult('download-result', `已请求下载${blob.size.toLocaleString()}字节JSON。请到OPPO下载目录核对文件；触发下载不等于已经保存。`, 'ok');
+        } catch (error) { setResult('download-result', `下载触发失败：${error.message || error}`, 'error'); }
+      });
+
+      $('open-file').addEventListener('click', () => {
+        try {
+          const blob = new Blob([currentJson], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url; link.target = '_blank'; link.rel = 'noopener';
+          document.body.appendChild(link); link.click(); link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 300000);
+          setResult('open-result', `已请求打开${blob.size.toLocaleString()}字节JSON。请观察微信是否显示预览或“用其他应用打开/保存”入口。`, 'ok');
+        } catch (error) { setResult('open-result', `打开失败：${error.message || error}`, 'error'); }
+      });
+
+      refreshData();
+    })();
+  </script>
+</body>
+</html>
