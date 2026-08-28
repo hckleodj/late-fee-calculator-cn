@@ -586,21 +586,22 @@
     await Promise.all([backupStateManager.whenIdle(),businessChangePending]);
     let raw;try{raw=localStorage.getItem(PLAN_STORAGE_KEY)}catch(error){throw new Error('当前浏览器无法读取客户数据，未生成迁移分段。')}
     if(raw===null||raw!==planStorageState.raw)throw new Error('客户数据在迁移生成前发生变化，请刷新检查后重试。');
-    const sourcePlans=JSON.parse(raw),state=backupStateManager.snapshot(),fullChecksum=await window.DajinBackupState.sha256Text(raw),date=new Date();
+    const sourcePlans=JSON.parse(raw),state=backupStateManager.snapshot(),plansJson=JSON.stringify(sourcePlans),fullChecksum=await window.DajinBackupState.sha256Text(plansJson),date=new Date();
     if(!Array.isArray(sourcePlans)||!sourcePlans.length||!sourcePlans.every(validBackupPlan))throw new Error('当前没有可安全迁移的完整客户数据。');
     if(state.dataRevision!==backupStateManager.snapshot().dataRevision)throw new Error('客户数据在迁移生成期间发生变化，请重新生成。');
     const value=backupPayload(date,sourcePlans,state.dataRevision,fullChecksum),compactJson=JSON.stringify(value);
-    return window.DajinMigrationTransfer.buildMigrationSegments({compactJson,dataRevision:state.dataRevision,fullChecksum,payloadBytes:8*1024,date,hashText:window.DajinBackupState.sha256Text});
+    return window.DajinMigrationTransfer.buildMigrationSegments({compactJson,dataRevision:state.dataRevision,fullChecksum,maxSegmentChars:3900,date,hashText:window.DajinBackupState.sha256Text});
   }
   function renderMigrationExport(){
     if(!activeMigrationExport)return;
     const segment=activeMigrationExport.segments[activeMigrationExport.index],copied=activeMigrationExport.copied.size,total=activeMigrationExport.segments.length;
-    $('migration-segment-text').value=segment.text;$('migration-export-progress').textContent=`第 ${segment.segmentIndex} 段 / 共 ${total} 段 · 已复制 ${copied} / ${total}`;
+    $('migration-segment-text').value=segment.text;$('migration-export-progress').textContent=`第 ${segment.segmentIndex}/${total} 段 · ${segment.textChars}字符 · 已执行复制 ${copied}/${total}`;
     $('previous-migration-segment').disabled=activeMigrationExport.index===0;$('next-migration-segment').disabled=activeMigrationExport.index===total-1;
     $('migration-export-status').textContent=copied===total?'全部分段都执行过复制。请确认已逐段粘贴保存，再到 OPPO 浏览器导入。':'请将每一段分别粘贴保存到微信文件传输助手或电脑。复制不代表已安全保存。';
   }
   async function startMigrationExport(emergency=false){
     let built;try{built=await createMigrationArtifact()}catch(error){setBackupStatus(error.message,true);return false}
+    if(built.segments.some(segment=>segment.textChars>4000)){setBackupStatus('程序错误：存在超过4000字符的迁移分段，已禁止生成本次迁移。',true);return false}
     activeMigrationExport={segments:built.segments,index:0,copied:new Set()};
     $('migration-export-title').textContent=emergency?'分段文本应急备份':'迁移到系统浏览器';
     renderMigrationExport();if($('backup-dialog').open)$('backup-dialog').close();const dialog=$('migration-export-dialog');if(!dialog.open)dialog.showModal();return true;
