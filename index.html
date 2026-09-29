@@ -9,6 +9,7 @@
   <link rel="icon" href="./icons/icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <title>大进车贷助手</title>
+  <link rel="stylesheet" href="./rental-document.css?v=86847eb3e4b3">
   <style>
     :root{--blue:#245785;--blue-dark:#183f61;--light:#eef5fb;--yellow:#fff3c7;--green:#287a4b;--line:#d6e0e8;--text:#17212b;--muted:#637786;--danger:#a23a29}
     *{box-sizing:border-box}html{background:#f4f7f9}body{margin:0;background:#f4f7f9;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
@@ -101,44 +102,45 @@
 
   <div class="panel" id="finance-panel">
     <section>
-      <h2 class="section-title">以租代购方案计算器</h2>
-      <p class="section-help">先选择合同使用的计息口径，再进行方案报价或按月供倒推。默认使用以租代购常见的平息 / 固定月息。</p>
+      <h2 class="section-title">车辆租赁方案测算</h2>
+      <p class="section-help">按车辆方案全额测算固定月租。预付租金抵扣前几期，不降低固定月租；押金单独列示。本页方案仅在当前页面保留，刷新后需重新录入。</p>
       <div class="mode-tabs" aria-label="计算模式">
-        <button class="active" type="button" data-mode="quote">客户方案报价</button>
-        <button type="button" data-mode="reverse">按月供倒推</button>
+        <button class="active" type="button" data-mode="quote">客户方案测算</button>
+        <button type="button" data-mode="reverse">按月租倒推</button>
       </div>
-
       <div class="inputs">
-        <fieldset class="fee-choice full">
-          <legend>计息方式</legend>
-          <div class="fee-options">
-            <label><input type="radio" name="finance-method" value="flat" checked><span class="fee-option-copy"><span class="fee-option-title">平息 / 固定月息 <em class="fee-option-badge">业务常用</em></span><span class="fee-option-desc">等本等息 · 每期按原贷款金额计息</span></span></label>
-            <label><input type="radio" name="finance-method" value="annuity"><span class="fee-option-copy"><span class="fee-option-title">标准等额本息</span><span class="fee-option-desc">银行常用 · 每期按剩余本金递减计息</span></span></label>
-          </div>
-        </fieldset>
+        <div class="field"><label for="rental-customer">客户姓名（可选）</label><input id="rental-customer" maxlength="40" autocomplete="off" placeholder="客户姓名"></div>
+        <div class="field"><label for="rental-phone">客户手机号（可选）</label><input id="rental-phone" type="tel" maxlength="24" autocomplete="off" placeholder="仅在本页保留，不进入确认单"></div>
+        <div class="field"><label for="rental-vehicle">车辆名称</label><input id="rental-vehicle" maxlength="80" autocomplete="off" placeholder="品牌 + 车型"></div>
+        <div class="field"><label for="car-price">车辆方案金额（元）</label><input id="car-price" inputmode="decimal" type="number" min="0.01" max="100000000" step="0.01" value="200000"><div class="field-hint" id="rental-amount-hint">固定月租的计算基础，不扣减预付租金</div></div>
+        <div class="field reverse-field" hidden><label for="target-payment">月租预算（元）</label><input id="target-payment" inputmode="decimal" type="number" min="0.01" step="0.01" value="4500"><div class="field-hint">倒推可承受的车辆方案金额，不用预付租金降低月租</div></div>
+        <div class="field"><label for="term">租赁期限（期）</label><input id="term" inputmode="numeric" type="number" min="1" max="120" step="1" value="36"></div>
+        <div class="field"><label for="prepaid-months">预付租金（月）</label><input id="prepaid-months" inputmode="numeric" type="number" min="0" max="36" step="1" value="0"><div class="field-hint">填写预付月数，抵扣前几期；不改变固定月租</div></div>
+        <div class="field"><label for="rental-deposit-months">押金（月）</label><input id="rental-deposit-months" inputmode="numeric" type="number" min="0" max="120" step="1" value="2"><div class="field-hint">通常为2个月；按固定月租折算，不抵扣租金</div></div>
+        <div class="field"><label for="monthly-rate">内部月费率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" max="100" step="0.01" value="0.6"><div class="field-hint" id="finance-rate-hint">只供内部测算，不进入客户确认单</div></div>
+        <div class="field"><label for="rental-first-date">首次付款日期</label><input id="rental-first-date" type="date"><div class="field-hint">遇短月取月末，后续恢复原约定日</div></div>
         <div class="formula-note" id="finance-method-note" aria-live="polite"></div>
-        <div class="field quote-reverse-field"><label for="car-price">车辆价格（元）</label><input id="car-price" inputmode="decimal" type="number" min="0" step="100" value="200000"></div>
-        <div class="field quote-field"><label for="down-payment-rate">首付比例（%）</label><input id="down-payment-rate" inputmode="decimal" type="number" min="0" max="100" step="0.1" value="25"><div class="field-hint" id="down-payment-preview">自动换算：50,000.00 元</div></div>
-        <div class="field reverse-field" hidden><label for="target-payment">可接受月供（元）</label><input id="target-payment" inputmode="decimal" type="number" min="0" step="10" value="4500"></div>
-        <div class="field"><label for="term">贷款期限（月）</label><input id="term" inputmode="numeric" type="number" min="1" max="120" step="1" value="36"></div>
-        <div class="field"><label for="deposit-months">押金（月）</label><input id="deposit-months" inputmode="numeric" type="number" min="0" max="120" step="1" value="1"><div class="field-hint">仅用于方案展示，不参与贷款和月供计算</div></div>
-        <div class="field quote-reverse-field"><label for="monthly-rate">月利率（%）</label><input id="monthly-rate" inputmode="decimal" type="number" min="0" step="0.01" value="0.6"><div class="field-hint" id="finance-rate-hint">例如1.29代表每月1.29%</div></div>
       </div>
+      <button id="rental-calculate" type="button">计算</button>
       <p class="error" id="finance-error" role="alert"></p>
-
+      <h3 class="rental-subheading">内部测算</h3>
       <div class="summary" aria-live="polite">
-        <div class="metric"><span>贷款金额</span><strong id="loan-amount">0.00 元</strong></div>
-        <div class="metric"><span id="primary-result-label">每月还款</span><strong id="primary-result">0.00 元</strong></div>
-        <div class="metric"><span id="secondary-result-label">分期总还款</span><strong id="secondary-result">0.00 元</strong></div>
-        <div class="metric"><span id="tertiary-result-label">总利息</span><strong id="tertiary-result">0.00 元</strong></div>
+        <div class="metric"><span>车辆方案计价基数</span><strong id="loan-amount">—</strong></div>
+        <div class="metric"><span id="primary-result-label">固定月租</span><strong id="primary-result">—</strong></div>
+        <div class="metric"><span id="secondary-result-label">租金总额</span><strong id="secondary-result">—</strong></div>
+        <div class="metric"><span id="tertiary-result-label">方案费用合计（非净利润）</span><strong id="tertiary-result">—</strong></div>
       </div>
-
-      <div class="output-label"><strong id="finance-output-title">客户方案文字</strong><span class="tip">金额按测算结果保留2位</span></div>
-      <textarea id="finance-message" readonly aria-label="客户方案文字"></textarea>
-      <button id="finance-copy" type="button">复制客户方案</button>
-      <p class="note" id="finance-status">复制后可直接粘贴到微信。实际方案以双方合同约定为准。</p>
+      <div id="rental-results" hidden>
+        <div class="rental-summary"><h3>车辆租赁方案</h3><div id="rental-summary-content"></div></div>
+        <details class="rental-schedule"><summary>查看付款计划</summary><div id="rental-schedule-content" class="rental-scroll"></div><p class="rental-explanation" id="rental-schedule-note"></p></details>
+        <div class="output-label rental-subheading"><strong id="finance-output-title">客户方案文字</strong><span class="tip">与确认单使用同一份结果</span></div>
+        <textarea id="finance-message" readonly aria-label="客户方案文字"></textarea>
+        <button id="finance-copy" type="button">复制客户方案</button>
+        <p class="note" id="finance-status">复制后可直接粘贴到微信。实际方案以双方合同约定为准。</p>
+        <button id="rental-confirm" type="button">生成客户确认单</button>
+      </div>
     </section>
-    <div class="warning" id="finance-method-warning">本区域只用于新方案报价；已有客户请从“客户还款计划”进入合同结清核算。</div>
+    <div class="warning" id="finance-method-warning"></div>
   </div>
 
   <div class="panel" id="late-fee-panel">
@@ -303,6 +305,18 @@
     <div class="dialog-actions"><button class="secondary" type="button" id="close-migration-import">关闭</button></div>
   </div>
 </dialog>
+<dialog id="rental-dialog" aria-labelledby="rental-preview-title"><div class="dialog-body">
+  <h2 id="rental-preview-title">客户确认单预览</h2>
+  <p class="dialog-context">以下为完整导出内容。可横向滑动查看；PNG保留全部期次，PDF每页最多36期。</p>
+  <div class="rental-preview-tools"><button id="rental-png" type="button">保存 PNG</button><button id="rental-pdf" type="button">导出 PDF</button><button id="rental-close" type="button" class="secondary">返回修改</button></div>
+  <p id="rental-export-status" class="note" role="status"></p>
+  <div id="rental-preview" class="rental-scroll"></div>
+</div></dialog>
+<script src="./rental-calculation.js?v=7bb17bdf7851"></script>
+<script src="./rental-document.js?v=f7ae86092580"></script>
+<script src="./vendor/html2canvas-1.4.1.min.js"></script>
+<script src="./vendor/jspdf-4.2.1.umd.min.js"></script>
+<script src="./rental-export.js?v=dc7a799bcd17"></script>
 <script src="./backup-state.js"></script>
 <script src="./local-snapshots.js"></script>
 <script src="./backup-transfer.js"></script>
@@ -866,12 +880,8 @@
     return {totalInterest,totalRepayment:principal+totalInterest};
   }
   function updateFinanceMethodNote(){
-    const method=selectedFinanceMethod(),flat=method==='flat';
-    $('finance-method-note').innerHTML=flat
-      ?'<strong>当前计息方式：平息 / 固定月息</strong>月供＝贷款金额÷期数＋贷款金额×月利率；总利息＝贷款金额×月利率×期数。每期利息都按原贷款金额计算。'
-      :'<strong>当前计息方式：标准等额本息</strong>月供＝贷款金额×月利率×(1＋月利率)^期数÷[(1＋月利率)^期数－1]；总利息＝月供×期数－贷款金额。每期利息按剩余本金递减计算。';
-    $('finance-rate-hint').textContent=flat?'每期利息＝原贷款金额×月利率；例如1.29代表每月1.29%':'按剩余本金递减计息；例如0.6代表月利率0.6%';
-    $('finance-method-warning').textContent=`当前计息方式：${financeMethodName(method)}。押金仅用于展示，不参与贷款金额、月供或利息计算。本区域只用于新方案报价；已有客户请从“客户还款计划”进入合同结清核算。`;
+    $('finance-method-note').innerHTML='<strong>内部固定月费率口径</strong>固定月租＝车辆方案金额÷期数＋车辆方案金额×内部月费率。预付租金只抵扣付款计划，不减少计价基数。';
+    $('finance-method-warning').textContent='本区域用于新租赁方案测算。历史客户合同、收款记录及结清计算仍按原合同处理；方案费用未扣除资金等成本，不代表净利润。';
   }
   function readPositive(id,allowZero=false){
     const raw=$(id).value;if(raw==='')return null;const value=Number(raw);
@@ -881,44 +891,51 @@
     $(buttonId).classList.remove('ok');$(buttonId).textContent=defaultText;
     $(statusId).textContent='复制后可直接粘贴到微信。实际方案以双方合同约定为准。';
   }
+  let calculationResult=null, paymentSchedule=[], rentalSignature='', rentalSequence=0;
   function showFinanceError(message){
+    calculationResult=null;paymentSchedule=[];rentalSignature='';
     const error=$('finance-error');error.textContent=message;error.classList.add('show');
     ['loan-amount','primary-result','secondary-result','tertiary-result'].forEach(id=>$(id).textContent='—');
     $('finance-message').value='请先完整填写有效的方案数据。';
+    $('rental-results').hidden=true;$('finance-copy').disabled=true;$('rental-confirm').disabled=true;
+    $('rental-preview').innerHTML='';if($('rental-dialog').open)$('rental-dialog').close();
   }
   function calculateFinance(){
-    const term=readPositive('term');
-    const depositMonths=readPositive('deposit-months',true);
-    const error=$('finance-error');error.classList.remove('show');error.textContent='';
-    if(term===null||!Number.isInteger(term)||term>120){
-      showFinanceError('贷款期限请填写1至120个月的整数。');return;
-    }
-    if(depositMonths===null||!Number.isInteger(depositMonths)||depositMonths>120){
-      showFinanceError('押金请填写0至120个月的整数。');return;
-    }
-    let loan,payment,totalInterest,totalRepayment,message;
-    const price=readPositive('car-price'),ratePct=readPositive('monthly-rate',true);
-    if(price===null||ratePct===null){showFinanceError('请填写有效的车辆价格和月利率。');return;}
-    const rate=ratePct/100,method=selectedFinanceMethod();updateFinanceMethodNote();
-    if(financeMode==='quote'){
-      const downRatePct=readPositive('down-payment-rate',true);
-      if(downRatePct===null||downRatePct>100){showFinanceError('首付比例请填写0%至100%。');return;}
-      const down=price*(downRatePct/100);$('down-payment-preview').textContent=`自动换算：${money(down)} 元`;
-      loan=price-down;payment=monthlyPayment(loan,rate,term,method);({totalInterest,totalRepayment}=repaymentTotals(loan,payment,rate,term,method));
-      $('primary-result-label').textContent='每月还款';$('secondary-result-label').textContent='分期总还款';$('tertiary-result-label').textContent='总利息';
-      $('primary-result').textContent=money(payment)+' 元';$('secondary-result').textContent=money(totalRepayment)+' 元';$('tertiary-result').textContent=money(totalInterest)+' 元';
-      message=`车辆价格：${money(price)}元\n首付：${shortMoney(downRatePct)}% / ${money(down)}元\n贷款金额：${money(loan)}元\n期数：${term}个月\n月供：${money(payment)}元\n押金：${depositMonths}个月`;
-    }else{
-      const target=readPositive('target-payment');
-      if(target===null){showFinanceError('请输入大于0的可接受月供。');return;}
-      const affordableLoan=principalFromPayment(target,rate,term,method);loan=Math.min(price,affordableLoan);
-      const down=Math.max(0,price-loan),downRatePct=price?down/price*100:0;payment=monthlyPayment(loan,rate,term,method);({totalInterest,totalRepayment}=repaymentTotals(loan,payment,rate,term,method));
-      $('primary-result-label').textContent='建议首付款';$('secondary-result-label').textContent='对应月供';$('tertiary-result-label').textContent='分期总还款';
-      $('primary-result').textContent=`${shortMoney(downRatePct)}% / ${money(down)} 元`;$('secondary-result').textContent=money(payment)+' 元';$('tertiary-result').textContent=money(totalRepayment)+' 元';
-      message=`车辆价格：${money(price)}元\n首付：${shortMoney(downRatePct)}% / ${money(down)}元\n贷款金额：${money(loan)}元\n期数：${term}个月\n月供：${money(payment)}元\n押金：${depositMonths}个月`;
-    }
-    $('loan-amount').textContent=money(loan)+' 元';$('finance-output-title').textContent='客户方案文字';$('finance-message').value=message;
-    resetCopy('finance-copy','finance-status','复制客户方案');
+    updateFinanceMethodNote();
+    $('prepaid-months').max=$('term').value||'120';
+    try{
+      const draft={mode:financeMode,vehicleAmount:$('car-price').value,terms:$('term').value,ratePct:$('monthly-rate').value,prepaidMonths:$('prepaid-months').value,depositMonths:$('rental-deposit-months').value,target:$('target-payment').value,firstDate:$('rental-first-date').value,vehicle:$('rental-vehicle').value,customer:$('rental-customer').value,phone:$('rental-phone').value};
+      const result=window.RentalCalculation.calculate(draft,{monthlyPayment,principalFromPayment,repaymentTotals});
+      const signature=JSON.stringify(result);
+      if(signature!==rentalSignature){
+        rentalSignature=signature;
+        const suffix=crypto.randomUUID?crypto.randomUUID().slice(0,8):`${Date.now().toString(36)}${++rentalSequence}`;
+        calculationResult=Object.freeze({...result,schemeId:`HK-${toISO(todayNoon()).replaceAll('-','')}-${suffix}`});
+        paymentSchedule=calculationResult.paymentSchedule;
+        $('rental-preview').innerHTML='';if($('rental-dialog').open)$('rental-dialog').close();
+      }
+      if(financeMode==='reverse')$('car-price').value=(result.vehicleAmountCents/100).toFixed(2);
+      $('finance-error').classList.remove('show');$('finance-error').textContent='';
+      $('loan-amount').textContent=money(result.vehicleAmountCents/100)+' 元';
+      $('primary-result').textContent=money(result.fixedMonthlyCents/100)+' 元';
+      $('secondary-result').textContent=money(result.totalRentCents/100)+' 元';
+      $('tertiary-result').textContent=money(result.feeCents/100)+' 元';
+      const customer=window.RentalDocument.customerData(calculationResult);
+      $('rental-summary-content').innerHTML=window.RentalDocument.meta(customer);
+      $('rental-schedule-content').innerHTML=window.RentalDocument.table(customer);
+      $('rental-schedule-note').textContent=window.RentalDocument.notes(customer);
+      $('finance-message').value=window.RentalDocument.text(customer);
+      $('rental-results').hidden=false;$('finance-copy').disabled=false;$('rental-confirm').disabled=false;
+      resetCopy('finance-copy','finance-status','复制客户方案');
+    }catch(error){showFinanceError(error.message||'方案测算失败，请检查输入。')}
+  }
+  function openRentalConfirmation(){
+    calculateFinance();
+    if(!calculationResult)return;
+    if(!calculationResult.vehicle){$('finance-error').textContent='请填写车辆名称后再生成客户确认单。';$('finance-error').classList.add('show');$('rental-vehicle').focus();return}
+    $('rental-preview').innerHTML=window.RentalDocument.documentHtml(window.RentalDocument.customerData(calculationResult));
+    $('rental-export-status').textContent='请核对车辆、金额、日期及全部期次后导出。';
+    $('rental-dialog').showModal();
   }
 
   function calculateLateFee(){
@@ -945,9 +962,8 @@
   }));
   document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{
     financeMode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item===button));
-    document.querySelectorAll('.quote-field').forEach(item=>item.hidden=financeMode!=='quote');document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');calculateFinance();
+    document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');$('car-price').readOnly=financeMode==='reverse';$('rental-amount-hint').textContent=financeMode==='reverse'?'由月租预算倒推的车辆方案金额；预付租金不参与倒推':'固定月租的计算基础，不扣减预付租金';calculateFinance();
   }));
-  document.querySelectorAll('input[name="finance-method"]').forEach(input=>input.addEventListener('change',calculateFinance));
   $('plan-form').addEventListener('submit',event=>{
     event.preventDefault();
     if(!ensureStorageWritable())return;
@@ -1013,9 +1029,16 @@
     if(button.dataset.copyOverdue){const plan=plans.find(item=>item.id===button.dataset.copyOverdue),account=plan&&overdueAccount(plan);if(account)copyReminderText(overdueAccountMessage(account),button)}
     if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&installmentItem(plan,Number(button.dataset.termIndex));if(item&&item.remaining>.005)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
   });
-  ['car-price','down-payment-rate','target-payment','term','deposit-months','monthly-rate'].forEach(id=>$(id).addEventListener('input',calculateFinance));
+  ['car-price','target-payment','term','prepaid-months','rental-deposit-months','monthly-rate','rental-first-date','rental-vehicle','rental-customer','rental-phone'].forEach(id=>$(id).addEventListener('input',calculateFinance));
   ['contract-price','contract-down-rate','contract-monthly-rate','total-terms'].forEach(id=>$(id).addEventListener('input',updateContractPreview));
   ['due','pay','amount','rate'].forEach(id=>$(id).addEventListener('input',calculateLateFee));
+  $('rental-calculate').addEventListener('click',calculateFinance);
+  $('rental-confirm').addEventListener('click',openRentalConfirmation);
+  $('rental-close').addEventListener('click',()=>$('rental-dialog').close());
+  ['png','pdf'].forEach(format=>$('rental-'+format).addEventListener('click',()=>{
+    const snapshot=calculationResult;
+    if(snapshot&&snapshot.vehicle)window.RentalExport.exportFile(snapshot,format,()=>calculationResult===snapshot);
+  }));
   $('finance-copy').addEventListener('click',()=>copyPlain('finance-message','finance-copy','finance-status'));
   $('late-fee-copy').addEventListener('click',()=>copyPlain('late-fee-message','late-fee-copy','late-fee-status'));
   $('export-backup').addEventListener('click',exportBackup);
@@ -1048,6 +1071,7 @@
   $('copy-storage-evidence').addEventListener('click',copyStorageEvidence);
   $('close-recovery').addEventListener('click',()=>$('recovery-dialog').close());
   $('wechat-notice').hidden=!/MicroMessenger/i.test(navigator.userAgent);
+  $('rental-first-date').value=toISO(todayNoon());
   $('start-date').value=toISO(todayNoon());updateContractPreview();renderPlanModule();renderBackupReminder();renderStorageProtection();refreshBackupAccess();calculateFinance();calculateLateFee();
   backupStateReady.then(refreshBackupAccess);
   window.addEventListener('focus',renderReminders);

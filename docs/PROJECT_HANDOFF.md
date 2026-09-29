@@ -3,10 +3,11 @@
 ## 1. 当前生产状态
 
 - 正式 URL：<https://hckleodj.github.io/late-fee-calculator-cn/>
-- 当前 release commit：`e63ac63a328a07bba8e5783c4b4ed81eb5c3eff3`
-- 发布前/回滚基线：`43fa129a8303f4aa0ef619c167f91755a6184ebd`
-- 备份分支：`backup/pre-rc1-release-20260828`
-- 状态：稳定生产 / 已归档
+- 当前发布版本：2026-09-29 算月供租赁确认单升级（提交可由本文件 Git 历史定位）
+- 发布前/回滚基线：`87ca2cab55f27afcae2a871dce3be654d492d978`
+- 备份分支：`backup/pre-rental-v1-20260929`
+- 状态：用户已明确授权先更新正式地址用于手机试用；桌面及自动化检查通过，OPPO N6 真机验收待完成。
+- 本次变更范围和金额口径见 `RENTAL_PAYMENT_PLAN_V1.md`。客户合同、备份与迁移数据结构保持原样。
 
 ## 2. 唯一正式使用环境
 

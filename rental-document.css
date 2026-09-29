@@ -1,0 +1,32 @@
+#finance-panel [hidden]{display:none!important}
+#finance-panel .rental-subheading{font-size:17px;margin:25px 0 10px}
+.rental-summary{border:1px solid #cad4dd;border-radius:10px;padding:16px;background:#fff}
+.rental-summary h3{margin:0 0 14px;font-size:17px}
+.rental-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px 18px;font-size:13px;line-height:1.6}
+.rental-meta>div{display:flex;align-items:baseline;min-width:0;overflow-wrap:anywhere}
+.rental-meta span{color:#555;flex-shrink:0}.rental-meta strong{font-weight:500;min-width:0}
+.rental-schedule{margin-top:18px}.rental-schedule summary{cursor:pointer;font-size:16px;font-weight:650;padding:12px 0}
+.rental-scroll{overflow:auto;-webkit-overflow-scrolling:touch}
+.rental-table{width:100%;border-collapse:collapse;table-layout:fixed;color:#111;font-size:12px;font-variant-numeric:tabular-nums;background:#fff}
+.rental-table th,.rental-table td{border:1px solid #777;height:19px;line-height:16px;padding:1px 4px;text-align:right;white-space:nowrap}
+.rental-table th{font-weight:600;background:#f0f1f2}.rental-table th,.rental-table td:nth-child(-n+2){text-align:center}
+.rental-table tfoot td,.rental-table tfoot th{font-weight:650;background:#f5f5f5}
+.rental-scroll>.rental-table{min-width:720px}
+#rental-dialog{width:min(880px,calc(100% - 16px));max-height:94vh}
+#rental-dialog .dialog-body{max-height:94vh;padding:16px}
+.rental-preview-tools{display:flex;gap:8px;margin:10px 0}.rental-preview-tools button{height:42px;margin:0;font-size:14px}
+.rental-sheet{box-sizing:border-box;width:794px;background:#fff;color:#111;padding:28px 30px 22px;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-align:left}
+.rental-sheet *{box-sizing:border-box}
+.rental-brand{font-size:11px;letter-spacing:1px;color:#444;border-bottom:1px solid #333;padding-bottom:7px}
+#rental-dialog .rental-sheet h2,.rental-sheet h2{font-size:23px;text-align:center;font-weight:600;line-height:1.4;margin:12px 0 15px}
+.rental-sheet .rental-meta{gap:5px 16px;font-size:12px;line-height:1.5;margin-bottom:12px}
+.rental-table-caption{font-size:13px;font-weight:600;margin:8px 0 5px;display:flex;justify-content:space-between}
+.rental-table-caption span{font-size:11px;font-weight:400}
+.rental-explanation{font-size:11px;line-height:1.65;margin:8px 0;color:#333}
+.rental-disclaimer{font-size:12px;line-height:1.8;margin:9px 0 14px}
+.rental-signatures{display:flex;justify-content:space-between;font-size:12px;line-height:1.8;gap:12px;margin-top:12px}
+.rental-page{font-size:10px;color:#555;text-align:right;margin-top:12px}
+.rental-continuation{font-size:12px;margin:15px 0}
+.rental-render-stage{position:absolute;left:-12000px;top:0;width:794px;background:#fff;pointer-events:none}
+button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:620px){.rental-summary .rental-meta{grid-template-columns:1fr}.rental-preview-tools{flex-wrap:wrap}.rental-preview-tools button{flex:1 1 30%}}
