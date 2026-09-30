@@ -1,6 +1,11 @@
 (function () {
   'use strict';
   let busy = false;
+  function verifyLayout(sheet) {
+    if (!sheet || sheet.offsetWidth !== 794 || getComputedStyle(sheet).paddingLeft !== '30px') {
+      throw new Error('确认单样式未完整加载，请刷新页面后重新导出。');
+    }
+  }
   async function canvasFor(html) {
     if (!window.html2canvas) throw new Error('图片导出组件未加载，请刷新后重试。');
     const stage = document.createElement('div');
@@ -10,6 +15,7 @@
     try {
       if (document.fonts?.ready) await document.fonts.ready;
       const sheet = stage.firstElementChild;
+      verifyLayout(sheet);
       return await window.html2canvas(sheet, { scale: 2, backgroundColor: '#ffffff', logging: false, width: 794, height: sheet.offsetHeight, windowWidth: 1000, scrollX: 0, scrollY: 0 });
     } finally { stage.remove(); }
   }
@@ -26,6 +32,7 @@
       for (let rows = 36; rows >= 1; rows--) {
         const pages = window.RentalDocument.pdfPages(data, rows);
         stage.innerHTML = pages.join('');
+        [...stage.children].forEach(verifyLayout);
         // Keep printed 12px table text above 8pt, even for long vehicle/customer names.
         if ([...stage.children].every(sheet => sheet.offsetHeight <= 1180)) return pages;
       }

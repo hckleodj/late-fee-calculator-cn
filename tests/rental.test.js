@@ -13,7 +13,7 @@ const pricing = vm.runInNewContext(`${source.slice(source.indexOf('  function mo
 const draft = { mode: 'quote', vehicleAmount: '100000', terms: '36', ratePct: '1', prepaidMonths: '0', depositMonths: '2', firstDate: '2026-12-31', vehicle: '虚构测试车辆', customer: '测试客户' };
 const calc = overrides => engine.calculate({ ...draft, ...overrides }, pricing);
 test('mutable rental assets carry current content hashes to invalidate old cached scripts', () => {
-  for(const file of ['rental-calculation.js','rental-document.js','rental-export.js','rental-document.css']) {
+  for(const file of ['installment-ledger.js','rental-calculation.js','rental-document.js','rental-export.js','rental-document.css']) {
     const hash=createHash('sha256').update(fs.readFileSync(path.join(__dirname,'..',file))).digest('hex').slice(0,12);
     assert.ok(source.includes(`./${file}?v=${hash}"`),`${file} cache version must match current contents`);
   }

@@ -142,6 +142,7 @@ async function buildPage(options = {}) {
     constructor(parts, name, options) { super(parts, options); this.name = name; }
   }
   const context = vm.createContext({
+    alert: message => { context.lastAlert = message; },
     Blob,
     File: TestFile,
     TextEncoder,
@@ -189,7 +190,7 @@ async function buildPage(options = {}) {
   if (options.loadBackupModule !== false) vm.runInContext(backupModule, context, { filename: 'backup-state.js' });
   vm.runInContext(snapshotModule, context, { filename: 'local-snapshots.js' });
   if (fs.existsSync(migrationPath)) vm.runInContext(fs.readFileSync(migrationPath, 'utf8'), context, { filename: 'migration-transfer.js' });
-  for (const file of ['rental-calculation.js','rental-document.js']) {
+  for (const file of ['installment-ledger.js','rental-calculation.js','rental-document.js']) {
     const candidate=path.join(sourceRoot,file);
     if(fs.existsSync(candidate)) vm.runInContext(fs.readFileSync(candidate,'utf8'),context,{filename:file});
   }

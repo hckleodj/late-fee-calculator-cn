@@ -27,6 +27,7 @@
     return `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, '0')}-${String(Math.min(day, lastDay)).padStart(2, '0')}`;
   }
   function calculate(draft, pricing) {
+    const batteryMonthlyCents = amount(draft.batteryMonthlyRent ?? 0, '月租电费');
     const terms = Number(draft.terms);
     if (!/^\d+$/.test(String(draft.terms)) || !Number.isInteger(terms) || terms < 1 || terms > 120) throw new Error('租赁期限请输入1至120期的整数。');
     const rateText = String(draft.ratePct).trim();
@@ -78,12 +79,12 @@
       const offsetCents = Math.min(availablePrepaid, plannedCents);
       availablePrepaid -= offsetCents;
       remainingRent -= plannedCents;
-      return Object.freeze({ term: index + 1, dueDate: dueDate(draft.firstDate, index), plannedCents, offsetCents, dueCents: plannedCents - offsetCents, remainingCents: remainingRent });
+      return Object.freeze({ term: index + 1, dueDate: dueDate(draft.firstDate, index), plannedCents, offsetCents, dueCents: plannedCents - offsetCents, batteryRentCents: batteryMonthlyCents, comprehensiveDueCents: plannedCents - offsetCents + batteryMonthlyCents, remainingCents: remainingRent });
     });
     return Object.freeze({
       vehicle: String(draft.vehicle || '').trim(), customer: String(draft.customer || '').trim(), phone: String(draft.phone || '').trim().slice(0, 24),
       terms, firstDate: draft.firstDate, vehicleAmountCents, ratePct: Number(rateText),
-      fixedMonthlyCents, totalRentCents, prepaidMonths, depositMonths, prepaidCents, depositCents,
+      batteryMonthlyCents, fixedMonthlyCents, totalRentCents, prepaidMonths, depositMonths, prepaidCents, depositCents,
       feeCents: totalRentCents - vehicleAmountCents, outstandingCents: totalRentCents - prepaidCents,
       tailAdjustmentCents: lastRentCents - fixedMonthlyCents,
       paymentSchedule: Object.freeze(paymentSchedule)
