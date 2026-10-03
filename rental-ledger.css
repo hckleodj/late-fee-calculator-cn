@@ -1,0 +1,76 @@
+/* Rental UI shares the toolbox's blue/white palette; financial modules are untouched. */
+.nav{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:6px;background:#f2f6fa}
+.nav button{font-size:13px;height:44px;border-radius:8px;white-space:nowrap}
+header{padding-top:20px;padding-bottom:20px}
+.data-safety-help{background:#f8fafc;border-color:var(--line);color:var(--muted);font-size:12px;padding:10px 14px}
+.data-safety-help summary{cursor:pointer;font-weight:600;color:var(--blue)}
+.data-safety-help p{margin:8px 0 0;line-height:1.65}
+#rental-ledger-panel{background:#f5f7fa}
+#rental-ledger-panel section{padding-top:22px}
+.ledger-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.ledger-heading .section-title{font-size:23px;letter-spacing:-.5px}
+.ledger-heading .section-help{margin:5px 0 0;font-size:12px}
+#ledger-new{flex-shrink:0;width:auto;padding:0 15px;height:43px;margin:0;background:var(--blue);font-size:14px}
+#ledger-status{margin:0 0 14px;text-align:left;font-size:13px;color:var(--blue);line-height:1.6;overflow-wrap:anywhere}
+#ledger-status:empty{display:none}
+.ledger-tabs{display:grid;grid-template-columns:1fr 1fr;padding:4px;border:1px solid #dae4ed;border-radius:10px;background:#fff;margin:18px 0 16px;gap:4px}
+.ledger-tabs button{margin:0;height:42px;border-radius:7px;color:#657787;background:transparent;font-size:14px}
+.ledger-tabs button.active{background:var(--blue);color:#fff}
+.ledger-list{display:grid;gap:14px}
+.ledger-card{background:#fff;border:1px solid #e0e7ee;border-radius:14px;padding:17px;box-shadow:0 2px 8px #183f6105}
+.ledger-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.ledger-card-top h3{margin:0;font-size:18px;line-height:1.4;overflow-wrap:anywhere}
+.ledger-plate{display:inline-block;border-radius:5px;background:#f3f6fa;color:#526777;font-size:12px;padding:3px 7px;margin-top:6px;overflow-wrap:anywhere}
+.ledger-state-badge{flex-shrink:0;font-size:11px;font-weight:650;border-radius:999px;padding:6px 9px;background:#edf7f0;color:#237449;max-width:112px;text-align:center}
+.ledger-state-badge.returned{background:#fff5e6;color:#9b650e}
+.ledger-state-badge.settled{background:#f0f3f7;color:#687987}
+.ledger-contact-line{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:12px 0;color:#526777;font-size:13px;line-height:1.6}
+.ledger-contact-line a,.ledger-return-alert a{color:var(--blue);text-decoration:none;white-space:nowrap}
+.ledger-money{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;border-top:1px solid #edf1f5;padding-top:13px}
+.ledger-money span{display:block;font-size:12px;color:#718290;margin-bottom:4px}
+.ledger-money strong{display:block;color:var(--blue);font-size:23px;font-weight:720;font-variant-numeric:tabular-nums;letter-spacing:-.5px;overflow-wrap:anywhere}
+.ledger-money>div+div{border-left:1px solid #edf1f5;padding-left:12px}
+.ledger-money strong.unpaid{color:var(--danger)}.ledger-money strong.paid{color:var(--green)}
+.ledger-secondary-money{font-size:12px;color:#687987;line-height:1.8;margin:9px 0 12px;display:flex;gap:3px 12px;flex-wrap:wrap}
+.ledger-dates{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid #edf1f5;padding-top:12px;font-size:12px;line-height:1.6;color:#667d8d}
+.ledger-dates strong{display:block;font-weight:550;color:#324c60;font-size:13px;margin-top:2px}
+.ledger-more{margin-top:12px;border-top:1px solid #edf1f5;padding-top:10px;font-size:12px;color:#687987;overflow-wrap:anywhere}
+.ledger-more summary{cursor:pointer;color:#526777;font-weight:600}
+.ledger-more p{line-height:1.8;margin:8px 0}
+.ledger-photo{max-width:100%;max-height:240px;object-fit:contain;border-radius:8px;display:block;margin-top:8px}
+.ledger-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.ledger-actions button{margin:0;height:40px;width:auto;flex:1 1 40%;border-radius:8px;padding:0 10px;font-size:13px;background:var(--blue)}
+.ledger-actions .secondary{background:#fff;border:1px solid #d7e2ec;color:var(--blue)}
+.ledger-actions .ledger-subaction{flex:1 1 40%;height:35px;font-size:12px;background:#f7f9fb;border-color:transparent;color:#667d8d}
+.ledger-return-alert{background:#fff7ef;border:1px solid #f3dfcc;border-radius:12px;padding:14px;margin-bottom:12px}
+.ledger-return-alert .ledger-card-top strong{font-size:14px;color:#a85a2d}
+.ledger-return-alert p{font-size:12px;line-height:1.8;margin:7px 0;color:#79634d}
+.ledger-return-alert .ledger-actions{margin-top:9px}
+.ledger-return-alert button{height:36px;font-size:12px}
+.ledger-empty{background:#fff;border:1px dashed #d6e1eb;border-radius:12px;padding:26px 16px;text-align:center;color:#8292a0;font-size:13px;line-height:1.8}
+#ledger-form[hidden],.ledger-list[hidden]{display:none!important}
+#ledger-form{padding-bottom:70px;margin-bottom:18px;scroll-margin-top:60px}
+.ledger-form-title{margin:0 0 18px;font-size:19px;color:#223e53}
+#ledger-form fieldset{min-width:0;margin:0 0 16px;padding:16px;border:1px solid #e1e8ef;border-radius:12px;background:#fff}
+#ledger-form legend{font-size:15px;font-weight:700;color:#2b4c64;padding:0 7px}
+#ledger-form .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
+#ledger-form .field{min-width:0}
+#ledger-form .field label{font-size:12px;font-weight:600;color:#4b6477;margin-bottom:6px;line-height:1.5}
+#ledger-form .field input,#ledger-form select{width:100%;min-width:0;height:45px;border:1px solid #d6e1ea;border-radius:8px;padding:0 10px;font-size:16px;background:#fff;color:#263f53}
+#ledger-form .field input:focus,#ledger-form select:focus{outline:3px solid #24578515;border-color:var(--blue)}
+#ledger-form .field.full{grid-column:1/-1}
+#ledger-form .note{font-size:11px;text-align:left;line-height:1.65;margin:5px 0 0;color:#7a8996}
+#ledger-form input[type=file]{height:auto;padding:8px;font-size:12px}
+#ledger-form input[type=file]::file-selector-button{border:0;border-radius:5px;background:#edf3f8;color:var(--blue);padding:8px;margin-right:7px}
+#ledger-identity-details{margin-top:14px;padding:11px;background:#f7f9fb;border-radius:8px}
+#ledger-identity-details summary{font-size:12px;color:#536f82;cursor:pointer}
+#ledger-identity-details .field{margin-top:12px}
+.ledger-manual-toggle{display:flex;gap:8px;align-items:center;color:#526777;font-size:13px;margin:15px 0 12px}
+#ledger-manual{width:18px;height:18px;margin:0;accent-color:var(--blue)}
+#ledger-preview{padding:13px;border:1px solid #dde8f1;border-radius:9px;background:#f0f5fa!important;margin-top:14px!important;color:var(--blue)!important;font-size:13px!important;line-height:1.8!important}
+.ledger-savebar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(744px,100%);z-index:8;display:grid;grid-template-columns:1fr 2fr;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));background:#fffffffa;border-top:1px solid #e2e9f0;box-shadow:0 -4px 16px #1d3d5e08}
+.ledger-savebar button{margin:0;height:45px;border-radius:9px;font-size:14px;background:var(--blue)}
+.ledger-savebar .secondary{background:#fff;border:1px solid #d5e0e9;color:#667d8d}
+@media(max-width:620px){header{padding-top:18px;padding-bottom:16px}header h1{font-size:23px}header p{font-size:12px}.nav button{font-size:12px;padding:0 2px}.ledger-heading .section-title{font-size:22px}#rental-ledger-panel section{padding:20px 16px}.ledger-card{padding:15px}#ledger-form fieldset{padding:14px}#ledger-form .grid{gap:14px 10px}#ledger-form .field.full{grid-column:1/-1}.ledger-money strong{font-size:21px}.ledger-dates{font-size:11px}}
+@media(max-width:360px){.ledger-heading{align-items:flex-start}.ledger-heading .section-title{font-size:20px}#ledger-new{padding:0 10px;font-size:12px}.ledger-money strong{font-size:19px}.nav button{font-size:11px}#ledger-form .grid{grid-template-columns:1fr}}
+.ledger-return-alert .ledger-actions button{flex:1 1 0;min-width:0;padding:0 5px;font-size:12px}

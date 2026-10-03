@@ -191,7 +191,7 @@
     return { migrationId: migrationIds[0], segmentTotal: total, dataRevision: revisions[0], fullChecksum: checksums[0], formatVersion: segments[0].formatVersion, encoding: segments[0].encoding, missing };
   }
   function validateBusinessStructure(value) {
-    if (!value || typeof value !== 'object' || Array.isArray(value) || !Array.isArray(value.plans) || !value.plans.length) throw new MigrationTransferError('invalid-structure', '迁移数据缺少非空plans数组。');
+    if (!value || typeof value !== 'object' || Array.isArray(value) || !Array.isArray(value.plans) || (!value.plans.length&&!value.rentals?.length)) throw new MigrationTransferError('invalid-structure', '迁移数据缺少非空plans数组。');
     const ids = new Set();
     for (const plan of value.plans) {
       if (!plan || typeof plan !== 'object' || Array.isArray(plan) || typeof plan.id !== 'string' || !plan.id.trim()) throw new MigrationTransferError('invalid-customer', '迁移数据存在无效客户结构。');
@@ -212,7 +212,7 @@
     let value; try { value = JSON.parse(compactJson); } catch (_error) { throw new MigrationTransferError('invalid-json', '迁移分段拼接后的JSON已损坏，禁止导入。'); }
     validateBusinessStructure(value);
     if (value.dataRevision !== metadata.dataRevision || value.checksum !== metadata.fullChecksum) throw new MigrationTransferError('payload-metadata', '迁移数据与分段头信息不一致。');
-    const actualFullChecksum = await hashText(JSON.stringify(value.plans)); if (actualFullChecksum !== metadata.fullChecksum) throw new MigrationTransferError('full-checksum', '完整客户数据校验失败，禁止导入。');
+    const actualFullChecksum = await hashText(JSON.stringify(value.schemaVersion===2?{schemaVersion:2,plans:value.plans,vehicles:value.vehicles,rentals:value.rentals,...(value.paymentSettings===undefined?{}:{paymentSettings:value.paymentSettings})}:value.plans)); if (actualFullChecksum !== metadata.fullChecksum) throw new MigrationTransferError('full-checksum', '完整客户数据校验失败，禁止导入。');
     return { value, compactJson, segments: ordered, ...metadata };
   }
 

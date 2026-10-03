@@ -6,7 +6,7 @@
   'use strict';
   const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const money = cents => (cents / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const disclaimer = '本确认单用于确认本次车辆租赁方案及付款安排。具体付款方式、预付租金抵扣、提前退租、逾期处理及租期届满后的相关权利义务，以双方最终签署的《车辆租赁合同》及相关附件约定为准。';
+  const disclaimer = '本方案单用于展示本次车辆租赁报价及拟定付款安排，不代表已成交。具体付款方式、预付租金抵扣、提前退租、逾期处理及租期届满后的相关权利义务，以双方最终签署的《车辆租赁合同》及相关附件约定为准。';
   // Explicit customer-facing allowlist. Never spread the internal result into a template.
   function customerData(result) {
     const { schemeId, customer, vehicle, terms, firstDate, fixedMonthlyCents, batteryMonthlyCents, prepaidMonths, depositMonths, tailAdjustmentCents } = result;
@@ -27,7 +27,7 @@
   }
   function documentHtml(data, rows = data.paymentSchedule, page = 1, pages = 1) {
     const final = page === pages;
-    return `<article class="rental-sheet"><div class="rental-brand">HOKU MOTORS / 好车库</div><h2>车辆租赁付款计划确认单</h2>${meta(data)}<div class="rental-table-caption">付款计划 <span>金额单位：元</span></div>${table(data, rows)}<p class="rental-explanation">${escape(notes(data))}</p>${final ? `<p class="rental-disclaimer">${disclaimer}</p><div class="rental-signatures"><span>承租人确认：________________</span><span>确认日期：______年____月____日</span></div>` : '<p class="rental-continuation">付款计划续下页；完整确认说明及签名栏见末页。</p>'}<div class="rental-page">${escape(data.schemeId)} · 第 ${page} / ${pages} 页</div></article>`;
+    return `<article class="rental-sheet"><div class="rental-brand">HOKU MOTORS / 好车库</div><h2>车辆租赁方案单</h2>${meta(data)}<div class="rental-table-caption">付款计划 <span>金额单位：元</span></div>${table(data, rows)}<p class="rental-explanation">${escape(notes(data))}</p>${final ? `<p class="rental-disclaimer">${disclaimer}</p><div class="rental-signatures"><span>客户参考：________________</span><span>方案日期：______年____月____日</span></div>` : '<p class="rental-continuation">付款计划续下页；完整方案说明及签名栏见末页。</p>'}<div class="rental-page">${escape(data.schemeId)} · 第 ${page} / ${pages} 页</div></article>`;
   }
   function pdfPages(data, rowsPerPage = 36) {
     const pages = Math.ceil(data.terms / rowsPerPage);

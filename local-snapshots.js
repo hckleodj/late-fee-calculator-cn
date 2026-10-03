@@ -68,8 +68,8 @@
     capture(rawData, dataRevision, expectedHash = null, reason = 'business-change') {
       const raw = String(rawData == null ? '' : rawData);
       this.pending = this.pending.catch(() => null).then(async () => {
-        let plans;
-        try { plans = JSON.parse(raw); }
+        let plans,businessData;
+        try { businessData = JSON.parse(raw); plans=Array.isArray(businessData)?businessData:businessData.plans; }
         catch (error) { this.lastError = error; return { ok: false, reason: 'invalid-data' }; }
         if (!Array.isArray(plans) || !Number.isInteger(dataRevision) || dataRevision < 0) {
           return { ok: false, reason: 'invalid-data' };
@@ -84,6 +84,7 @@
           dataRevision,
           hash,
           plans: JSON.parse(JSON.stringify(plans)),
+          ...(Array.isArray(businessData)?{}:{businessData}),
           reason: reason === 'before-restore' ? 'before-restore' : 'business-change'
         };
         const items = this.read();
@@ -104,7 +105,8 @@
       const snapshot = this.read().find(item => item.id === id);
       if (!snapshot) return null;
       try {
-        const raw = JSON.stringify(snapshot.plans);
+        if(snapshot.businessData&&JSON.stringify(snapshot.businessData.plans)!==JSON.stringify(snapshot.plans))return null;
+        const raw = JSON.stringify(snapshot.businessData||snapshot.plans);
         const hash = await this.calculateHash(raw);
         return hash === snapshot.hash ? JSON.parse(JSON.stringify(snapshot)) : null;
       } catch (error) {

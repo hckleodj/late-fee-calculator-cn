@@ -97,7 +97,7 @@
         for(const w of plan.lateFeeWaivers){if(typeof w.id!=='string'||!/^[A-Za-z0-9._:-]+$/.test(w.id)||ids.has(w.id)||!Number.isInteger(w.termIndex)||w.termIndex<0||w.termIndex>=Number(plan.totalTerms)||!amount(w.amount)||Number(w.amount)<=0||typeof w.reason!=='string'||!w.reason.trim())return false;ids.add(w.id);day(w.date);if(w.reversedAt&&day(w.reversedAt)<day(w.date))return false}
         checkWaivers(plan);
       }
-      for(const p of plan.payments||[]){if(p.allocationVersion!==undefined&&p.allocationVersion!==2)return false;if(p.allocationVersion!==2)continue;
+      for(const p of plan.payments||[]){if(!validChannelCost(p))return false;if(p.allocationVersion!==undefined&&p.allocationVersion!==2)return false;if(p.allocationVersion!==2)continue;
         day(p.date);if(![p.total,p.principal,p.batteryRent,p.lateFee].every(amount))return false;
         if(!Number.isInteger(p.startTermIndex)||p.startTermIndex<0||p.startTermIndex>=Number(plan.totalTerms))return false;
         const sums={principal:0,batteryRent:0,lateFee:0},seen=new Set();
@@ -106,6 +106,29 @@
         if(cents(p.total)!==sums.principal+sums.batteryRent+sums.lateFee)return false;
       }return true;
     }catch(e){return false}
+  }
+  // Channel costs never participate in repayment allocation or statements.
+  const paymentChannels={CCB:'建行收款码',WECHAT:'微信经营收款',CASH:'现金类渠道'};
+  function channelCost(total,channel,fee){
+    if(!Object.hasOwn(paymentChannels,channel))throw Error('请选择收款渠道。');
+    if(!amount(total)||Number(total)<=0||!amount(fee))throw Error('付款金额和手续费须为有效非负金额，最多两位小数。');
+    const channelFee=channel==='CASH'?0:Number(fee);
+    return {paymentAmount:Number(total),paymentChannel:channel,channelFee,netReceived:yuan(Math.max(cents(total)-cents(channelFee),0))};
+  }
+  function validChannelCost(p){
+    const keys=['paymentAmount','paymentChannel','channelFee','netReceived'];
+    if(keys.every(k=>p[k]===undefined))return true; // Legacy receipts stay untouched.
+    try{if(keys.some(k=>p[k]===undefined)||typeof p.paymentAmount!=='number'||typeof p.channelFee!=='number'||typeof p.netReceived!=='number')return false;
+      const cost=channelCost(p.paymentAmount,p.paymentChannel,p.channelFee);
+      return cents(p.paymentAmount)===cents(p.total)&&p.channelFee===cost.channelFee&&p.netReceived===cost.netReceived;
+    }catch(error){return false}
+  }
+  function suggestedChannelFee(total,channel,settings){
+    if(channel==='CASH')return 0;
+    const rate=settings?.[channel];
+    if(rate===undefined||rate===null)return null;
+    if(!amount(total))return null;
+    return yuan(Math.round(cents(total)*rate/100));
   }
   function localToday(){const now=new Date();return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`}
   function configure(plan,existing,rent,effective,asOf=localToday()){
@@ -177,5 +200,5 @@
     if(copy.legacyLateFeeAllocations)delete copy.legacyLateFeeAllocations[id];
     checkWaivers(copy);recompute(copy);return copy;
   }
-  return {cents,yuan,amount,day,dueDay,opening,battery,base,accrued,statement,recompute,validate,configure,receive,freezeLegacyFees,undo,waive,reverseWaiver};
+  return {paymentChannels,channelCost,validChannelCost,suggestedChannelFee,cents,yuan,amount,day,dueDay,opening,battery,base,accrued,statement,recompute,validate,configure,receive,freezeLegacyFees,undo,waive,reverseWaiver};
 });

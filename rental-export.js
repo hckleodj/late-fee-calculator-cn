@@ -3,7 +3,7 @@
   let busy = false;
   function verifyLayout(sheet) {
     if (!sheet || sheet.offsetWidth !== 794 || getComputedStyle(sheet).paddingLeft !== '30px') {
-      throw new Error('确认单样式未完整加载，请刷新页面后重新导出。');
+      throw new Error('方案单样式未完整加载，请刷新页面后重新导出。');
     }
   }
   async function canvasFor(html) {
@@ -36,7 +36,7 @@
         // Keep printed 12px table text above 8pt, even for long vehicle/customer names.
         if ([...stage.children].every(sheet => sheet.offsetHeight <= 1180)) return pages;
       }
-      throw new Error('确认单内容过长，请缩短车辆名称后重试。');
+      throw new Error('方案单内容过长，请缩短车辆名称后重试。');
     } finally { stage.remove(); }
   }
   async function exportFile(result, format, isCurrent) {
@@ -64,11 +64,11 @@
           pdf.addImage(canvas, 'PNG', (210 - width) / 2, 5, width, height, undefined, 'FAST');
           canvas.width = canvas.height = 0;
         }
-        pdf.setProperties({ title: `车辆租赁付款计划确认单 ${data.schemeId}`, subject: '车辆租赁付款安排', creator: 'HOKU MOTORS / 好车库' });
+        pdf.setProperties({ title: `车辆租赁方案单 ${data.schemeId}`, subject: '车辆租赁付款安排', creator: 'HOKU MOTORS / 好车库' });
         blob = pdf.output('blob');
       }
-      if (!isCurrent()) throw new Error('方案已变更，未下载旧确认单。请重新生成。');
-      download(blob, `车辆租赁付款计划确认单_${data.schemeId}.${format}`);
+      if (!isCurrent()) throw new Error('方案已变更，未下载旧方案单。请重新生成。');
+      download(blob, `车辆租赁方案单_${data.schemeId}.${format}`);
       status.textContent = `${format.toUpperCase()}已生成并发起下载。请在浏览器下载记录或文件管理中确认文件；微信内无法下载时，请在系统浏览器打开。`;
     } catch (error) {
       status.textContent = `导出未完成：${error.message || '请重试。'}`;
