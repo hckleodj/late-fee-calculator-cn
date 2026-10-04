@@ -879,15 +879,6 @@
   }
   function recomputeCompletedTerms(plan){window.InstallmentLedger.recompute(plan)}
   function previewPaymentChange(plan,paymentId,termIndex,draft){
-    const original=(plan.payments||[]).find(payment=>payment.id===paymentId);
-    // Channel costs are company expenses; unchanged customer accounting keeps its historical split.
-    if(original&&window.InstallmentLedger.amount($('payment-total').value)
-      &&window.InstallmentLedger.cents(draft.total)===window.InstallmentLedger.cents(original.total)
-      &&$('payment-date').value===original.date
-      &&termIndex===Number(original.startTermIndex??original.allocations?.[0]?.termIndex??plan.completedTerms)){
-      const copy=JSON.parse(JSON.stringify(plan)),candidate=copy.payments.find(payment=>payment.id===paymentId);
-      return {copy,candidate,unallocated:0,unchangedAccounting:true};
-    }
     try{return window.InstallmentLedger.receive(plan,{id:paymentId||'__payment_draft__',date:$('payment-date').value,total:draft.total,lateFee:0,automatic:true,startTermIndex:termIndex},toISO(todayNoon()))}
     catch(error){return {copy:plan,candidate:null,unallocated:0,error:error.message}}
   }
@@ -1098,8 +1089,7 @@
     Object.assign(result.candidate,draft.cost);
     if(!paymentId)result.candidate.id=`${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const previousPlan=JSON.parse(JSON.stringify(plan)),previousRaw=planStorageState.raw;
-    plan.payments=result.copy.payments;
-    if(!result.unchangedAccounting){if(result.copy.legacyLateFeeAllocations)plan.legacyLateFeeAllocations=result.copy.legacyLateFeeAllocations;plan.openingCompletedTerms=result.copy.openingCompletedTerms;plan.completedTerms=result.copy.completedTerms;}
+    plan.payments=result.copy.payments;if(result.copy.legacyLateFeeAllocations)plan.legacyLateFeeAllocations=result.copy.legacyLateFeeAllocations;plan.openingCompletedTerms=result.copy.openingCompletedTerms;plan.completedTerms=result.copy.completedTerms;
     try{if(!savePlans()){plans[plans.indexOf(plan)]=previousPlan;return}}catch(writeError){if(planStorageState.raw===previousRaw){plans[plans.indexOf(plan)]=previousPlan;error.textContent='收款未保存，浏览器存储写入失败：'+writeError.message;return}renderPlanModule();$('payment-dialog').close();alert('收款已写入，但备份状态记录异常，请立即导出完整备份：'+writeError.message);return}renderPlanModule();$('payment-dialog').close();
   });
   document.addEventListener('click',event=>{
