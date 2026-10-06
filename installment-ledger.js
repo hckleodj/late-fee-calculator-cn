@@ -151,7 +151,7 @@
     freezeLegacyFees(plan);
     plan.batteryMonthlyRent=Number(rent);plan.batteryRentEffectiveTermIndex=effective;plan.batteryRentByTerm=values;
   }
-  function receive(plan,{id,date,total,lateFee=0,startTermIndex,automatic=false},asOf){
+  function receive(plan,{id,date,total,lateFee=0,startTermIndex,automatic=true},asOf){
     if(!amount(total)||Number(total)<=0||!amount(lateFee)||Number(lateFee)>Number(total))throw Error('到账总额及滞纳金须为有效的非负两位小数金额。');
     if(day(date)>day(asOf))throw Error('实际收款日期不能晚于今天。');
     if(!Number.isInteger(startTermIndex)||startTermIndex<opening(plan)||startTermIndex>=Number(plan.totalTerms))throw Error('收款期数无效。');
@@ -159,10 +159,12 @@
     const oldIndex=(copy.payments||[]).findIndex(p=>p.id===id);copy.payments=(copy.payments||[]).filter(p=>p.id!==id);if(copy.legacyLateFeeAllocations)delete copy.legacyLateFeeAllocations[id];
     const entries=new Map();const entry=i=>{if(!entries.has(i))entries.set(i,{termIndex:i,principal:0,batteryRent:0,lateFee:0});return entries.get(i)};
     let left=cents(total)-cents(lateFee);
+    // Resolve from saved balances after removing only the receipt being edited.
+    // The clicked term and today's month must never choose the FIFO starting point.
+    const dueRows=statement(copy,date);
+    const first=dueRows.findIndex((r,i)=>{const b=base(copy,i);return b.contractRemaining>0||b.batteryRemaining>0||r.remainingLateFee>0});
+    startTermIndex=first>=0?Math.max(opening(copy),first):Number(copy.totalTerms);
     if(automatic){
-      const dueRows=statement(copy,date);
-      const first=dueRows.findIndex((r,i)=>{const b=base(copy,i);return b.contractRemaining>0||b.batteryRemaining>0||r.remainingLateFee>0});
-      if(first>=0)startTermIndex=Math.max(opening(copy),first);
       const view={...copy,payments:[...copy.payments,{id,date,allocationVersion:2,allocations:[]}]},temporary=view.payments[view.payments.length-1];
       for(let i=startTermIndex;i<Number(copy.totalTerms)&&left>0;i++){
         const b=base(copy,i),contract=Math.min(left,b.contractRemaining);left-=contract;const rent=Math.min(left,b.batteryRemaining);left-=rent;

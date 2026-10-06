@@ -355,7 +355,7 @@
 <script src="./vendor/html2canvas-1.4.1.min.js?v=e87e55079432"></script>
 <script src="./vendor/jspdf-4.2.1.umd.min.js?v=e6551fcdc32f"></script>
 <script src="./rental-export.js?v=243adcc4072e"></script>
-<script src="./installment-ledger.js?v=f5a52f828648"></script>
+<script src="./installment-ledger.js?v=cb2c560eee8c"></script>
 <script src="./rental-ledger.js?v=eae9c9b4ffed"></script>
 <script src="./backup-state.js?v=ba49f5fa6455"></script>
 <script src="./local-snapshots.js?v=00871e97a3f7"></script>
@@ -914,7 +914,7 @@
   }
   function openPaymentDialog(planId,termIndex,paymentId=''){
     try{const current=plans.find(p=>p.id===planId);if(current)window.InstallmentLedger.statement(current,toISO(todayNoon()))}catch(error){alert(error.message+' 当前账单暂停收款计算；请先核对原始备份中的日期。');return}
-    const plan=plans.find(item=>item.id===planId),payment=paymentId&&(plan?.payments||[]).find(item=>item.id===paymentId),resolvedTerm=payment?Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??termIndex):termIndex,item=plan&&installmentItem(plan,resolvedTerm);if(!item)return;
+    const plan=plans.find(item=>item.id===planId),payment=paymentId&&(plan?.payments||[]).find(item=>item.id===paymentId),resolvedTerm=payment?Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??termIndex):(plan?openInstallments(plan)[0]?.termIndex:undefined),item=plan&&Number.isInteger(resolvedTerm)&&installmentItem(plan,resolvedTerm);if(!item)return;
     $('payment-plan-id').value=planId;$('payment-term-index').value=resolvedTerm;$('payment-id').value=paymentId;$('payment-date').value=payment?.date||toISO(todayNoon());$('payment-total').value=payment?shortMoney(payment.total):shortMoney(item.total);
     $('payment-dialog-title').textContent=payment?'修改收款记录':'登记本期收款';$('save-payment').textContent=payment?'保存修改':'保存收款记录';$('payment-context').textContent=`${plan.name} · 第 ${resolvedTerm+1} 期 · 本期剩余应付款 ${money(item.remaining)} 元 · 待收滞纳金 ${money(item.fee)} 元`;
     channelFeeManual=Boolean(payment);$('payment-channel').value=payment?.paymentChannel||'CASH';
