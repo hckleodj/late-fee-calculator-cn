@@ -100,7 +100,7 @@
           <div class="field"><label for="battery-rent">月租电费（元）</label><input id="battery-rent" type="number" min="0" step="0.01" value="0"><div class="field-hint">独立费用，不计入合同本金或利息</div></div>
           <div class="field"><label for="battery-effective-term">租电费从第几期生效</label><input id="battery-effective-term" type="number" min="1" step="1" value="1"><div class="field-hint">未开始且无收款时可纠正首次生效期；已开始后按未来改价处理，保留历史期</div></div>
           <div class="field"><label for="due-day">每月还款日</label><input id="due-day" type="number" min="1" max="31" required value="5"></div>
-          <div class="field"><label for="plan-rate">参考日滞纳金比例（小数）</label><input id="plan-rate" type="number" min="0" step="0.0001" required value="0.005"><div class="field-hint">登记收款时再决定是否收取及实际金额</div></div>
+          <div class="field"><label for="plan-rate">参考日违约金比例（%）</label><input id="plan-rate" type="number" min="0" step="any" required value="0.5"><div class="field-hint">输入0.05表示每日0.05%。仅作参考计算，后补费率不代表原合同已约定；登记收款时再决定是否收取及实际金额</div></div>
           <div class="field"><label for="start-date">合同第1期应付月份</label><input id="start-date" type="date" required><div class="field-hint">请填写合同第1期原定还款所在月份，不是本次录入日期；后续期数会从这里逐月顺延</div></div>
           <div class="field"><label for="total-terms">总期数</label><input id="total-terms" type="number" min="1" max="360" required value="36"></div>
           <div class="field"><label for="completed-terms">已完成期数</label><input id="completed-terms" type="number" min="0" max="360" required value="0"></div>
@@ -355,7 +355,7 @@
 <script src="./vendor/html2canvas-1.4.1.min.js?v=e87e55079432"></script>
 <script src="./vendor/jspdf-4.2.1.umd.min.js?v=e6551fcdc32f"></script>
 <script src="./rental-export.js?v=243adcc4072e"></script>
-<script src="./installment-ledger.js?v=cb2c560eee8c"></script>
+<script src="./installment-ledger.js?v=499dcf657248"></script>
 <script src="./rental-ledger.js?v=eae9c9b4ffed"></script>
 <script src="./backup-state.js?v=ba49f5fa6455"></script>
 <script src="./local-snapshots.js?v=00871e97a3f7"></script>
@@ -842,7 +842,7 @@
     const plan=plans.find(item=>item.id===id);if(!plan)return;
     $('plan-form-section').hidden=false;
     $('battery-rent').value=plan.batteryMonthlyRent??0;$('battery-effective-term').value=Number(plan.batteryMonthlyRent??0)>0?Number(plan.batteryRentEffectiveTermIndex??0)+1:Math.min(Number(plan.completedTerms)+1,Number(plan.totalTerms));
-    $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('contract-price').value=plan.vehiclePrice??'';$('contract-down-rate').value=plan.downPaymentRate??'';$('contract-deposit-months').value=plan.depositMonths??0;$('contract-monthly-rate').value=plan.monthlyRate??'';$('due-day').value=plan.dueDay;$('plan-rate').value=plan.rate;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';updateContractPreview();
+    $('plan-id').value=plan.id;$('customer-name').value=plan.name;$('plate').value=plan.plate||'';$('vehicle').value=plan.vehicle||'';$('contract-price').value=plan.vehiclePrice??'';$('contract-down-rate').value=plan.downPaymentRate??'';$('contract-deposit-months').value=plan.depositMonths??0;$('contract-monthly-rate').value=plan.monthlyRate??'';$('due-day').value=plan.dueDay;$('plan-rate').value=Number(plan.rate)*100;$('start-date').value=plan.startDate;$('total-terms').value=plan.totalTerms;$('completed-terms').value=plan.completedTerms;$('plan-notes').value=plan.notes||'';updateContractPreview();
     $('plan-form-title').textContent='编辑客户还款计划';$('save-plan').textContent='保存修改';$('cancel-edit').hidden=false;$('plan-form-section').scrollIntoView({behavior:'smooth'});
   }
   async function copyReminderText(text,button){
@@ -1045,14 +1045,15 @@
     const contract=updateContractPreview();if(!contract){alert('请完整填写该客户合同中的车辆价格、首付比例、固定月利率和总期数。');return}
     const id=$('plan-id').value||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const existing=plans.find(item=>item.id===id);
-    const plan={...JSON.parse(JSON.stringify(existing||{})),id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),vehiclePrice:contract.price,downPaymentRate:contract.downRate,depositMonths,monthlyRate:contract.monthlyRatePct,loanAmount:contract.loan,amount:round2(contract.monthlyPayment),dueDay,rate:Number($('plan-rate').value),startDate:$('start-date').value,totalTerms,completedTerms,openingCompletedTerms:existing?.payments?.length?openingCompletedTerms(existing):completedTerms,notes:$('plan-notes').value.trim(),payments:JSON.parse(JSON.stringify(existing?.payments||[]))};
+    const plan={...JSON.parse(JSON.stringify(existing||{})),id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),vehiclePrice:contract.price,downPaymentRate:contract.downRate,depositMonths,monthlyRate:contract.monthlyRatePct,loanAmount:contract.loan,amount:round2(contract.monthlyPayment),dueDay,rate:existing&&Number($('plan-rate').value)===Number(existing.rate)*100?existing.rate:Number($('plan-rate').value)/100,startDate:$('start-date').value,totalTerms,completedTerms,openingCompletedTerms:existing?.payments?.length?openingCompletedTerms(existing):completedTerms,notes:$('plan-notes').value.trim(),payments:JSON.parse(JSON.stringify(existing?.payments||[]))};
     try{
+      window.InstallmentLedger.assertRateChange(existing,plan.rate);
       if(existing?.payments?.length){
         const financialKeys=['vehiclePrice','downPaymentRate','monthlyRate','loanAmount'];
         const missing=value=>value===undefined||value===null||value==='';
-        const changedCore=plan.startDate!==existing.startDate||['amount','rate','dueDay','totalTerms'].some(k=>Number(plan[k])!==Number(existing[k]));
+        const changedCore=plan.startDate!==existing.startDate||['amount','dueDay','totalTerms'].some(k=>Number(plan[k])!==Number(existing[k]));
         const changedKnownFinancial=financialKeys.some(k=>!missing(existing[k])&&Number(plan[k])!==Number(existing[k]));
-        if(changedCore||changedKnownFinancial)throw Error('已有收款记录的合同不能直接修改金额、日费率、日期或期数，避免改变历史计费。');
+        if(changedCore||changedKnownFinancial)throw Error('已有收款记录的合同不能直接修改金额、日期或期数，避免改变历史计费。');
         // Permit only filling genuinely absent metadata, with the same monthly amount
         // and every known financial term preserved; never silently replace old values.
       }

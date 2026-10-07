@@ -131,6 +131,15 @@
     return yuan(Math.round(cents(total)*rate/100));
   }
   function localToday(){const now=new Date();return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`}
+  // Inspect saved history, including reversed waivers; never replay receipts to change a rate.
+  function hasLateFeeHistory(plan){
+    return (plan.payments||[]).some(p=>Number(p.lateFee)>0||(p.allocations||[]).some(a=>Number(a.lateFee)>0))
+      ||Object.keys(plan.legacyLateFeeAllocations||{}).length>0||(plan.lateFeeWaivers||[]).length>0;
+  }
+  function assertRateChange(existing,rate){
+    if(!Number.isFinite(Number(rate))||Number(rate)<0)throw Error('参考日违约金比例须为非负数字。');
+    if(existing&&Number(rate)!==Number(existing.rate)&&hasLateFeeHistory(existing))throw Error('已有滞纳金收款、分配或减免历史（含已撤销记录），不能直接修改参考日违约金比例，请先核对历史账务。');
+  }
   function configure(plan,existing,rent,effective,asOf=localToday()){
     if(!amount(rent))throw Error('月租电费请输入非负金额，最多2位小数。');
     if(!Number.isInteger(effective)||effective<0||effective>=Number(plan.totalTerms))throw Error('租电费生效期须在合同期数内。');
@@ -202,5 +211,5 @@
     if(copy.legacyLateFeeAllocations)delete copy.legacyLateFeeAllocations[id];
     checkWaivers(copy);recompute(copy);return copy;
   }
-  return {paymentChannels,channelCost,validChannelCost,suggestedChannelFee,cents,yuan,amount,day,dueDay,opening,battery,base,accrued,statement,recompute,validate,configure,receive,freezeLegacyFees,undo,waive,reverseWaiver};
+  return {hasLateFeeHistory,assertRateChange,paymentChannels,channelCost,validChannelCost,suggestedChannelFee,cents,yuan,amount,day,dueDay,opening,battery,base,accrued,statement,recompute,validate,configure,receive,freezeLegacyFees,undo,waive,reverseWaiver};
 });
