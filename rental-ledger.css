@@ -74,3 +74,7 @@ header{padding-top:20px;padding-bottom:20px}
 @media(max-width:620px){header{padding-top:18px;padding-bottom:16px}header h1{font-size:23px}header p{font-size:12px}.nav button{font-size:12px;padding:0 2px}.ledger-heading .section-title{font-size:22px}#rental-ledger-panel section{padding:20px 16px}.ledger-card{padding:15px}#ledger-form fieldset{padding:14px}#ledger-form .grid{gap:14px 10px}#ledger-form .field.full{grid-column:1/-1}.ledger-money strong{font-size:21px}.ledger-dates{font-size:11px}}
 @media(max-width:360px){.ledger-heading{align-items:flex-start}.ledger-heading .section-title{font-size:20px}#ledger-new{padding:0 10px;font-size:12px}.ledger-money strong{font-size:19px}.nav button{font-size:11px}#ledger-form .grid{grid-template-columns:1fr}}
 .ledger-return-alert .ledger-actions button{flex:1 1 0;min-width:0;padding:0 5px;font-size:12px}
+
+#ledger-form .ledger-boundary-toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;line-height:1.5;cursor:pointer}
+#ledger-form .ledger-boundary-toggle[hidden]{display:none}
+#ledger-form .ledger-boundary-toggle input{width:18px;height:18px;margin:0;flex-shrink:0;accent-color:var(--blue)}
