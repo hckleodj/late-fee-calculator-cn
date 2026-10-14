@@ -1,11 +1,14 @@
-(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.VehicleRentalLedger=api})(typeof globalThis!=='undefined'?globalThis:this,function(){
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./installment-ledger.js'):root.InstallmentLedger);if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.VehicleRentalLedger=api})(typeof globalThis!=='undefined'?globalThis:this,function(installment){
 'use strict';
 const statuses=['RENTING','RETURNED_UNSETTLED','SETTLED'];
 function day(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))throw new Error('日期格式不正确');const n=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(n)||new Date(n).toISOString().slice(0,10)!==value)throw new Error('日期不存在');return n/86400000}
 function cents(value){if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>1e9)throw new Error('金额必须为有效非负数字');return Math.round((value+Number.EPSILON)*100)}
-const rentalPaymentChannels={CASH:'现金',CCB:'建行收款码',WECHAT:'微信经营收款',BANK:'银行转账',ALIPAY:'支付宝',OTHER:'其他'};
+const rentalPaymentChannels=installment.paymentChannels;
+// Read-only compatibility for channels written by the previous rental page.
+const legacyChannelLabels={BANK:'银行转账',ALIPAY:'支付宝',OTHER:'其他'};
+function paymentChannelLabel(channel){return rentalPaymentChannels[channel]||legacyChannelLabels[channel]}
 function moneyCents(n){const c=cents(n);if(Math.abs(n*100-c)>0.00001)throw Error('金额最多两位小数');return c}
-function channelCost(amount,channel,fee){const gross=moneyCents(amount),cost=moneyCents(fee);if(!gross)throw Error('付款须大于零');if(!Object.hasOwn(rentalPaymentChannels,channel))throw Error('收款渠道无效');if(channel==='CASH'&&cost)throw Error('现金手续费须为零');if(cost>gross)throw Error('手续费不能超过付款');return {paymentChannel:channel,channelFee:cost/100,netReceived:(gross-cost)/100}}
+function channelCost(amount,channel,fee,history=false){const gross=moneyCents(amount),cost=moneyCents(fee);if(!gross)throw Error('付款须大于零');if(!Object.hasOwn(rentalPaymentChannels,channel)&&!(history&&Object.hasOwn(legacyChannelLabels,channel)))throw Error('收款渠道无效');if(channel==='CASH'&&cost)throw Error('现金手续费须为零');if(cost>gross)throw Error('手续费不能超过付款');if(history)return {paymentChannel:channel,channelFee:cost/100,netReceived:(gross-cost)/100};const shared=installment.channelCost(amount,channel,fee);return {paymentChannel:shared.paymentChannel,channelFee:shared.channelFee,netReceived:shared.netReceived}}
 function paymentChannelTotals(r){paymentTotals(r);let gross=0,fees=0,net=0,missing=0;for(const p of r.rentalPayments||[]){if(p.status!=='ACTIVE')continue;if(!p.paymentChannel){missing++;continue}gross+=moneyCents(p.amount);fees+=moneyCents(p.channelFee);net+=moneyCents(p.netReceived)}return {gross:gross/100,fees:fees/100,net:net/100,missing}}
 // Legacy records are read without mutation; their undated total is the opening base.
 function paymentTotals(r){
@@ -17,7 +20,7 @@ function paymentTotals(r){
   if(!p||typeof p.id!=='string'||!/^[A-Za-z0-9._:-]+$/.test(p.id)||ids.has(p.id))throw new Error('收款ID无效或重复');ids.add(p.id);
   day(p.date);
   const hasChannel=['paymentChannel','channelFee','netReceived'].some(k=>p[k]!==undefined);
-  if(hasChannel){if(['paymentChannel','channelFee','netReceived'].some(k=>p[k]===undefined))throw Error('渠道信息不完整');const cost=channelCost(p.amount,p.paymentChannel,p.channelFee);if(moneyCents(p.netReceived)!==moneyCents(cost.netReceived))throw Error('手续费与净到账不一致')}
+  if(hasChannel){if(['paymentChannel','channelFee','netReceived'].some(k=>p[k]===undefined))throw Error('渠道信息不完整');const cost=channelCost(p.amount,p.paymentChannel,p.channelFee,true);if(moneyCents(p.netReceived)!==moneyCents(cost.netReceived))throw Error('手续费与净到账不一致')}
   if(cents(p.amount)<=0||Math.abs(p.amount*100-Math.round(p.amount*100))>0.00001)throw new Error('收款金额须大于零且最多两位小数');
   if(typeof p.note!=='string'||p.note.length>500||typeof p.createdAt!=='string'||!Number.isFinite(Date.parse(p.createdAt)))throw new Error('收款备注或创建时间无效');
   if(!['ACTIVE','REVOKED'].includes(p.status))throw new Error('收款状态无效');
@@ -126,5 +129,5 @@ function validatePaymentSettings(value){
 }
 function data(value){if(Array.isArray(value))return {plans:value,vehicles:[],rentals:[]};if(!value||!Array.isArray(value.plans))throw new Error('业务数据结构异常');if(value.schemaVersion!==undefined&&value.schemaVersion!==2)throw new Error('不支持的数据版本');if(value.schemaVersion===2&&(!Array.isArray(value.vehicles)||!Array.isArray(value.rentals)))throw new Error('出租数据包字段缺失');const vehicles=value.vehicles??[],rentals=value.rentals??[];validate(vehicles,rentals);validatePaymentSettings(value.paymentSettings);return {plans:value.plans,vehicles,rentals,...(value.paymentSettings===undefined?{}:{paymentSettings:value.paymentSettings})}}
 function pack(plans,vehicles=[],rentals=[],paymentSettings){validate(vehicles,rentals);validatePaymentSettings(paymentSettings);return vehicles.length||rentals.length||paymentSettings!==undefined?{schemaVersion:2,plans,vehicles,rentals,...(paymentSettings===undefined?{}:{paymentSettings})}:plans}
-return {vehicleSummary,assertRentalAllowed,markSold,paymentTotals,paymentChannelTotals,channelCost,rentalPaymentChannels,receive,revoke,adjustmentTotals,adjustReceivable,reverseAdjustment,assertAdjustmentBaseUnchanged,validatePaymentSettings,day,calculate,returnReminder,validate,data,pack,statuses};
+return {vehicleSummary,assertRentalAllowed,markSold,paymentTotals,paymentChannelTotals,channelCost,rentalPaymentChannels,paymentChannelLabel,receive,revoke,adjustmentTotals,adjustReceivable,reverseAdjustment,assertAdjustmentBaseUnchanged,validatePaymentSettings,day,calculate,returnReminder,validate,data,pack,statuses};
 });
