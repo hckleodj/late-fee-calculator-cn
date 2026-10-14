@@ -223,7 +223,19 @@
       <div class="grid"><div class="field"><label for="ledger-payment-date">收款日期</label><input id="ledger-payment-date" type="date" required></div>
       <div class="field"><label for="ledger-payment-amount">收款金额（元）</label><input id="ledger-payment-amount" type="number" min="0.01" step="0.01" required></div>
       <div class="field full"><label id="ledger-payment-note-label" for="ledger-payment-note">备注（选填）</label><input id="ledger-payment-note" maxlength="500"></div></div>
-      <p id="ledger-payment-error" class="note" role="alert"></p><div class="ledger-savebar"><button id="ledger-payment-cancel" type="button" class="secondary">取消</button><button id="ledger-payment-submit" type="submit">保存收款</button></div>
+      <div class="grid" id="ledger-payment-channel-fields">
+       <div class="field"><label for="ledger-payment-channel">收款渠道</label><select id="ledger-payment-channel"><option value="CASH">现金</option><option value="WECHAT">微信经营收款</option><option value="CCB">建行收款码</option><option value="BANK">银行转账</option><option value="ALIPAY">支付宝</option><option value="OTHER">其他</option></select></div>
+       <div class="field"><label for="ledger-payment-fee">实际手续费（元）</label><input id="ledger-payment-fee" type="number" min="0" step="0.01"></div>
+     </div><p class="note" id="ledger-payment-net">客户付款全额核销欠款，手续费仅影响公司净到账。</p>
+     <p id="ledger-payment-error" class="note" role="alert"></p><div class="ledger-savebar"><button id="ledger-payment-cancel" type="button" class="secondary">取消</button><button id="ledger-payment-submit" type="submit">保存收款</button></div>
+    </form>
+    <form id="ledger-adjustment-form" class="ledger-form" hidden>
+      <h3 id="ledger-adjustment-title">租金应收减免</h3><input id="ledger-adjustment-rental" type="hidden"><input id="ledger-adjustment-id" type="hidden">
+      <div class="grid"><div class="field"><label for="ledger-adjustment-date">调整日期</label><input id="ledger-adjustment-date" type="date" required></div>
+      <div class="field"><label for="ledger-adjustment-amount">减免金额（元）</label><input id="ledger-adjustment-amount" type="number" min="0.01" step="0.01" required></div>
+      <div class="field full"><label for="ledger-adjustment-reason" id="ledger-adjustment-reason-label">调整原因（必填）</label><input id="ledger-adjustment-reason" maxlength="500" required></div></div>
+      <p class="note" id="ledger-adjustment-preview"></p><p class="note" id="ledger-adjustment-error" role="alert"></p>
+      <div class="ledger-savebar"><button id="ledger-adjustment-cancel" type="button" class="secondary">取消</button><button id="ledger-adjustment-submit" type="submit">保存减免记录</button></div>
     </form>
     <div id="ledger-reminders"></div>
     <div class="ledger-tabs" role="group" aria-label="出租记录分类"><button id="ledger-tab-current" type="button" class="active" aria-pressed="true">当前在租</button><button id="ledger-tab-history" type="button" aria-pressed="false">历史记录</button><button id="ledger-tab-sold" type="button" aria-pressed="false">已售车辆</button></div>
@@ -1223,6 +1235,7 @@
   }
   function ledgerCanStart(){return planStorageState.status==='missing'&&!plans.length&&localStorage.getItem(PLAN_STORAGE_KEY)===null}
   function openLedgerForm(id='',action=''){
+    $('ledger-adjustment-form').hidden=true;
     if(!ledgerCanStart()&&!ensureStorageWritable())return;
     $('ledger-payment-form').hidden=true;++ledgerPhotoSequence;ledgerPhotoBusy=false;const r=rentals.find(item=>item.id===id);ledgerIdentityPhotos=(r?.renterIdPhotos||[]).slice();$('ledger-id-number').value=r?.renterIdNumber||'';$('ledger-id-photos').value='';renderLedgerPhotos();$('ledger-identity-details').open=Boolean(r?.renterIdNumber||r?.renterIdPhotos?.length);$('ledger-form-title').textContent=r?'编辑出租记录':'新建出租记录';$('ledger-id').value=r?.id||'';ledgerVehicleOptions(r?.vehicleId||'');
     for(const key of ['model','vin','plate','registration-year','registration-month','registration-day','color'])$('ledger-'+key).value='';
@@ -1244,12 +1257,15 @@
         <div class="ledger-money"><div><span>${r.returnDate?'最终应收':'当前应收'}</span><strong>¥${money(c.receivable)}</strong></div><div><span>未收</span><strong class="${c.outstanding>0?'unpaid':'paid'}">¥${money(c.outstanding)}</strong></div></div>
         <div class="ledger-secondary-money"><span>已收 ¥${money(c.receivedAmount)}</span><span>已租 ${c.days} 天</span><span>${r.billingMode==='DAILY'?'日租':'月租'} ¥${money(r.billingMode==='DAILY'?r.dailyRate:r.monthlyRate)}</span></div>
         <p class="note">放车当天${r.chargeStartDay===false?'不计费':'计费'} · ${r.returnDate?'还车当天'+(r.chargeReturnDay===true?'计费':'不计费'):'截至今日零点累计，今日尚未计满'}</p>
+        ${c.discount>0?`<p class="note">原应收 ¥${money(c.baseReceivable)} · 减免 ¥${money(c.discount)} · 最终应收 ¥${money(c.receivable)}</p>`:''}
         ${c.overreceived>0?`<p class="note">多收 / 预收 ¥${money(c.overreceived)}</p>`:''}
-        <details class="ledger-more"><summary>收款流水（${(r.rentalPayments||[]).length}笔，含撤销）</summary><p>历史已收基数 ¥${money(window.VehicleRentalLedger.paymentTotals(r).historicalReceivedBase)} · 逐笔明细未登记，无具体收款日期</p>${(r.rentalPayments||[]).map(p=>`<div class="history-row"><strong>${escapeHtml(p.date)}</strong> · ¥${money(p.amount)} · ${p.status==='REVOKED'?'已撤销':'有效'}${p.note?`<br>备注：${escapeHtml(p.note)}`:''}${p.status==='REVOKED'?`<br>撤销时间：${escapeHtml(p.revokedAt)}<br>原因：${escapeHtml(p.revokeReason)}`:`<br><button class="secondary" type="button" data-ledger-revoke="${p.id}" data-ledger-rental="${r.id}">撤销此笔</button>`}</div>`).join('')}</details>
+        <p class="note">${(()=>{const x=window.VehicleRentalLedger.paymentChannelTotals(r);return '渠道已登记收款 ¥'+money(x.gross)+' · 手续费 ¥'+money(x.fees)+' · 净到账 ¥'+money(x.net)+(x.missing?'（另有'+x.missing+'笔旧收款未记录渠道）':'')})()}</p>
+        <details class="ledger-more"><summary>收款流水（${(r.rentalPayments||[]).length}笔，含撤销）</summary><p>历史已收基数 ¥${money(window.VehicleRentalLedger.paymentTotals(r).historicalReceivedBase)} · 逐笔明细未登记，无具体收款日期</p>${(r.rentalPayments||[]).map(p=>`<div class="history-row"><strong>${escapeHtml(p.date)}</strong> · ¥${money(p.amount)} · ${p.status==='REVOKED'?'已撤销':'有效'}${p.paymentChannel?'<br>渠道：'+escapeHtml(window.VehicleRentalLedger.rentalPaymentChannels[p.paymentChannel])+' · 手续费 ¥'+money(p.channelFee)+' · 净到账 ¥'+money(p.netReceived):'<br>旧记录：未登记渠道和手续费'}${p.note?`<br>备注：${escapeHtml(p.note)}`:''}${p.status==='REVOKED'?`<br>撤销时间：${escapeHtml(p.revokedAt)}<br>原因：${escapeHtml(p.revokeReason)}`:`<br><button class="secondary" type="button" data-ledger-revoke="${p.id}" data-ledger-rental="${r.id}">撤销此笔</button>`}</div>`).join('')}</details>
+         ${r.rentalAdjustments?.length?`<details class="ledger-more"><summary>应收调整（${r.rentalAdjustments.length}笔）</summary>${r.rentalAdjustments.map(a=>`<div class="history-row"><strong>${escapeHtml(a.date)}</strong> · 减免 ¥${money(a.amount)} · ${a.status==='ACTIVE'?'生效':'已冲回'}<br>原因：${escapeHtml(a.reason)}${a.status==='REVERSED'?'<br>冲回原因：'+escapeHtml(a.reverseReason)+'<br>冲回时间：'+escapeHtml(a.reversedAt):'<br><button type="button" class="secondary" data-ledger-adjust-reverse="'+escapeHtml(a.id)+'" data-ledger-adjust-rental="'+escapeHtml(r.id)+'">冲回此笔减免</button>'}</div>`).join('')}</details>`:''}
         <div class="ledger-dates"><div>放车日<strong>${escapeHtml(r.startDate)}</strong></div><div>${r.returnDate?'实际还车日':'约定还车日'}<strong>${r.returnDate?escapeHtml(r.returnDate):r.expectedReturnDate?escapeHtml(r.expectedReturnDate):'暂未确定'}</strong></div></div>
         ${r.manualReceivable!=null?`<p class="note">人工调整 · 系统计算 ¥${money(c.systemAmount)}</p>`:''}
         ${extra||r.renterIdPhotos?.length?`<details class="ledger-more"><summary>承租人资料与备注${r.renterIdPhotos?.length?' · 含证件照片':''}</summary>${extra?`<p>${extra}</p>`:''}${(r.renterIdPhotos||[]).map((photo,index)=>`<img class="ledger-photo" src="${photo}" alt="证件照片 ${index+1}" loading="lazy">`).join('')}</details>`:''}
-        <div class="ledger-actions"><button class="secondary" type="button" data-ledger-edit="${r.id}">编辑出租资料</button><button type="button" data-ledger-receive="${r.id}">新增一笔收款</button>${r.status==='RENTING'?`<button type="button" data-ledger-return="${r.id}">登记还车</button><button type="button" class="secondary ledger-subaction" data-ledger-extend="${r.id}">${r.expectedReturnDate?'延期 / 修改约定':'约定还车日'}</button>${r.expectedReturnDate?`<button type="button" class="secondary ledger-subaction" data-ledger-clear="${r.id}">时间不确定</button>`:''}`:r.status==='RETURNED_UNSETTLED'?`<button type="button" data-ledger-settle="${r.id}">标记结清</button>`:''}</div></article>`;
+        <div class="ledger-actions"><button class="secondary" type="button" data-ledger-edit="${r.id}">编辑出租资料</button><button type="button" data-ledger-receive="${r.id}">新增一笔收款</button>${r.returnDate&&c.outstanding>0?`<button type="button" class="secondary" data-ledger-adjust="${r.id}">应收减免</button>`:''}${r.status==='RENTING'?`<button type="button" data-ledger-return="${r.id}">登记还车</button><button type="button" class="secondary ledger-subaction" data-ledger-extend="${r.id}">${r.expectedReturnDate?'延期 / 修改约定':'约定还车日'}</button>${r.expectedReturnDate?`<button type="button" class="secondary ledger-subaction" data-ledger-clear="${r.id}">时间不确定</button>`:''}`:r.status==='RETURNED_UNSETTLED'?`<button type="button" data-ledger-settle="${r.id}">标记结清</button>`:''}</div></article>`;
     }
     const reminderHtml=rentals.filter(r=>window.VehicleRentalLedger.returnReminder(r,toISO(todayNoon()))).map(r=>{
       const v=vehicles.find(v=>v.id===r.vehicleId),reminder=window.VehicleRentalLedger.returnReminder(r,toISO(todayNoon()));
@@ -1309,15 +1325,28 @@
     const previous=rentals,previousRaw=planStorageState.raw;
     try{rentals=rentals.map(item=>item.id===id?{...item,expectedReturnDate:null,updatedAt:new Date().toISOString()}:item);if(!savePlans()){rentals=previous;return}renderRentalLedger();$('ledger-status').textContent='已清除约定还车日，车辆继续在租。';checkRentalBackup()}catch(error){if(planStorageState.raw===previousRaw){rentals=previous;alert(error.message)}else{recoverRentalBackupTracking();renderRentalLedger();rentalBackupWarning(error)}}
   }
+  function rentalPaymentCostPreview(reset=false){
+    const channel=$('ledger-payment-channel').value,amount=Number($('ledger-payment-amount').value);
+    if(reset){const suggested=channel==='CASH'?0:['CCB','WECHAT'].includes(channel)&&amount>0?window.InstallmentLedger.suggestedChannelFee(amount,channel,paymentSettings):null;$('ledger-payment-fee').value=suggested===null?'':Number(suggested).toFixed(2)}
+    $('ledger-payment-fee').readOnly=channel==='CASH';
+    try{if($('ledger-payment-fee').value==='')throw Error('请填写实际手续费（可为0）');
+      const cost=window.VehicleRentalLedger.channelCost(amount,channel,Number($('ledger-payment-fee').value));
+      $('ledger-payment-net').textContent='客户付款 ¥'+money(amount)+' · 渠道手续费 ¥'+money(cost.channelFee)+' · 公司净到账 ¥'+money(cost.netReceived);
+    }catch(error){$('ledger-payment-net').textContent=error.message+'；客户付款全额核销欠款。'}
+  }
+  $('ledger-payment-channel').addEventListener('change',()=>rentalPaymentCostPreview(true));
+  $('ledger-payment-amount').addEventListener('input',()=>rentalPaymentCostPreview(true));
+  $('ledger-payment-fee').addEventListener('input',()=>rentalPaymentCostPreview(false));
   function openLedgerPayment(rentalId,paymentId=''){
     if(!ensureStorageWritable())return;
     const r=rentals.find(r=>r.id===rentalId);if(!r)return;
     const p=paymentId?r.rentalPayments?.find(p=>p.id===paymentId&&p.status==='ACTIVE'):null;if(paymentId&&!p)return;
-    $('ledger-form').hidden=true;$('ledger-payment-rental').value=rentalId;$('ledger-payment-id').value=paymentId;
+    $('ledger-form').hidden=true;$('ledger-adjustment-form').hidden=true;$('ledger-payment-rental').value=rentalId;$('ledger-payment-id').value=paymentId;
     $('ledger-payment-title').textContent=p?'撤销收款（保留原流水）':'新增一笔收款';$('ledger-payment-submit').textContent=p?'确认撤销':'保存收款';
     $('ledger-payment-date').value=p?.date||toISO(todayNoon());$('ledger-payment-date').max=toISO(todayNoon());$('ledger-payment-date').disabled=!!p;
     $('ledger-payment-amount').value=p?.amount||'';$('ledger-payment-amount').disabled=!!p;
     $('ledger-payment-note-label').textContent=p?'撤销原因（必填）':'备注（选填）';$('ledger-payment-note').required=!!p;$('ledger-payment-note').value='';$('ledger-payment-error').textContent='';
+    $('ledger-payment-channel-fields').hidden=!!p;$('ledger-payment-channel').value=p?.paymentChannel||'CASH';$('ledger-payment-fee').value=p?.channelFee??'';rentalPaymentCostPreview(!p);
     $('ledger-payment-form').hidden=false;$('ledger-payment-form').scrollIntoView({block:'start'});
   }
   $('ledger-payment-cancel').addEventListener('click',()=>{$('ledger-payment-form').hidden=true});
@@ -1326,10 +1355,43 @@
     try{
       const r=rentals.find(r=>r.id===$('ledger-payment-rental').value);if(!r)throw new Error('出租记录不存在');
       const paymentId=$('ledger-payment-id').value,now=new Date().toISOString(),today=toISO(todayNoon());
-      const next=paymentId?window.VehicleRentalLedger.revoke(r,paymentId,$('ledger-payment-note').value,now,today):window.VehicleRentalLedger.receive(r,{id:crypto.randomUUID(),date:$('ledger-payment-date').value,amount:Number($('ledger-payment-amount').value),note:$('ledger-payment-note').value.trim()},today,now);
+      if(!paymentId&&$('ledger-payment-fee').value==='')throw Error('请输入实际手续费（没有手续费填0）');
+      const next=paymentId?window.VehicleRentalLedger.revoke(r,paymentId,$('ledger-payment-note').value,now,today):window.VehicleRentalLedger.receive(r,{id:crypto.randomUUID(),date:$('ledger-payment-date').value,amount:Number($('ledger-payment-amount').value),paymentChannel:$('ledger-payment-channel').value,channelFee:Number($('ledger-payment-fee').value),note:$('ledger-payment-note').value.trim()},today,now);
       rentals=rentals.map(item=>item.id===r.id?next:item);window.VehicleRentalLedger.validate(vehicles,rentals);
       if(!savePlans()){rentals=previous;return}renderRentalLedger();$('ledger-payment-form').hidden=true;$('ledger-status').textContent=paymentId?'收款已撤销，原流水及撤销原因已保留。':'收款已保存，累计已收已更新。';checkRentalBackup();
     }catch(error){if(planStorageState.raw===previousRaw){rentals=previous;$('ledger-payment-error').textContent=error.message}else{recoverRentalBackupTracking();renderRentalLedger();$('ledger-payment-form').hidden=true;rentalBackupWarning(error)}}
+  });
+  function adjustmentPreview(){
+    const r=rentals.find(x=>x.id===$('ledger-adjustment-rental').value);if(!r)return;
+    const c=window.VehicleRentalLedger.calculate(r,toISO(todayNoon())),a=Number($('ledger-adjustment-amount').value);
+    $('ledger-adjustment-preview').textContent=$('ledger-adjustment-id').value?'本次冲回恢复应收 ¥'+money(a)+'，原流水不删除。':'原应收 ¥'+money(c.baseReceivable)+' · 已减免 ¥'+money(c.discount)+' · 当前应收 ¥'+money(c.receivable)+' · 可减免上限 ¥'+money(c.outstanding)+(a>0&&a<=c.outstanding?' · 本次调整后应收 ¥'+money(c.receivable-a):'');
+  }
+  $('ledger-adjustment-amount').addEventListener('input',adjustmentPreview);
+  function openLedgerAdjustment(rentalId,adjustmentId=''){
+    if(!ensureStorageWritable())return;const r=rentals.find(x=>x.id===rentalId);if(!r)return;
+    const a=adjustmentId?r.rentalAdjustments?.find(a=>a.id===adjustmentId&&a.status==='ACTIVE'):null;if(adjustmentId&&!a)return;
+    $('ledger-form').hidden=true;$('ledger-payment-form').hidden=true;$('ledger-adjustment-rental').value=rentalId;$('ledger-adjustment-id').value=adjustmentId;
+    $('ledger-adjustment-title').textContent=a?'冲回应收减免':'租金应收减免';
+    $('ledger-adjustment-date').value=a?.date||toISO(todayNoon());$('ledger-adjustment-date').max=toISO(todayNoon());$('ledger-adjustment-date').disabled=!!a;
+    $('ledger-adjustment-amount').value=a?.amount||'';$('ledger-adjustment-amount').disabled=!!a;$('ledger-adjustment-reason').value='';
+    $('ledger-adjustment-reason-label').textContent=a?'冲回原因（必填）':'减免原因（必填）';$('ledger-adjustment-submit').textContent=a?'确认冲回':'保存减免记录';
+    $('ledger-adjustment-error').textContent='';adjustmentPreview();$('ledger-adjustment-form').hidden=false;$('ledger-adjustment-form').scrollIntoView({block:'start'});
+  }
+  $('ledger-adjustment-cancel').addEventListener('click',()=>{$('ledger-adjustment-form').hidden=true});
+  $('ledger-adjustment-form').addEventListener('submit',event=>{
+    event.preventDefault();if(!ensureStorageWritable())return;
+    const previous=rentals,previousRaw=planStorageState.raw;
+    try{
+      const r=rentals.find(x=>x.id===$('ledger-adjustment-rental').value);if(!r)throw Error('出租记录不存在');
+      const id=$('ledger-adjustment-id').value,now=new Date().toISOString(),today=toISO(todayNoon());
+      const next=id?window.VehicleRentalLedger.reverseAdjustment(r,id,$('ledger-adjustment-reason').value,now,today):window.VehicleRentalLedger.adjustReceivable(r,{id:crypto.randomUUID(),date:$('ledger-adjustment-date').value,amount:Number($('ledger-adjustment-amount').value),reason:$('ledger-adjustment-reason').value.trim()},today,now);
+      rentals=rentals.map(x=>x.id===r.id?next:x);window.VehicleRentalLedger.validate(vehicles,rentals);
+      if(!savePlans()){rentals=previous;return}
+      renderRentalLedger();$('ledger-adjustment-form').hidden=true;$('ledger-status').textContent=id?'减免已冲回，原记录保留。':'减免已保存，应收金额已更新。';checkRentalBackup();
+    }catch(error){
+      if(planStorageState.raw===previousRaw){rentals=previous;$('ledger-adjustment-error').textContent=error.message}
+      else{recoverRentalBackupTracking();renderRentalLedger();$('ledger-adjustment-form').hidden=true;rentalBackupWarning(error)}
+    }
   });
   $('ledger-new').addEventListener('click',()=>openLedgerForm());$('ledger-cancel').addEventListener('click',()=>{++ledgerPhotoSequence;ledgerPhotoBusy=false;$('ledger-form').hidden=true});
   $('ledger-vehicle').addEventListener('change',()=>{$('ledger-vehicle-fields').hidden=Boolean($('ledger-vehicle').value)});
@@ -1342,12 +1404,12 @@
       if(ledgerPhotoBusy)throw new Error('照片正在处理，请稍候再保存');
       const draft=ledgerDraft();if(draft.startDate>toISO(todayNoon()))throw new Error('放车日不能晚于今天');if(draft.returnDate&&draft.returnDate>toISO(todayNoon()))throw new Error('实际还车日不能晚于今天');
       const nextVehicles=JSON.parse(JSON.stringify(vehicles));if(!draft.vehicleId){const v={id:crypto.randomUUID(),model:$('ledger-model').value.trim(),vin:$('ledger-vin').value.trim().toUpperCase(),plateNumber:$('ledger-plate').value.trim(),registrationDate:ledgerRegistrationDate(),color:$('ledger-color').value.trim()};nextVehicles.push(v);draft.vehicleId=v.id}
-      const previousRental=rentals.find(r=>r.id===draft.id);window.VehicleRentalLedger.assertRentalAllowed(nextVehicles.find(v=>v.id===draft.vehicleId),previousRental,draft,vehicles.find(v=>v.id===previousRental?.vehicleId));
+      const previousRental=rentals.find(r=>r.id===draft.id);window.VehicleRentalLedger.assertAdjustmentBaseUnchanged(previousRental,draft);window.VehicleRentalLedger.assertRentalAllowed(nextVehicles.find(v=>v.id===draft.vehicleId),previousRental,draft,vehicles.find(v=>v.id===previousRental?.vehicleId));
       if($('ledger-manual').checked&&!$('ledger-final').value.trim())throw new Error('请输入人工调整的最终应收');
       const nextRentals=rentals.filter(r=>r.id!==draft.id).concat(draft);window.VehicleRentalLedger.validate(nextVehicles,nextRentals);if(first){if(!confirm('当前浏览器没有业务数据。确定建立第一条出租记录？不会改动其他存储项。'))return;if(!ledgerCanStart())throw new Error('存储已发生变化，请刷新后检查');const raw=JSON.stringify(window.VehicleRentalLedger.pack(plans,nextVehicles,nextRentals,paymentSettings));trackedSetItem(PLAN_STORAGE_KEY,raw);planStorageState.raw=raw;planStorageState.status='ok';planStorageState.locked=false;planStorageState.reason='业务数据正常。';vehicles=nextVehicles;rentals=nextRentals;recordSuccessfulBusinessWrite(raw);renderStorageProtection()}else{vehicles=nextVehicles;rentals=nextRentals;if(!savePlans()){({vehicles,rentals}=old);return}}$('ledger-form').hidden=true;ledgerView=nextVehicles.find(v=>v.id===draft.vehicleId)?.soldAt!==undefined?'sold':draft.status==='RENTING'?'current':'history';renderRentalLedger();$('ledger-status').textContent='出租记录已保存。';checkRentalBackup();
     }catch(error){if(planStorageState.raw===previousRaw){({vehicles,rentals}=old);$('ledger-status').textContent=error.message}else{recoverRentalBackupTracking();$('ledger-form').hidden=true;renderRentalLedger();rentalBackupWarning(error)}}
   });
-  document.addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;if(button.dataset.ledgerRemovePhoto!==undefined){if(ledgerPhotoBusy){$('ledger-status').textContent='照片正在处理，请稍候';return}ledgerIdentityPhotos.splice(Number(button.dataset.ledgerRemovePhoto),1);renderLedgerPhotos();return}if(button.dataset.ledgerSold)markLedgerSold(button.dataset.ledgerSold);if(button.dataset.ledgerReceive)openLedgerPayment(button.dataset.ledgerReceive);if(button.dataset.ledgerRevoke)openLedgerPayment(button.dataset.ledgerRental,button.dataset.ledgerRevoke);if(button.dataset.ledgerExtend)openLedgerForm(button.dataset.ledgerExtend,'extend');if(button.dataset.ledgerClear)clearExpectedReturn(button.dataset.ledgerClear);if(button.dataset.ledgerEdit)openLedgerForm(button.dataset.ledgerEdit);if(button.dataset.ledgerReturn)openLedgerForm(button.dataset.ledgerReturn,'return');if(button.dataset.ledgerSettle)openLedgerForm(button.dataset.ledgerSettle,'settle')});
+  document.addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;if(button.dataset.ledgerRemovePhoto!==undefined){if(ledgerPhotoBusy){$('ledger-status').textContent='照片正在处理，请稍候';return}ledgerIdentityPhotos.splice(Number(button.dataset.ledgerRemovePhoto),1);renderLedgerPhotos();return}if(button.dataset.ledgerSold)markLedgerSold(button.dataset.ledgerSold);if(button.dataset.ledgerReceive)openLedgerPayment(button.dataset.ledgerReceive);if(button.dataset.ledgerAdjust)openLedgerAdjustment(button.dataset.ledgerAdjust);if(button.dataset.ledgerAdjustReverse)openLedgerAdjustment(button.dataset.ledgerAdjustRental,button.dataset.ledgerAdjustReverse);if(button.dataset.ledgerRevoke)openLedgerPayment(button.dataset.ledgerRental,button.dataset.ledgerRevoke);if(button.dataset.ledgerExtend)openLedgerForm(button.dataset.ledgerExtend,'extend');if(button.dataset.ledgerClear)clearExpectedReturn(button.dataset.ledgerClear);if(button.dataset.ledgerEdit)openLedgerForm(button.dataset.ledgerEdit);if(button.dataset.ledgerReturn)openLedgerForm(button.dataset.ledgerReturn,'return');if(button.dataset.ledgerSettle)openLedgerForm(button.dataset.ledgerSettle,'settle')});
   window.addEventListener('focus',renderRentalLedger);window.addEventListener('pageshow',renderRentalLedger);document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderRentalLedger()});
   function scheduleLedgerRefresh(){const now=new Date(),next=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);const timer=setTimeout(()=>{renderRentalLedger();scheduleLedgerRefresh()},next-now+100);timer?.unref?.()}
   renderRentalLedger();scheduleLedgerRefresh();
