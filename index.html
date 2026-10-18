@@ -36,6 +36,10 @@
     .fee-choice{border:0;padding:0;margin:0;min-width:0}.fee-choice.full{grid-column:1/-1}.fee-choice legend{font-weight:700;margin-bottom:10px;font-size:15px}.fee-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fee-options label{position:relative;min-height:88px;border:1px solid #c5d2dc;border-radius:12px;background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s,transform .18s}.fee-options label:hover{border-color:#8fa9bc;transform:translateY(-1px)}.fee-options label:has(input:checked){border-color:var(--blue);background:linear-gradient(135deg,#f1f7fc,#e8f2f9);box-shadow:0 0 0 1px var(--blue),0 8px 20px #24578514}.fee-options input{width:20px;height:20px;margin:0;accent-color:var(--blue);flex:0 0 auto}.fee-option-copy{min-width:0}.fee-option-title{display:flex;align-items:center;flex-wrap:wrap;gap:6px;color:var(--text);font-size:16px;font-weight:750;line-height:1.35}.fee-options label:has(input:checked) .fee-option-title{color:var(--blue)}.fee-option-desc{display:block;margin-top:5px;color:var(--muted);font-size:12px;font-weight:500;line-height:1.45}.fee-option-badge{display:inline-flex;align-items:center;height:21px;border-radius:999px;background:#e5f0f8;color:var(--blue);padding:0 8px;font-size:11px;font-style:normal;font-weight:700}.fee-options label:has(input:checked) .fee-option-badge{background:var(--blue);color:#fff}.formula-note{grid-column:1/-1;background:#f8fafb;border:1px solid var(--line);border-radius:10px;padding:13px 14px;color:#496172;font-size:13px;line-height:1.65}.formula-note strong{display:block;color:var(--blue);margin-bottom:3px}
     dialog{width:min(620px,calc(100% - 24px));max-height:90vh;border:0;border-radius:16px;padding:0;color:var(--text);box-shadow:0 18px 60px #102c4260}dialog::backdrop{background:#102c4270}.dialog-body{padding:22px;overflow:auto;max-height:90vh}.dialog-body h2{margin:0 0 5px;font-size:21px}.dialog-context{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.55}.payment-preview{background:var(--light);border-radius:11px;padding:13px;margin-top:15px}.preview-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14px}.preview-row strong{text-align:right}.preview-row.total{border-top:1px solid #cad9e4;margin-top:5px;padding-top:10px}.allocation-preview{margin-top:10px;color:#496172;font-size:13px;line-height:1.65}.payment-error{color:var(--danger);font-size:13px;margin:10px 0 0}.dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}.dialog-actions button{margin:0}#backup-dialog .dialog-actions{grid-template-columns:1fr}.payment-history{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.payment-history summary{cursor:pointer;color:var(--blue);font-size:13px;font-weight:700}.history-row{padding:10px 0;border-bottom:1px dashed var(--line);font-size:12px;color:#496172;line-height:1.55}.history-row:last-child{border-bottom:0}.history-actions{display:flex;gap:7px;margin-top:7px}.history-actions button{width:auto;height:32px;margin:0;padding:0 12px;border-radius:8px;font-size:12px}.history-actions .undo{background:#fff0ec;color:var(--danger)}
     @media(max-width:620px){main{margin:0;padding:0}.card{border:0;border-radius:0;min-height:100vh}.inputs{grid-template-columns:1fr}.field.full,.formula-note,.fee-choice.full{grid-column:auto}.fee-options{grid-template-columns:1fr;gap:9px}.summary{grid-template-columns:1fr}.metric.wide{grid-column:auto}section,header{padding-left:18px;padding-right:18px}.nav{position:sticky;top:0;z-index:5;gap:4px}.nav button{font-size:13px}.data-safety,.recovery-alert,.wechat-notice{margin:12px 18px 0}.backup-reminder{padding:10px 18px}.mode-tabs{gap:4px}.mode-tabs button{font-size:13px;padding:0 4px}.output-label{align-items:flex-start}textarea{min-height:300px}.backup-textarea{min-height:210px}.item-actions{grid-template-columns:1fr}.form-actions,.backup-actions{grid-template-columns:1fr}.reminder-summary{gap:6px}.reminder-summary strong{font-size:21px}.section-heading-row{flex-direction:column}.section-tools{width:100%}.section-tools .compact-tool{flex:1}.migration-controls{grid-template-columns:1fr 1fr}.migration-controls #copy-migration-segment{grid-column:1/-1}}
+    #reminder-copy-dialog .dialog-actions{grid-template-columns:1fr}
+    #reminder-copy-dialog button{height:auto;min-height:46px;padding:11px 14px;line-height:1.45;white-space:normal}
+    #reminder-compound-rate{width:100%;min-width:0;min-height:44px;margin:7px 0;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text);font:inherit;font-size:13px}
+    #reminder-compound-summary{white-space:pre-wrap;background:var(--light);padding:12px;border-radius:8px;font-weight:700;line-height:1.5}
   </style>
   <link rel="stylesheet" href="./rental-ledger.css?v=2a527701fd0e">
 </head>
@@ -245,9 +249,20 @@
 </div></main>
 <dialog id="reminder-copy-dialog" aria-labelledby="reminder-copy-title"><div class="dialog-body">
   <h2 id="reminder-copy-title">复制催款短信</h2>
-  <p class="dialog-context">本次复制是否包含滞纳金？包含时按日千分之五（0.5%）测算，选择仅对本次短信生效。</p>
+  <p id="reminder-copy-context" class="dialog-context"></p>
+  <p class="dialog-context">HOKU V2.4.3 Final 第6.1条：每日0.05%，不复利，不对违约金再次计费。工具临时每日0.5%测算不等于合同约定。以下选择仅对本次复制生效。</p>
   <p id="reminder-copy-error" class="warning" role="status" hidden></p>
-  <div class="dialog-actions"><button type="button" id="copy-reminder-without-fee" autofocus>不包含滞纳金（默认）</button><button type="button" id="copy-reminder-with-fee" class="secondary">包含滞纳金</button></div>
+  <div class="dialog-actions"><button type="button" id="copy-reminder-without-fee" autofocus>不包含违约金</button><button type="button" id="copy-reminder-with-fee" class="secondary">按现有规则计算违约金</button></div>
+  <button type="button" id="preview-reminder-compound" class="secondary">按每日复利试算</button>
+  <div id="reminder-compound-panel" hidden>
+    <label for="reminder-compound-rate">本次复利试算日费率</label>
+    <select id="reminder-compound-rate"></select>
+    <p id="reminder-compound-summary" aria-live="polite"></p>
+    <p class="dialog-context">各期分别计算；收款当天计费，次日起减少基础款。沿用原收款及减免归期，基础款付清后停止新增费用。中间日不舍入，逐期最终精确到分。</p>
+    <p class="warning">复利试算金额，仅供协商参考，不代表合同约定的应付款金额。</p>
+    <pre id="reminder-compound-preview" role="status" aria-live="polite" style="white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:13px;line-height:1.6"></pre>
+    <button type="button" id="copy-reminder-compound" disabled>复制复利试算结果（协商参考）</button>
+  </div>
   <button type="button" id="cancel-reminder-copy" class="secondary">取消</button>
 </div></dialog>
 <dialog id="payment-dialog">
@@ -913,21 +928,94 @@
       const item=items.find(item=>item.termIndex===termIndex);return item?reminderMessage(item,type,includeLateFee):null;
     }
     items=items.filter(item=>item.delta<=0);if(!items.length)return null;
-    if(termIndex!==null&&items.length===1&&includeLateFee)return reminderMessage(items[0],items[0].delta===0?'today':'overdue',true);
+    if(termIndex!==null&&items.length===1&&includeLateFee)return reminderMessage(items[0],items[0].delta===0?'today':'overdue',true).replace('按照合同约定，参考滞纳金','按工具现有口径，参考滞纳金');
     return overdueAccountMessage({plan:view,items,throughToday:true,remaining:round2(items.reduce((sum,item)=>sum+item.remaining,0)),total:round2(items.reduce((sum,item)=>sum+item.total,0))},includeLateFee);
   }
-  function startReminderCopy(plan,button,termIndex=null,type=null){
-    if(!hasReminderRate(plan)){
-      pendingReminderCopy={planId:plan.id,button,termIndex,type};$('reminder-copy-error').hidden=true;$('reminder-copy-error').textContent='';
-      $('reminder-copy-dialog').showModal();$('copy-reminder-without-fee').focus();return;
+  // Independent, exact rational trial. No ledger mutation, persistence or receipt allocation.
+  function reminderCompoundTrial(plan,rate){
+    if(!Number.isFinite(Number(rate))||Number(rate)<=0)throw Error('请选择有效的本次试算费率。');
+    const asOf=toISO(todayNoon()),day=value=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('试算日期无效。');const n=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(n)||new Date(n).toISOString().slice(0,10)!==value)throw Error('试算日期无效。');return n/86400000},end=day(asOf);
+    const toCents=value=>{const n=Math.round(Number(value)*100);if(!Number.isSafeInteger(n))throw Error('金额超出精确试算范围。');return BigInt(n)};
+    const gcd=(a,b)=>{a=a<0n?-a:a;while(b){[a,b]=[b,a%b]}return a};
+    const fraction=(n,d)=>{const g=gcd(n,d);return {n:n/g,d:d/g}};
+    const [mantissa,exponent='0']=String(Number(rate)).toLowerCase().split('e'),scale=(mantissa.split('.')[1]||'').length-Number(exponent);
+    const r=fraction(BigInt(mantissa.replace('.',''))*10n**BigInt(Math.max(0,-scale)),10n**BigInt(Math.max(0,scale)));
+    // Obtain fee attribution with the ORIGINAL rate, including legacy read-time splits.
+    // The trial rate must never reassign any historical receipt.
+    const unsetRate=plan.rate==null||(typeof plan.rate==='string'&&!plan.rate.trim())||((typeof plan.rate==='number'||typeof plan.rate==='string')&&Number(plan.rate)===0);
+    if(!hasReminderRate(plan)&&!unsetRate)throw Error('客户参考费率无效，请先核对费率；仍可选择“不包含滞纳金”。');
+    // Unset/zero original rates stay zero for historical attribution, even if this
+    // trial explicitly uses 0.5%. Only the unchanged simple-copy path has its old fallback.
+    const view=hasReminderRate(plan)?plan:{...plan,rate:0};
+    const dates=[...new Set([...(plan.payments||[]).map(p=>p.date),...(plan.lateFeeWaivers||[]).flatMap(w=>[w.date,...(w.reversedAt?[w.reversedAt]:[])]),asOf])].filter(date=>day(date)<=end).sort();
+    const checkpoints=dates.map(date=>({day:day(date),rows:window.InstallmentLedger.statement(view,date)}));
+    const current=checkpoints[checkpoints.length-1].rows,rows=[];
+    for(let i=openingCompletedTerms(plan);i<Number(plan.totalTerms);i++){
+      const due=day(toISO(getDueDate(plan,i)));if(due>end)continue;
+      if(end-due>36600)throw Error('逾期超过100年，无法进行可靠试算。');
+      let base=toCents(current[i].baseDue),fee={n:0n,d:1n},cursor=due,paid=0n,waived=0n;
+      function charge(until){
+        let days=Math.max(0,until-cursor);cursor=Math.max(cursor,until);if(!days||base<=0n)return;
+        // A historical excess fee credit offsets subsequent fees, never principal.
+        if(fee.n<0n){const dailyN=base*r.n*fee.d,dailyD=r.d;
+          const toZero=(-fee.n*dailyD+dailyN-1n)/dailyN,take=Math.min(days,Number(toZero));
+          fee=fraction(fee.n*r.d+base*r.n*BigInt(take)*fee.d,fee.d*r.d);days-=take;
+        }
+        if(days){const a=(r.d+r.n)**BigInt(days),b=r.d**BigInt(days);fee=fraction((fee.n+base*fee.d)*a-base*fee.d*b,fee.d*b)}
+      }
+      for(const point of checkpoints){
+        charge(Math.max(due,point.day));const row=point.rows[i],nextPaid=toCents(row.paidLateFee),nextWaived=toCents(row.waivedLateFee);
+        fee=fraction(fee.n-(nextPaid-paid+nextWaived-waived)*fee.d,fee.d);paid=nextPaid;waived=nextWaived;base=toCents(row.remaining);
+      }
+      const feeCents=fee.n<=0n?0n:(fee.n*2n+fee.d)/(2n*fee.d),total=base+feeCents;
+      if(total>BigInt(Number.MAX_SAFE_INTEGER))throw Error('复利金额超出精确展示范围，请缩小试算范围或核对费率。');
+      if(total>0n||current[i].totalDue>0)rows.push({termIndex:i,dueDate:toISO(getDueDate(plan,i)),base,fee:feeCents,total,paid,waived,days:Math.max(0,end-due)});
     }
-    try{const text=reminderCopyMessage(plan,termIndex,type);if(text)copyReminderText(text,button)}catch(error){alert(error.message)}
+    return {rows,base:rows.reduce((n,row)=>n+row.base,0n),fee:rows.reduce((n,row)=>n+row.fee,0n),total:rows.reduce((n,row)=>n+row.total,0n)};
   }
-  function finishReminderCopy(includeLateFee){
+  function trialMoney(cents){return (cents/100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',')+'.'+(cents%100n).toString().padStart(2,'0')}
+  function reminderRatePercent(rate){
+    const [m,e='0']=String(Number(rate)).toLowerCase().split('e'),[whole,decimal='']=m.split('.'),digits=whole+decimal,point=whole.length+Number(e)+2;
+    const text=point<=0?'0.'+'0'.repeat(-point)+digits:point>=digits.length?digits+'0'.repeat(point-digits.length):digits.slice(0,point)+'.'+digits.slice(point);
+    return text.replace(/^0+(?=\d)/,'').replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');
+  }
+  const compoundDisclaimer='复利试算金额，仅供协商参考，不代表合同约定的应付款金额。';
+  function reminderCompoundMessage(plan,rate,rateSource,trial=reminderCompoundTrial(plan,rate)){
+    if(!trial.rows.length)throw Error('截至今天没有可试算的未结清款项；未来期不进入试算。');
+    const original=hasReminderRate(plan)?plan:{...plan,rate:0},statement=window.InstallmentLedger.statement(original,toISO(todayNoon()));
+    const formal=statement.reduce((sum,row,i)=>toISO(getDueDate(plan,i))<=toISO(todayNoon())?sum+BigInt(Math.round(row.totalDue*100)):sum,0n);
+    const lines=[`您好，${plan.name||''}，以下为车辆款项协商试算。`,`车辆信息：${planIdentity(plan)}`,compoundDisclaimer,`截至日期：${toISO(todayNoon())}`,`本次日费率：${reminderRatePercent(rate)}%（${rateSource}）`,`现有账本口径合计：${trialMoney(formal)}元（未加入本次复利；合同应付金额请依合同核对）`,`未付基础款合计：${trialMoney(trial.base)}元`];
+    for(const row of trial.rows)lines.push('',`第${row.termIndex+1}期 · 应付日期：${row.dueDate}`,`未付基础款：${trialMoney(row.base)}元`,row.days?`逾期${row.days}天，未付复利试算费用：${trialMoney(row.fee)}元`:'今天到期，试算费用：0.00元',`已收费用：${trialMoney(row.paid)}元；当前有效减免：${trialMoney(row.waived)}元（按原记录归期扣除）`,`本期试算合计：${trialMoney(row.total)}元`);
+    lines.push('',`未付复利试算费用合计：${trialMoney(trial.fee)}元`,`复利试算合计：${trialMoney(trial.total)}元`,'各期分别滚动；收款当天计费，次日起减少基础款；基础款付清后停止新增费用。中间日不舍入，逐期最终四舍五入到分。',compoundDisclaimer);
+    return lines.join('\n');
+  }
+  function updateReminderCompound(){
+    $('copy-reminder-compound').disabled=true;$('reminder-compound-preview').textContent='';$('reminder-compound-summary').textContent='';
+    const pending=pendingReminderCopy,plan=plans.find(p=>p.id===pending?.planId);if(!plan)return;
+    try{
+      if(pending.type==='upcoming')throw Error('未来未到期期次不进入催款复利试算，可复制原到期提醒。');
+      const value=$('reminder-compound-rate').value,rate=value==='saved'?plan.rate:value,source=value==='saved'?'客户已有参考费率，仅本次复利试算':value==='0.0005'?'合同条款日费率参考，合同本身不复利':'临时测算日费率，非合同约定';
+      const trial=reminderCompoundTrial(plan,rate);
+      $('reminder-compound-preview').textContent=reminderCompoundMessage(plan,rate,source,trial);$('reminder-compound-summary').textContent=`复利试算合计：${trialMoney(trial.total)}元\n仅供协商参考`; $('copy-reminder-compound').disabled=false;
+    }catch(error){$('reminder-compound-preview').textContent=error.message}
+  }
+  function startReminderCopy(plan,button,termIndex=null,type=null){
+    pendingReminderCopy={planId:plan.id,button,termIndex,type};$('reminder-copy-error').hidden=true;$('reminder-copy-error').textContent='';
+    const saved=hasReminderRate(plan),defaultButton=saved?'copy-reminder-with-fee':'copy-reminder-without-fee';
+    $('reminder-copy-context').textContent=saved?`默认沿用客户已有每日${reminderRatePercent(plan.rate)}%参考费率，按现有规则分段单利；不代表已核验合同费率。`:'默认不包含违约金；选择按现有规则计算时，缺失/零费率仅本次使用临时每日0.5%（非合同约定）。异常费率须先核对。';
+    $('copy-reminder-without-fee').textContent='不包含违约金'+(saved?'':'（默认）');$('copy-reminder-with-fee').textContent='按现有规则计算违约金'+(saved?'（默认）':'');
+    $('copy-reminder-without-fee').classList.toggle('secondary',saved);$('copy-reminder-with-fee').classList.toggle('secondary',!saved);
+    $('reminder-compound-panel').hidden=true;$('reminder-compound-preview').textContent='';$('reminder-compound-summary').textContent='';$('copy-reminder-compound').disabled=true;
+    $('reminder-compound-rate').innerHTML=(saved?`<option value="saved">已有参考日费率：${escapeHtml(reminderRatePercent(plan.rate))}%</option>`:'')+'<option value="0.0005">每日0.05% · 合同不复利</option><option value="0.005">每日0.5% · 临时测算</option>';
+    $('reminder-compound-rate').value=saved?'saved':'0.005';
+    $('reminder-copy-dialog').showModal();$(defaultButton).focus();
+  }
+  function finishReminderCopy(includeLateFee,compound=false){
     const pending=pendingReminderCopy;if(!pending)return;
     const plan=plans.find(item=>item.id===pending.planId);if(!plan)return;
     try{
-      const text=reminderCopyMessage(plan,pending.termIndex,pending.type,includeLateFee);
+      if(compound){updateReminderCompound();if($('copy-reminder-compound').disabled)return}
+      const text=compound?$('reminder-compound-preview').textContent:reminderCopyMessage(plan,pending.termIndex,pending.type,includeLateFee);
       // Close before the legacy textarea fallback so it is focusable outside the modal.
       $('reminder-copy-dialog').close();pendingReminderCopy=null;if(text)copyReminderText(text,pending.button);
     }catch(error){$('reminder-copy-error').textContent=error.message;$('reminder-copy-error').hidden=false}
@@ -1202,6 +1290,9 @@
   });
   $('copy-reminder-without-fee').addEventListener('click',()=>finishReminderCopy(false));
   $('copy-reminder-with-fee').addEventListener('click',()=>finishReminderCopy(true));
+  $('preview-reminder-compound').addEventListener('click',()=>{$('reminder-compound-panel').hidden=false;updateReminderCompound();$('reminder-compound-summary').scrollIntoView({block:'nearest'})});
+  $('reminder-compound-rate').addEventListener('change',updateReminderCompound);
+  $('copy-reminder-compound').addEventListener('click',()=>finishReminderCopy(true,true));
   $('cancel-reminder-copy').addEventListener('click',()=>{$('reminder-copy-dialog').close();pendingReminderCopy=null});
   $('reminder-copy-dialog').addEventListener('close',()=>{pendingReminderCopy=null});
   ['rental-battery-rent','car-price','target-payment','term','prepaid-months','rental-deposit-months','monthly-rate','rental-first-date','rental-vehicle','rental-customer','rental-phone'].forEach(id=>$(id).addEventListener('input',calculateFinance));
