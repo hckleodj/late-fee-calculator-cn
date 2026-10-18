@@ -923,7 +923,8 @@
     if(plan.plate||plan.vehicle)lines.push(`车辆信息：${planIdentity(plan)}`);
     for(const row of rows){
       const status=row.days>0?`逾期${row.days}天`:row.days===0?'今天到期':`${-row.days}天后到期`;
-      lines.push('',`第${row.termIndex+1}期 · 应付日期：${row.dueDate}`,`未付金额：${row.base}元，${status}${includeLateFee&&row.days>0?`，滞纳金：${row.fee}元`:''}。`);
+      const detail=row.base==='0.00'?`本期款已付清，剩余滞纳金：${row.fee}元。`:`未付金额：${row.base}元，${status}${includeLateFee&&row.days>0?`，滞纳金：${row.fee}元`:''}。`;
+      lines.push('',`第${row.termIndex+1}期 · 应付日期：${row.dueDate}`,detail);
     }
     lines.push('',`${upcoming?'本期应付':'截至今天合计应付'}：${total}元`);return lines.join('\n');
   }
@@ -932,7 +933,9 @@
     if(includeLateFee&&!hasReminderRate(plan)&&!unsetRate)throw Error('客户参考费率无效，请先核对费率；仍可选择“不包含滞纳金”。');
     // User-confirmed daily standard (5 per mille), only for this copy; never save it to the plan.
     const view=hasReminderRate(plan)?plan:{...plan,rate:includeLateFee?0.005:0},statement=window.InstallmentLedger.statement(view,toISO(todayNoon()));
-    let items=statement.map((_,i)=>installmentItem(view,i,statement)).filter(item=>(includeLateFee?item.total:item.remaining)>.005);
+    // A temporary copy rate must not reopen a term already settled in the saved ledger.
+    const existing=hasReminderRate(plan)?statement:window.InstallmentLedger.statement({...plan,rate:0},toISO(todayNoon()));
+    let items=statement.map((_,i)=>installmentItem(view,i,statement)).filter(item=>existing[item.termIndex].totalDue>.005&&(includeLateFee?item.total:item.remaining)>.005);
     items=type==='upcoming'?items.filter(item=>item.termIndex===termIndex):items.filter(item=>item.delta<=0);if(!items.length)return null;
     return conciseReminderMessage(plan,items.map(item=>({termIndex:item.termIndex,dueDate:fullCnDate(item.dueDate),days:-item.delta,base:money(item.remaining),fee:money(item.fee)})),money(round2(items.reduce((sum,item)=>sum+(includeLateFee?item.total:item.remaining),0))),includeLateFee,type==='upcoming');
   }
@@ -956,6 +959,8 @@
     const checkpoints=dates.map(date=>({day:day(date),rows:window.InstallmentLedger.statement(view,date)}));
     const current=checkpoints[checkpoints.length-1].rows,rows=[];
     for(let i=openingCompletedTerms(plan);i<Number(plan.totalTerms);i++){
+      // Trial amounts cannot turn a fully settled ledger term back into a debt.
+      if(current[i].totalDue<=.005)continue;
       const due=day(toISO(getDueDate(plan,i)));if(due>end)continue;
       if(end-due>36600)throw Error('逾期超过100年，无法进行可靠试算。');
       let base=toCents(current[i].baseDue),fee={n:0n,d:1n},cursor=due,paid=0n,waived=0n;
