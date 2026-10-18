@@ -243,6 +243,13 @@
     <div class="ledger-list" id="ledger-history" hidden></div><div class="ledger-list" id="ledger-sold" hidden></div></section>
   </div>
 </div></main>
+<dialog id="reminder-copy-dialog" aria-labelledby="reminder-copy-title"><div class="dialog-body">
+  <h2 id="reminder-copy-title">复制催款短信</h2>
+  <p class="dialog-context">本次复制是否包含滞纳金？包含时按日千分之五（0.5%）测算，选择仅对本次短信生效。</p>
+  <p id="reminder-copy-error" class="warning" role="status" hidden></p>
+  <div class="dialog-actions"><button type="button" id="copy-reminder-without-fee" autofocus>不包含滞纳金（默认）</button><button type="button" id="copy-reminder-with-fee" class="secondary">包含滞纳金</button></div>
+  <button type="button" id="cancel-reminder-copy" class="secondary">取消</button>
+</div></dialog>
 <dialog id="payment-dialog">
   <form class="dialog-body" id="payment-form">
     <input id="payment-plan-id" type="hidden"><input id="payment-term-index" type="hidden"><input id="payment-id" type="hidden">
@@ -793,20 +800,20 @@
   }
   function nextInstallment(plan){return openInstallments(plan)[0]||null}
   function planIdentity(plan){return [plan.plate,plan.vehicle].filter(Boolean).join(' · ')||'未填写车辆信息'}
-  function dueCompositionText(item){
+  function dueCompositionText(item,includeLateFee=true){
     const lines=[`第${item.termIndex+1}期 · 应付日期：${fullCnDate(item.dueDate)}`,`合同月租：${money(item.contractRent)}元`];
     if(item.batteryRent>0)lines.push(`月租电费：${money(item.batteryRent)}元`,`本期基础应付：${money(item.baseDue)}元`);
     lines.push(`未付合同租金：${money(item.contractRentRemaining)}元`);
     if(item.batteryRent>0)lines.push(`未付租电费：${money(item.batteryRentRemaining)}元`);
-    if(item.daysOverdue>0)lines.push(`累计应计滞纳金：${money(item.accruedLateFee)}元`,`已收滞纳金：${money(item.paidLateFee)}元`,`剩余未收滞纳金：${money(item.fee)}元`,`日费率：${shortMoney(Number(item.plan.rate)*100)}%，按实际未付基础款分段计算，付款次日起减少计费基数。`);
-    if(item.waivedLateFee>0)lines.push(`已减免滞纳金：${money(item.waivedLateFee)}元`);
-    if(item.lateFeeCredit>0)lines.push(`历史滞纳金超收待核对：${money(item.lateFeeCredit)}元（不自动冲抵基础款）`);
-    lines.push(`截至今天应付：${money(item.total)}元`);return lines.join('\n');
+    if(includeLateFee&&item.daysOverdue>0)lines.push(`累计应计滞纳金：${money(item.accruedLateFee)}元`,`已收滞纳金：${money(item.paidLateFee)}元`,`剩余未收滞纳金：${money(item.fee)}元`,`日费率：${shortMoney(Number(item.plan.rate)*100)}%，按实际未付基础款分段计算，付款次日起减少计费基数。`);
+    if(includeLateFee&&item.waivedLateFee>0)lines.push(`已减免滞纳金：${money(item.waivedLateFee)}元`);
+    if(includeLateFee&&item.lateFeeCredit>0)lines.push(`历史滞纳金超收待核对：${money(item.lateFeeCredit)}元（不自动冲抵基础款）`);
+    lines.push(`截至今天应付：${money(includeLateFee?item.total:item.remaining)}元`);return lines.join('\n');
   }
-  function reminderMessage(item,type){
+  function reminderMessage(item,type,includeLateFee=true){
     const {plan,dueDate,daysOverdue,fee,total}=item,name=plan.name?`${plan.name}，`:'';
     const vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'';
-    if(item.batteryRent>0||item.paidLateFee>0||item.segments.length>1||item.remaining===0)return `您好，${name}车辆款项提醒。${infoLine}\n\n${dueCompositionText(item)}\n\n请您核对后安排付款，谢谢。`;
+    if(!includeLateFee||item.batteryRent>0||item.paidLateFee>0||item.segments.length>1||item.remaining===0)return `您好，${name}车辆款项提醒。${infoLine}\n\n${dueCompositionText(item,includeLateFee)}\n\n请您核对后安排付款，谢谢。`;
     const payable=item.remaining;
     if(type==='today')return `您好，${name}提醒您一下，您本期车辆款项今天到期。\n\n本期剩余应付款：${shortMoney(payable)}元\n应付日期：${cnDate(dueDate)}${infoLine}\n\n请您今天安排付款，谢谢。`;
     if(type==='upcoming')return `您好，${name}提醒您一下，您本期车辆款项将在${cnDate(dueDate)}到期。\n\n本期剩余应付款：${shortMoney(payable)}元${infoLine}\n\n请您提前安排一下，避免逾期产生滞纳金，谢谢。`;
@@ -823,9 +830,9 @@
     const items=openInstallments(plan).filter(item=>item.delta<0);if(!items.length)return null;
     return {plan,items,remaining:round2(items.reduce((sum,item)=>sum+item.remaining,0)),fee:round2(items.reduce((sum,item)=>sum+item.fee,0)),total:round2(items.reduce((sum,item)=>sum+item.total,0)),maxDays:Math.max(...items.map(item=>item.daysOverdue))};
   }
-  function overdueAccountMessage(account){
+  function overdueAccountMessage(account,includeLateFee=true){
     const {plan,items,remaining,fee,total}=account,name=plan.name?`${plan.name}，`:'',vehicleInfo=[plan.plate,plan.vehicle].filter(Boolean).join(' / '),infoLine=vehicleInfo?`\n车辆信息：${vehicleInfo}`:'';
-    if(items.some(i=>i.batteryRent>0||i.paidLateFee>0||i.segments.length>1||i.remaining===0))return `您好，${name}您有${items.length}期待处理款项。${infoLine}\n\n${items.map(dueCompositionText).join('\n\n')}\n\n截至今天合计应付：${money(total)}元`;
+    if(account.throughToday||!includeLateFee||items.some(i=>i.batteryRent>0||i.paidLateFee>0||i.segments.length>1||i.remaining===0))return `您好，${name}您有${items.length}期待处理款项。${infoLine}\n\n${items.map(item=>dueCompositionText(item,includeLateFee)).join('\n\n')}\n\n截至今天合计应付：${money(includeLateFee?total:remaining)}元`;
     return `您好，${name}您目前有${items.length}期车辆款项已逾期。${infoLine}\n\n截至今天 ${cnDate(todayNoon())}：\n未付合同款：${shortMoney(remaining)}元\n滞纳金：${shortMoney(fee)}元\n合计应付：${shortMoney(total)}元\n\n请您今天安排付款，谢谢。`;
   }
   function overdueAccountCard(account){
@@ -841,7 +848,13 @@
       $(`${type}-count`).textContent=list.length;$(`${type}-total`).textContent=list.length;
     });
     const invalid=plans.filter(plan=>{try{window.InstallmentLedger.statement(plan,toISO(todayNoon()));return false}catch(e){return true}});
-    if(invalid.length)$('overdue-list').innerHTML+=invalid.map(p=>`<div class="warning">${escapeHtml(p.name)}：历史收款日期不完整，无法可靠计算分段滞纳金。请在客户管理中核对收款记录，勿使用旧催款金额。</div>`).join('');
+    if(invalid.length)$('overdue-list').innerHTML+=invalid.map(p=>{
+      if(!hasReminderRate(p))try{
+        const view={...p,rate:0},statement=window.InstallmentLedger.statement(view,toISO(todayNoon()));
+        if(statement.some((row,i)=>row.remaining>.005&&installmentItem(view,i,statement).delta<=0))return `<div class="warning">${escapeHtml(p.name)}：未设置有效参考费率。复制时可临时选择是否包含滞纳金。<button type="button" data-copy-overdue="${p.id}">复制总催款文案</button></div>`;
+      }catch(error){}
+      return `<div class="warning">${escapeHtml(p.name)}：历史收款日期不完整，无法可靠计算分段滞纳金。请在客户管理中核对收款记录，勿使用旧催款金额。</div>`;
+    }).join('');
     $('today-label').textContent=`今天是 ${fullCnDate(todayNoon())}，逾期客户会自动汇总各期欠款和滞纳金。`;
   }
   function waiverHistoryHtml(plan){
@@ -886,6 +899,38 @@
     let ok=false;try{await navigator.clipboard.writeText(text);ok=true}catch(e){}
     if(!ok){const box=document.createElement('textarea');box.value=text;box.style.position='fixed';box.style.opacity='0';document.body.appendChild(box);box.focus();box.select();try{ok=document.execCommand('copy')}catch(e){}box.remove()}
     if(ok){const old=button.textContent;button.classList.add('ok');button.textContent='已复制';setTimeout(()=>{button.classList.remove('ok');button.textContent=old},1600)}else{window.prompt('请手动复制下面的文字：',text)}
+  }
+  // Copy-only views: never save a rate, replay receipts or change overdue statistics.
+  let pendingReminderCopy=null;
+  function hasReminderRate(plan){return (typeof plan.rate==='number'||typeof plan.rate==='string')&&Number.isFinite(Number(plan.rate))&&Number(plan.rate)>0}
+  function reminderCopyMessage(plan,termIndex=null,type=null,includeLateFee=true){
+    const unsetRate=plan.rate==null||(typeof plan.rate==='string'&&!plan.rate.trim())||((typeof plan.rate==='number'||typeof plan.rate==='string')&&Number(plan.rate)===0);
+    if(includeLateFee&&!hasReminderRate(plan)&&!unsetRate)throw Error('客户参考费率无效，请先核对费率；仍可选择“不包含滞纳金”。');
+    // User-confirmed daily standard (5 per mille), only for this copy; never save it to the plan.
+    const view=hasReminderRate(plan)?plan:{...plan,rate:includeLateFee?0.005:0},statement=window.InstallmentLedger.statement(view,toISO(todayNoon()));
+    let items=statement.map((_,i)=>installmentItem(view,i,statement)).filter(item=>(includeLateFee?item.total:item.remaining)>.005);
+    if(type==='upcoming'){
+      const item=items.find(item=>item.termIndex===termIndex);return item?reminderMessage(item,type,includeLateFee):null;
+    }
+    items=items.filter(item=>item.delta<=0);if(!items.length)return null;
+    if(termIndex!==null&&items.length===1&&includeLateFee)return reminderMessage(items[0],items[0].delta===0?'today':'overdue',true);
+    return overdueAccountMessage({plan:view,items,throughToday:true,remaining:round2(items.reduce((sum,item)=>sum+item.remaining,0)),total:round2(items.reduce((sum,item)=>sum+item.total,0))},includeLateFee);
+  }
+  function startReminderCopy(plan,button,termIndex=null,type=null){
+    if(!hasReminderRate(plan)){
+      pendingReminderCopy={planId:plan.id,button,termIndex,type};$('reminder-copy-error').hidden=true;$('reminder-copy-error').textContent='';
+      $('reminder-copy-dialog').showModal();$('copy-reminder-without-fee').focus();return;
+    }
+    try{const text=reminderCopyMessage(plan,termIndex,type);if(text)copyReminderText(text,button)}catch(error){alert(error.message)}
+  }
+  function finishReminderCopy(includeLateFee){
+    const pending=pendingReminderCopy;if(!pending)return;
+    const plan=plans.find(item=>item.id===pending.planId);if(!plan)return;
+    try{
+      const text=reminderCopyMessage(plan,pending.termIndex,pending.type,includeLateFee);
+      // Close before the legacy textarea fallback so it is focusable outside the modal.
+      $('reminder-copy-dialog').close();pendingReminderCopy=null;if(text)copyReminderText(text,pending.button);
+    }catch(error){$('reminder-copy-error').textContent=error.message;$('reminder-copy-error').hidden=false}
   }
   function openingCompletedTerms(plan){
     if(Number.isInteger(Number(plan.openingCompletedTerms)))return Number(plan.openingCompletedTerms);
@@ -1152,9 +1197,13 @@
     if(button.dataset.receive)openPaymentDialog(button.dataset.receive,Number(button.dataset.termIndex));
     if(button.dataset.editPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.editPayment);if(payment)openPaymentDialog(plan.id,Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??plan.completedTerms),payment.id)}
     if(button.dataset.undoPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.undoPayment);if(plan&&payment&&confirm(`确定撤销 ${payment.date} 收到的 ${money(payment.total)} 元记录吗？撤销后各期欠款会自动恢复。`)){try{Object.assign(plan,window.InstallmentLedger.undo(plan,payment.id));savePlans();renderPlanModule()}catch(error){alert(error.message)}}}
-    if(button.dataset.copyOverdue){const plan=plans.find(item=>item.id===button.dataset.copyOverdue),account=plan&&overdueAccount(plan);if(account)copyReminderText(overdueAccountMessage(account),button)}
-    if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder),item=plan&&installmentItem(plan,Number(button.dataset.termIndex));if(item&&item.total>.005)copyReminderText(reminderMessage(item,button.dataset.reminderType),button)}
+    if(button.dataset.copyOverdue){const plan=plans.find(item=>item.id===button.dataset.copyOverdue);if(plan)startReminderCopy(plan,button)}
+    if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder);if(plan)startReminderCopy(plan,button,Number(button.dataset.termIndex),button.dataset.reminderType)}
   });
+  $('copy-reminder-without-fee').addEventListener('click',()=>finishReminderCopy(false));
+  $('copy-reminder-with-fee').addEventListener('click',()=>finishReminderCopy(true));
+  $('cancel-reminder-copy').addEventListener('click',()=>{$('reminder-copy-dialog').close();pendingReminderCopy=null});
+  $('reminder-copy-dialog').addEventListener('close',()=>{pendingReminderCopy=null});
   ['rental-battery-rent','car-price','target-payment','term','prepaid-months','rental-deposit-months','monthly-rate','rental-first-date','rental-vehicle','rental-customer','rental-phone'].forEach(id=>$(id).addEventListener('input',calculateFinance));
   ['contract-price','contract-down-rate','contract-monthly-rate','total-terms'].forEach(id=>$(id).addEventListener('input',updateContractPreview));
   ['due','pay','amount','rate'].forEach(id=>$(id).addEventListener('input',calculateLateFee));
