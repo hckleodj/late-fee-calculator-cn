@@ -918,18 +918,23 @@
   // Copy-only views: never save a rate, replay receipts or change overdue statistics.
   let pendingReminderCopy=null;
   function hasReminderRate(plan){return (typeof plan.rate==='number'||typeof plan.rate==='string')&&Number.isFinite(Number(plan.rate))&&Number(plan.rate)>0}
+  function conciseReminderMessage(plan,rows,total,includeLateFee,upcoming=false){
+    const lines=[`您好，${plan.name?plan.name+'，':''}您有${rows.length}期待处理款项。`];
+    if(plan.plate||plan.vehicle)lines.push(`车辆信息：${planIdentity(plan)}`);
+    for(const row of rows){
+      const status=row.days>0?`逾期${row.days}天`:row.days===0?'今天到期':`${-row.days}天后到期`;
+      lines.push('',`第${row.termIndex+1}期 · 应付日期：${row.dueDate}`,`未付金额：${row.base}元，${status}${includeLateFee&&row.days>0?`，滞纳金：${row.fee}元`:''}。`);
+    }
+    lines.push('',`${upcoming?'本期应付':'截至今天合计应付'}：${total}元`);return lines.join('\n');
+  }
   function reminderCopyMessage(plan,termIndex=null,type=null,includeLateFee=true){
     const unsetRate=plan.rate==null||(typeof plan.rate==='string'&&!plan.rate.trim())||((typeof plan.rate==='number'||typeof plan.rate==='string')&&Number(plan.rate)===0);
     if(includeLateFee&&!hasReminderRate(plan)&&!unsetRate)throw Error('客户参考费率无效，请先核对费率；仍可选择“不包含滞纳金”。');
     // User-confirmed daily standard (5 per mille), only for this copy; never save it to the plan.
     const view=hasReminderRate(plan)?plan:{...plan,rate:includeLateFee?0.005:0},statement=window.InstallmentLedger.statement(view,toISO(todayNoon()));
     let items=statement.map((_,i)=>installmentItem(view,i,statement)).filter(item=>(includeLateFee?item.total:item.remaining)>.005);
-    if(type==='upcoming'){
-      const item=items.find(item=>item.termIndex===termIndex);return item?reminderMessage(item,type,includeLateFee):null;
-    }
-    items=items.filter(item=>item.delta<=0);if(!items.length)return null;
-    if(termIndex!==null&&items.length===1&&includeLateFee)return reminderMessage(items[0],items[0].delta===0?'today':'overdue',true).replace('按照合同约定，参考滞纳金','按工具现有口径，参考滞纳金');
-    return overdueAccountMessage({plan:view,items,throughToday:true,remaining:round2(items.reduce((sum,item)=>sum+item.remaining,0)),total:round2(items.reduce((sum,item)=>sum+item.total,0))},includeLateFee);
+    items=type==='upcoming'?items.filter(item=>item.termIndex===termIndex):items.filter(item=>item.delta<=0);if(!items.length)return null;
+    return conciseReminderMessage(plan,items.map(item=>({termIndex:item.termIndex,dueDate:fullCnDate(item.dueDate),days:-item.delta,base:money(item.remaining),fee:money(item.fee)})),money(round2(items.reduce((sum,item)=>sum+(includeLateFee?item.total:item.remaining),0))),includeLateFee,type==='upcoming');
   }
   // Independent, exact rational trial. No ledger mutation, persistence or receipt allocation.
   function reminderCompoundTrial(plan,rate){
@@ -989,6 +994,9 @@
     lines.push('',`未付复利试算费用合计：${trialMoney(trial.fee)}元`,`复利试算合计：${trialMoney(trial.total)}元`,'各期分别滚动；收款当天计费，次日起减少基础款；基础款付清后停止新增费用。中间日不舍入，逐期最终四舍五入到分。',compoundDisclaimer);
     return lines.join('\n');
   }
+  function reminderCompoundCopyMessage(plan,trial){
+    return conciseReminderMessage(plan,trial.rows.map(row=>({termIndex:row.termIndex,dueDate:row.dueDate,days:row.days,base:trialMoney(row.base),fee:trialMoney(row.fee)})),trialMoney(trial.total),true);
+  }
   function updateReminderCompound(){
     $('copy-reminder-compound').disabled=true;$('reminder-compound-preview').textContent='';$('reminder-compound-summary').textContent='';
     const pending=pendingReminderCopy,plan=plans.find(p=>p.id===pending?.planId);if(!plan)return;
@@ -997,6 +1005,7 @@
       const value=$('reminder-compound-rate').value,rate=value==='saved'?plan.rate:value,source=value==='saved'?'客户已有参考费率，仅本次复利试算':value==='0.0005'?'合同条款日费率参考，合同本身不复利':'临时测算日费率，非合同约定';
       const trial=reminderCompoundTrial(plan,rate);
       $('reminder-compound-preview').textContent=reminderCompoundMessage(plan,rate,source,trial);$('reminder-compound-summary').textContent=`复利试算合计：${trialMoney(trial.total)}元\n仅供协商参考`; $('copy-reminder-compound').disabled=false;
+      return reminderCompoundCopyMessage(plan,trial);
     }catch(error){$('reminder-compound-preview').textContent=error.message}
   }
   function startReminderCopy(plan,button,termIndex=null,type=null){
@@ -1014,8 +1023,8 @@
     const pending=pendingReminderCopy;if(!pending)return;
     const plan=plans.find(item=>item.id===pending.planId);if(!plan)return;
     try{
-      if(compound){updateReminderCompound();if($('copy-reminder-compound').disabled)return}
-      const text=compound?$('reminder-compound-preview').textContent:reminderCopyMessage(plan,pending.termIndex,pending.type,includeLateFee);
+      const text=compound?updateReminderCompound():reminderCopyMessage(plan,pending.termIndex,pending.type,includeLateFee);
+      if(compound&&$('copy-reminder-compound').disabled)return;
       // Close before the legacy textarea fallback so it is focusable outside the modal.
       $('reminder-copy-dialog').close();pendingReminderCopy=null;if(text)copyReminderText(text,pending.button);
     }catch(error){$('reminder-copy-error').textContent=error.message;$('reminder-copy-error').hidden=false}
