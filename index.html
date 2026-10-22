@@ -47,32 +47,316 @@
     #reminder-compound-summary{white-space:pre-wrap;background:var(--light);padding:12px;border-radius:8px;font-weight:700;line-height:1.5}
   </style>
   <link rel="stylesheet" href="./rental-ledger.css?v=2a527701fd0e">
+  <style id="hoku-presentation">
+/* HOKU workbench v2.1 — typography, alignment and density refinement. Presentation only; business and storage scripts unchanged. */
+:root{--hoku-accent:#128577;--hoku-ink:#18212f;--hoku-muted:#657483;--hoku-line:#e3e8ed;--hoku-surface:#f6f8fa;--hoku-control:44px}
+html,body{background:var(--hoku-surface)}
+body{color:var(--hoku-ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+body>main{max-width:none;margin:0;padding:0 40px 48px 248px}
+main>.card{overflow:visible;min-height:100vh;border:0;border-radius:0;box-shadow:none;background:transparent}
+.hoku-header{position:fixed;top:0;left:0;z-index:7;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;width:208px;height:116px;padding:24px;background:#fff;color:var(--hoku-ink);border-right:1px solid var(--hoku-line)}
+.hoku-brand{display:flex;align-items:baseline;gap:8px;font-size:27px;font-weight:750;line-height:1;letter-spacing:.8px;color:#17252c}
+.hoku-brand span{color:#6b7683;font-size:11px;font-weight:500;letter-spacing:1px}
+.hoku-brand::before{content:"";display:block;width:5px;height:20px;align-self:center;border-radius:1px;background:var(--hoku-accent);margin-right:2px}
+.hoku-product h1{margin:0;font-size:11px;font-weight:450;line-height:1.5;letter-spacing:1.5px;color:#687789}
+.hoku-product p{display:none}
+.nav{position:fixed;z-index:6;left:0;top:116px;bottom:0;display:flex;flex-direction:column;gap:5px;width:208px;margin:0;padding:16px 14px 24px;background:#fff;border:0;border-right:1px solid var(--hoku-line);border-radius:0;box-shadow:none}
+.nav button{display:flex;align-items:center;justify-content:flex-start;gap:12px;min-width:0;width:100%;height:46px;min-height:46px;margin:0;padding:0 16px;border:0;border-radius:6px;background:transparent;color:#6d7684;font-family:inherit;font-size:13px;font-weight:450;line-height:1.4;white-space:normal;text-align:left;box-shadow:none}
+.nav button svg{width:18px;height:18px;flex-shrink:0;color:#87919e}
+.nav button.active{color:#156f64;background:#edf6f3;font-weight:600;box-shadow:none}
+.nav button.active svg{color:#188376}
+.nav button:last-child{margin-top:auto}
+.nav button:hover{background:#f4f6f8;filter:none}
+.nav button.active:hover{background:#e9f3ef}
+.nav button:focus-visible,#reminders-panel button:focus-visible{outline:2px solid #12857780;outline-offset:3px}
+main>.card>.panel{max-width:1260px;margin:0 auto}
+#reminders-panel{--text:var(--hoku-ink);--muted:var(--hoku-muted);--line:var(--hoku-line);--blue:var(--hoku-accent);--green:var(--hoku-accent);--light:#f4f6f8;color:var(--text);font-variant-numeric:tabular-nums lining-nums}
+#reminders-panel.active{display:grid;grid-template-columns:minmax(0,1fr) 264px;gap:20px;align-items:start}
+#reminders-panel>section{min-width:0;padding:24px;background:#fff;border:1px solid var(--line);border-radius:10px}
+#reminders-panel .workbench-intro{order:0;grid-column:1/-1;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:30px 0 8px;background:transparent;border:0;border-radius:0}
+.hoku-eyebrow{margin:0 0 10px;color:#5f6e7d;font-size:11px;font-weight:450;letter-spacing:1px}
+#reminders-panel .workbench-intro .section-title{margin:0;font-size:27px;font-weight:650;letter-spacing:-.55px;line-height:1.35}
+#reminders-panel .workbench-intro .section-help{margin:7px 0 0;font-size:13px;line-height:1.55;color:#5c6d7e}
+#reminders-panel .section-title{margin:0 0 6px;font-size:17px;line-height:1.4;font-weight:650;letter-spacing:-.15px}
+#reminders-panel .section-help{margin:0 0 16px;color:#657586;font-size:13px;line-height:1.55}
+#reminders-panel .section-tools{display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}
+#reminders-panel button{font-family:inherit;font-weight:500;transition:background .15s,color .15s;box-shadow:none;transform:none}
+#reminders-panel .compact-tool{width:auto;height:44px;margin:0;padding:0 14px;border:0;border-radius:6px;background:transparent;color:#526577;font-size:13px;white-space:nowrap}
+#reminders-panel .compact-tool:hover{background:#edf0f3;filter:none}
+#reminders-panel .compact-tool.primary{padding:0 17px;background:#24313d;color:#fff;border:1px solid #24313d;box-shadow:0 1px 2px #18212f10}
+#reminders-panel .compact-tool.primary span{font-size:17px;vertical-align:-1px;font-weight:350;margin-right:3px}
+#reminders-panel .compact-tool.primary:hover{background:#34434e}
+#reminders-panel>.reminder-summary{order:1;grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+#reminders-panel .reminder-summary button{display:flex;flex-direction:column-reverse;align-items:flex-start;justify-content:center;gap:9px;min-height:100px;height:auto;padding:17px 24px;border:0;border-radius:0;margin:0;background:#fff;color:var(--hoku-ink);text-align:left;box-shadow:none}
+#reminders-panel .reminder-summary button+button{border-left:1px solid #edf0f3}
+#reminders-panel .reminder-summary button:hover{background:#fbfcfd;filter:none}
+#reminders-panel .reminder-summary strong{display:block;font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-size:30px;line-height:1.1;font-weight:600;letter-spacing:-.65px}
+#reminders-panel .reminder-summary span{display:flex;align-items:center;gap:7px;font-size:13px;line-height:1.4;font-weight:500;color:#617285}
+#reminders-panel .reminder-summary span::before{content:"";width:5px;height:5px;border-radius:50%;background:#128577}
+#reminders-panel .reminder-summary .overdue span::before{background:#b66c56}
+#reminders-panel .reminder-summary .upcoming span::before{background:#c09d66}
+#reminders-panel .reminder-summary .overdue strong{color:#a65f4e}
+#reminders-panel .backup-reminder{order:2;grid-column:1/-1;margin:0;padding:0 14px;background:#faf8f3;border:1px solid #eee9de;border-radius:6px;color:#9a8766;font-size:11px}
+#reminders-panel .backup-reminder[hidden]{display:none}
+#reminders-panel .backup-reminder button{display:flex;align-items:center;gap:8px;min-height:44px;height:auto;margin:0;padding:8px 0;background:transparent;color:#74613e;font-size:11px;font-weight:450;line-height:1.6;text-align:left}
+#reminders-panel .backup-reminder button::before{content:"i";display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex-shrink:0;border:1px solid #c9baa0;border-radius:50%;font-size:11px;font-family:Georgia,serif}
+#reminders-panel .workbench-payments{order:3;grid-column:1;grid-row:auto;padding:22px 24px 6px}
+#reminders-panel .workbench-returns{order:4;grid-column:2;grid-row:auto;padding:24px}
+#reminders-panel .reminder-group{margin:18px 0 10px;scroll-margin-top:24px}
+#reminders-panel .group-head{display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:0;margin:0;border:0}
+#reminders-panel .group-head h3{margin:0;color:#586b7d;font-size:13px;line-height:1.5;font-weight:600}
+#reminders-panel .count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:5px;background:#eef3f5;color:#5f7181;font-family:Arial,sans-serif;font-size:12px;line-height:1;font-weight:600}
+#reminders-panel .reminder-list{display:grid;gap:0}
+#reminders-panel .reminder-item{display:grid;grid-template-columns:minmax(0,1fr) 224px;align-items:start;gap:9px 20px;min-width:0;padding:14px 0 16px;border:0;border-bottom:1px solid #edf0f3;border-radius:0;background:#fff}
+#reminders-panel .reminder-item:last-child{border-bottom:0}
+#reminders-panel .item-top{grid-column:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;flex-wrap:wrap;gap:7px;min-width:0}
+#reminders-panel .item-top>div{min-width:0;overflow-wrap:anywhere}
+#reminders-panel .item-top h4{margin:0;color:#1e2b39;font-size:15px;line-height:1.5;font-weight:650;letter-spacing:-.12px}
+#reminders-panel .item-sub{margin-top:4px;color:#657789;font-size:13px;line-height:1.55}
+#reminders-panel .badge{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;padding:0;border:0;border-radius:0;background:transparent;color:#298173;font-size:12px;font-weight:500;line-height:1.6}
+#reminders-panel .badge::before{content:"";display:block;width:4px;height:4px;border-radius:50%;background:currentColor}
+#reminders-panel .overdue .badge{background:transparent;color:#9a5848}
+#reminders-panel .upcoming .badge{background:transparent;color:#80663b}
+#reminders-panel .item-money{grid-column:2;display:grid;gap:6px;min-width:0;margin:0;padding:0;border:0;color:#617285;font-size:12px;line-height:1.55}
+#reminders-panel .item-money>span{display:grid;grid-template-columns:minmax(0,1fr) max-content;align-items:baseline;gap:3px 10px;min-width:0;overflow-wrap:anywhere}
+#reminders-panel .item-money strong{margin-left:auto;color:#233446;font-size:14px;line-height:1.5;font-weight:600;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums lining-nums;letter-spacing:-.12px}
+#reminders-panel .item-money>span:first-child:has(strong) strong{font-size:20px;line-height:1.35;color:#192a38}
+#reminders-panel .overdue-account .item-top{grid-column:1/-1;flex-direction:row;justify-content:space-between;gap:10px 16px;align-items:flex-start}
+#reminders-panel .overdue-installments{grid-column:1;min-width:0;display:grid;gap:10px;margin:0;color:#5f7081;font-size:12px;line-height:1.6}
+#reminders-panel .overdue-installment{min-width:0;padding-bottom:10px;border-bottom:1px solid #f0f2f5;overflow-wrap:anywhere}
+#reminders-panel .overdue-installment:last-child{border-bottom:0;padding-bottom:0}
+#reminders-panel .overdue-installment-line{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:3px 10px}
+#reminders-panel .overdue-installment-line strong{margin-left:auto;color:#526477;font-size:12px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+#reminders-panel .overdue-composition{margin-top:4px;font-size:12px;line-height:1.6;color:#657789}
+#reminders-panel .overdue-account .item-money{grid-column:2;padding-left:18px;border-left:1px solid #e5eaef;gap:8px}
+#reminders-panel .overdue-account .item-money>span:first-child strong{font-size:13px;color:#334052}
+#reminders-panel .overdue-account .item-money>span:last-child{margin-top:3px;padding-top:9px;border-top:1px solid #edf0f3}
+#reminders-panel .overdue-account .item-money>span:last-child strong{color:#a95748;font-size:21px;font-weight:650}
+#reminders-panel .item-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:0}
+#reminders-panel .item-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:auto;min-height:44px;height:auto;margin:0;padding:8px 12px;border:1px solid transparent;border-radius:6px;background:transparent;color:#5f7183;font-size:12px;line-height:1.5;font-weight:500}
+#reminders-panel .item-actions button:hover{background:#f6f8fa;filter:none}
+#reminders-panel .item-actions button.secondary{padding:8px 14px;border-color:#dce4e9;background:#fff;color:#33485b;box-shadow:0 1px 2px #172b3004}
+#reminders-panel .item-actions button.secondary:hover{background:#f7f9fb}
+#reminders-panel .item-actions button:not(.secondary)::before{content:"";width:12px;height:12px;flex-shrink:0;opacity:.7;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6'%3E%3Crect x='8' y='8' width='13' height='13' rx='2'/%3E%3Cpath d='M16 5V3H3v13h2'/%3E%3C/svg%3E") center/contain no-repeat}
+#reminders-panel .empty,#reminders-panel .ledger-empty{padding:28px 0;border:0;border-radius:0;background:transparent;color:#657586;font-size:11px;line-height:1.8;text-align:left}
+#reminders-panel .ledger-return-alert{padding:16px 0 0;margin:0;background:transparent;border:0;border-top:1px solid #edf0f3;border-radius:0}
+#reminders-panel .ledger-card-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px}
+#reminders-panel .ledger-card-top strong{color:#876d49;font-size:12px;font-weight:600;line-height:1.6;overflow-wrap:anywhere}
+#reminders-panel .ledger-return-alert p{margin:10px 0;color:#637486;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+#reminders-panel .ledger-return-alert a{color:#276f64}
+#reminders-panel .ledger-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px}
+#reminders-panel .ledger-return-alert .ledger-actions button{flex:1 1 auto;min-height:44px;height:auto;min-width:0;width:auto;margin:0;padding:8px;border:0;border-radius:5px;background:#f2f5f8;color:#526579;font-size:12px;font-weight:500;line-height:1.5}
+#reminders-panel .ledger-return-alert .ledger-actions button:last-child{flex-basis:100%;background:transparent;color:#637486}
+#reminders-panel .ledger-return-alert .ledger-actions button:hover{background:#edf1f4;filter:none}
+#payment-dialog,#reminder-copy-dialog{border:1px solid #e5e9ee;border-radius:12px;box-shadow:0 24px 80px #14202e26;color:#25313f}
+#payment-dialog::backdrop,#reminder-copy-dialog::backdrop{background:#17212d55}
+#payment-dialog .dialog-body,#reminder-copy-dialog .dialog-body{padding:28px}
+#payment-dialog h2,#reminder-copy-dialog h2{font-size:21px;font-weight:600}
+#payment-dialog .field input,#payment-dialog .field select{height:44px;border:1px solid #dce3ea;border-radius:6px;background:#fff;color:#263543;font-family:inherit;font-size:14px}
+#payment-dialog .field label{font-size:12px;color:#6a7787;font-weight:500}
+#payment-dialog input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
+#payment-dialog button,#reminder-copy-dialog button{min-height:44px;height:auto;border-radius:6px;background:#283642;color:#fff;font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;padding:11px 14px}
+#payment-dialog button.secondary,#reminder-copy-dialog button.secondary{background:#f3f5f7;color:#5b6b7b}
+#payment-dialog .payment-preview{background:#f6f8fa;border:1px solid #edf0f3;border-radius:8px}
+#payment-dialog .preview-row{font-size:12px;color:#5b6b7b}
+#payment-dialog .preview-row strong{color:#374554;font-variant-numeric:tabular-nums}
+@media(max-width:1199px){body>main{padding-left:236px;padding-right:28px}#reminders-panel.active{grid-template-columns:minmax(0,1fr)}#reminders-panel .workbench-returns{grid-column:1}.hoku-header,.nav{width:208px}#reminders-panel .ledger-return-alert .ledger-actions button{flex:0 1 auto;padding-left:16px;padding-right:16px}#reminders-panel .ledger-return-alert .ledger-actions button:last-child{flex-basis:auto}}
+@media(max-width:1099px){body>main{padding:0 28px 36px}.hoku-header{position:static;flex-direction:row;align-items:center;justify-content:space-between;width:auto;height:82px;margin:0 -28px;padding:0 28px;border:0;border-bottom:1px solid var(--hoku-line)}.hoku-product h1{font-size:12px;letter-spacing:0;color:#657586}.nav{position:sticky;top:0;bottom:auto;left:auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;width:auto;margin:0 -28px;padding:0 20px;border:0;border-bottom:1px solid var(--hoku-line);background:#fff}.nav button{position:relative;justify-content:center;gap:8px;min-height:54px;height:auto;padding:8px 4px;border-radius:0;font-size:12px;white-space:normal}.nav button.active{background:#fff}.nav button.active::after{content:"";position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:#188376}.nav button:last-child{margin-top:0}.nav button svg{width:16px;height:16px}#reminders-panel .workbench-intro{padding-top:30px}#reminders-panel .reminder-group{scroll-margin-top:76px}}
+@media(max-width:760px){body>main{padding:0 20px 30px}.hoku-header{margin:0 -20px;padding:0 20px}.nav{margin:0 -20px;padding:0 10px}#reminders-panel .workbench-intro{align-items:flex-start;flex-direction:column;gap:18px;padding-top:26px}#reminders-panel .section-tools{gap:6px}#reminders-panel .workbench-intro .section-help{margin-top:8px}#reminders-panel .compact-tool{padding:0 12px}#reminders-panel .reminder-item{grid-template-columns:minmax(0,1fr) 196px;gap:12px 16px}#reminders-panel .reminder-summary button{padding:18px 20px;min-height:104px}#reminders-panel .reminder-summary strong{font-size:29px}#reminders-panel .workbench-payments{padding:22px 20px 4px}#reminders-panel .workbench-returns{padding:22px 20px}}
+@media(max-width:620px){html,body{background:#fff}body>main{padding:0 20px 28px}.hoku-header{height:64px}.hoku-brand{font-size:24px;gap:7px}.hoku-brand span{font-size:11px}.hoku-brand::before{height:18px;width:4px}.hoku-product h1{font-size:11px}.nav{padding:0 6px}.nav button{flex-direction:column;gap:4px;min-height:58px;padding:7px 2px;font-size:11px;font-weight:500}.nav button svg{width:17px;height:17px}.nav button.active{font-weight:550}.nav button.active::after{left:25%;right:25%}#reminders-panel.active{gap:15px}#reminders-panel .workbench-intro{padding:16px 0 0;gap:12px}#reminders-panel .workbench-intro .section-title{font-size:24px;letter-spacing:-.4px}.hoku-eyebrow{margin-bottom:7px;font-size:11px}#reminders-panel .workbench-intro .section-help{font-size:12px}#reminders-panel .section-tools{width:100%;gap:4px}#reminders-panel .compact-tool{flex:1 1 auto;min-width:0;padding:0 8px;font-size:12px}#reminders-panel .compact-tool.primary{padding:0 12px}#reminders-panel>.reminder-summary{border-radius:8px}#reminders-panel .reminder-summary button{padding:13px 12px;min-height:88px;gap:8px}#reminders-panel .reminder-summary strong{font-size:27px}#reminders-panel .reminder-summary span{font-size:12px;gap:5px}#reminders-panel .reminder-summary span::before{width:4px;height:4px}#reminders-panel .backup-reminder{padding:0 10px;border-radius:5px}#reminders-panel .backup-reminder button{font-size:12px}#reminders-panel .workbench-payments{padding:8px 0 0;border:0;border-radius:0}#reminders-panel .section-title{font-size:17px;font-weight:650}#reminders-panel .section-help{font-size:12px;margin-bottom:13px}#reminders-panel .reminder-group{margin-top:16px}#reminders-panel .reminder-item{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 0 16px;border-bottom:1px solid #edf0f3}#reminders-panel .item-top{grid-column:1;flex-direction:row;justify-content:space-between;gap:8px;align-items:flex-start}#reminders-panel .item-top h4{font-size:14px}#reminders-panel .item-sub{font-size:12px;line-height:1.55}#reminders-panel .badge{font-size:12px}#reminders-panel .item-money{grid-column:1;gap:6px;font-size:12px}#reminders-panel .item-money strong{font-size:13px}#reminders-panel .item-money>span:first-child:has(strong) strong{font-size:18px}#reminders-panel .item-actions{gap:4px;margin-top:0}#reminders-panel .item-actions button{font-size:12px;padding:8px 10px}#reminders-panel .item-actions button.secondary{padding:8px 13px}#reminders-panel .overdue-installments{grid-column:1;gap:9px;font-size:12px}#reminders-panel .overdue-installment-line strong{font-size:12px}#reminders-panel .overdue-account .item-money{grid-column:1;margin:0;padding:12px 0 0;border:0;border-top:1px solid #edf0f3;gap:5px}#reminders-panel .overdue-account .item-money>span:first-child strong{font-size:12px}#reminders-panel .overdue-account .item-money>span:last-child{border:0;margin-top:0;padding-top:5px}#reminders-panel .overdue-account .item-money>span:last-child strong{font-size:20px}#reminders-panel .workbench-returns{grid-column:1;padding:24px 0 0;border:0;border-top:1px solid #e7eaee;border-radius:0}#reminders-panel .ledger-return-alert{padding-top:14px}#reminders-panel .ledger-return-alert p{font-size:12px}#reminders-panel .ledger-return-alert .ledger-actions button{flex:1 1 auto;padding:8px;font-size:12px}#reminders-panel .ledger-return-alert .ledger-actions button:last-child{flex-basis:auto}#payment-dialog .dialog-body,#reminder-copy-dialog .dialog-body{padding:20px}}
+/* Browser refinement on top of ca61abc: retain v2.1 structure and type hierarchy. */
+@media(min-width:1200px){
+  #reminders-panel .reminder-group{margin:14px 0 4px}
+  #reminders-panel .reminder-item{grid-template-columns:minmax(0,1fr) 260px;gap:6px 20px;padding:12px 0}
+  #reminders-panel .reminder-item:not(.overdue-account) .item-top{grid-column:1;grid-row:1/span 2}
+  #reminders-panel .reminder-item:not(.overdue-account) .item-money{grid-column:2;grid-row:1}
+  #reminders-panel .reminder-item:not(.overdue-account) .item-actions{grid-column:2;grid-row:2}
+  #reminders-panel .overdue-account .item-actions{margin-top:0}
+}
+@media(max-width:620px){
+  .hoku-header{height:56px}
+  .nav button{min-height:54px;padding-top:6px;padding-bottom:6px}
+  #reminders-panel.active{gap:12px}
+  #reminders-panel .workbench-intro{gap:8px;padding-top:14px}
+  #reminders-panel .workbench-intro .hoku-eyebrow{display:none}
+  #reminders-panel .reminder-summary button{min-height:80px;padding:12px;gap:6px}
+  #reminders-panel .workbench-payments>.section-help{margin-bottom:0}
+  #reminders-panel .reminder-group{margin-top:12px}
+  #payment-dialog .field input,#payment-dialog .field select{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){#reminders-panel button{transition:none}}
+/* TOOL-011: editorial financial records; UI wordmark is separate from brand master art. */
+.hoku-header{height:104px;gap:10px}
+.hoku-brand{display:flex;flex-direction:row;align-items:baseline;gap:9px;width:auto;max-width:100%;color:#213039;line-height:1;letter-spacing:0;white-space:nowrap}
+.hoku-brand::before{display:none}
+.hoku-brand .hoku-brand-en{color:inherit;font-size:22px;font-weight:650;line-height:1.15;letter-spacing:.45px}
+.hoku-brand .hoku-brand-cn{color:#465760;font-size:15px;font-weight:550;line-height:1.4;letter-spacing:.65px}
+.nav{top:104px}
+#reminders-panel .reminder-group{margin:24px 0 18px}
+#reminders-panel .group-head{display:flex;align-items:center;gap:8px;min-height:32px;padding:0 0 12px;margin:0;border:0;background:transparent}
+#reminders-panel .group-head h3{font-size:14px;font-weight:650;line-height:1.5;color:#426259}
+#reminders-panel #overdue-group .group-head h3{color:#82594d}
+#reminders-panel #upcoming-group .group-head h3{color:#75633f}
+#reminders-panel .group-head::after{content:"";width:44px;height:1px;margin-left:4px;background:#d5dee4}
+#reminders-panel .group-head .count{min-width:0;height:auto;padding:0;border:0;border-radius:0;background:transparent;color:#657483;font-size:12px;font-weight:500}
+#reminders-panel .reminder-list{gap:16px;padding:0;border:0}
+#reminders-panel .reminder-item,#reminders-panel .reminder-item:last-child{position:relative;grid-template-columns:minmax(0,1fr) 296px;gap:10px 20px;padding:18px 16px;border:0;border-radius:0;background:#fff;box-shadow:none;isolation:isolate}
+#reminders-panel .reminder-item:nth-child(even){background:#f7f9fa}
+#reminders-panel .reminder-item:not(:last-child)::after{content:"";position:absolute;left:16px;bottom:-8px;width:48px;height:1px;background:#cbd5dc}
+#reminders-panel .item-top,#reminders-panel .overdue-account .item-top{position:relative;padding-left:12px}
+#reminders-panel .item-top::before{content:"";position:absolute;left:0;top:4px;width:2px;height:16px;background:#829d96}
+#reminders-panel .overdue .item-top::before{background:#af9186}
+#reminders-panel .upcoming .item-top::before{background:#aca085}
+#reminders-panel .item-top h4{font-size:15px;font-weight:650;line-height:1.55}
+#reminders-panel .item-sub,#reminders-panel .overdue-composition{color:#5d7082}
+#reminders-panel .badge{color:#247568}
+#reminders-panel .item-money>span:has(strong){grid-template-columns:minmax(0,1fr) 168px;column-gap:8px}
+#reminders-panel .item-money strong{width:100%;text-align:right}
+#reminders-panel .overdue-installments{padding-left:12px;border-left:1px solid #e7ecef;gap:12px}
+#reminders-panel .overdue-installment{padding-bottom:12px;border-bottom-color:#e9edf0}
+#reminders-panel .overdue-installment:last-child{padding-bottom:0}
+#reminders-panel .overdue-account .item-money{padding-left:16px;border-left:1px solid #e7ecef;gap:8px}
+#reminders-panel .overdue-account .item-money>span:last-child{border-top:0;margin-top:4px;padding-top:6px}
+#reminders-panel .item-actions{padding-top:8px;border:0}
+#reminders-panel .reminder-list>.empty{margin:0;padding:16px}
+@media(max-width:1099px){
+ .hoku-header{height:72px;gap:16px}
+ .nav{top:0}
+}
+@media(max-width:620px){
+ .hoku-header{height:56px;gap:12px}
+ .hoku-brand .hoku-brand-en{font-size:21px}
+ .hoku-brand .hoku-brand-cn{font-size:14px}
+ #reminders-panel .reminder-group{margin:20px 0 16px}
+ #reminders-panel .reminder-item,#reminders-panel .reminder-item:last-child{grid-template-columns:minmax(0,1fr);padding:16px 12px;gap:12px}
+ #reminders-panel .reminder-item:not(:last-child)::after{left:12px;width:40px}
+ #reminders-panel .item-top,#reminders-panel .overdue-account .item-top{grid-column:1;flex-direction:column;gap:6px}
+ #reminders-panel .item-money>span:has(strong){grid-template-columns:minmax(0,1fr) 148px}
+ #reminders-panel .overdue-account .item-money{grid-column:1;padding:4px 0 0;border:0;gap:6px}
+ #reminders-panel .overdue-account .item-money>span:last-child strong{font-size:18px}
+ #reminders-panel .item-actions{flex-wrap:wrap;gap:6px;padding-top:8px}
+}
+/* DESIGN-UI-001 v1.0: targeted core calculators; existing business hooks unchanged. */
+:root{--hoku-field-line:#8494a3;--hoku-focus:#08796e;--hoku-group-gap:24px;--hoku-field-gap:16px}
+:is(#finance-panel,#late-fee-panel){--text:var(--hoku-ink);--muted:#5d7082;--blue:#176e64;--line:var(--hoku-line);font-variant-numeric:tabular-nums lining-nums}
+:is(#finance-panel,#late-fee-panel)>section{min-width:0;padding:24px;background:#fff;border:1px solid var(--hoku-line);border-radius:10px}
+:is(#finance-panel,#late-fee-panel)>.hoku-calculator-intro{padding:30px 0 20px;background:transparent;border:0;border-radius:0}
+.hoku-calculator-intro .section-heading-row{margin:0;gap:24px}
+.hoku-calculator-intro .section-title{font-size:24px;line-height:1.4;letter-spacing:-.35px;font-weight:650;margin:0 0 8px}
+.hoku-calculator-intro .section-help{max-width:76ch;font-size:13px;color:#5d7082;line-height:1.65}
+:is(#finance-panel,#late-fee-panel) .section-title{line-height:1.4}
+#finance-panel>section:not(.hoku-calculator-intro)>.section-title{font-size:17px;font-weight:650}
+:is(#finance-panel,#late-fee-panel) .section-help{color:#5d7082;font-size:13px;line-height:1.65}
+:is(#finance-panel,#late-fee-panel) .inputs{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px var(--hoku-field-gap)}
+:is(#finance-panel,#late-fee-panel) .field{min-width:0}
+:is(#finance-panel,#late-fee-panel) .field label{font-size:13px;font-weight:550;line-height:1.5;margin-bottom:8px;color:#344858}
+:is(#finance-panel,#late-fee-panel) .field input{min-width:0;max-width:100%;height:44px;border:1px solid var(--hoku-field-line);border-radius:6px;background:#fff;padding:0 12px;color:#21313f;font-family:inherit;font-size:16px}
+:is(#finance-panel,#late-fee-panel) input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
+:is(#finance-panel,#late-fee-panel) input[readonly]{background:#f3f5f7;color:#4c6172}
+:is(#finance-panel,#late-fee-panel) input::placeholder{color:#657483;opacity:1}
+:is(#finance-panel,#late-fee-panel) .field-hint{margin-top:6px;font-size:12px;color:#5d7082;line-height:1.6}
+:is(#finance-panel,#late-fee-panel) .field input:focus{outline:2px solid var(--hoku-focus);outline-offset:2px;border-color:var(--hoku-focus)}
+:is(#finance-panel,#late-fee-panel) :is(button,summary,textarea):focus-visible{outline:2px solid var(--hoku-focus);outline-offset:3px}
+:is(#finance-panel,#late-fee-panel) button{min-height:44px;height:auto;margin-top:16px;padding:10px 14px;border:1px solid #263541;border-radius:6px;background:#263541;color:white;box-shadow:none;transform:none}
+:is(#finance-panel,#late-fee-panel) button{font-family:inherit;font-size:13px;font-weight:550;line-height:1.6}
+:is(#finance-panel,#late-fee-panel) button:hover{filter:none;background:#344755}
+:is(#finance-panel,#late-fee-panel) button:disabled{color:#526575;background:#eef1f4;border-color:#d3dce3;cursor:default}
+:is(#finance-panel,#late-fee-panel) .compact-tool{width:auto;flex-shrink:0;margin:0;background:transparent;color:#496171;border:1px solid #8494a3;padding:10px 14px}
+#finance-panel .mode-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 24px;padding:0;background:transparent;border-radius:0}
+#finance-panel .mode-tabs button{width:auto;flex:0 1 auto;margin:0;padding:10px 16px;border-color:#8494a3;background:#fff;color:#4a6070}
+#finance-panel .mode-tabs button.active{background:#edf5f2;border-color:#08796e;color:#17665c;font-weight:650}
+#finance-panel .formula-note{padding:14px 16px;background:#f7f9fa;border:0;border-left:2px solid #93aaa4;border-radius:0;color:#506778;font-size:12px;line-height:1.7}
+#finance-panel .formula-note strong{color:#3c5d54;font-size:12px;font-weight:600}
+#rental-calculate{width:auto;min-width:144px}
+:is(#finance-panel,#late-fee-panel) .summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;margin:16px 0 24px}
+:is(#finance-panel,#late-fee-panel) .metric{min-width:0;min-height:80px;padding:16px 0;text-align:left;background:transparent;border-radius:0;border-bottom:1px solid #e7ecef}
+:is(#finance-panel,#late-fee-panel) .metric span{font-size:12px;line-height:1.6;color:#5d7082}
+:is(#finance-panel,#late-fee-panel) .metric strong{margin-top:6px;font-size:17px;line-height:1.4;font-weight:600;color:#243846;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#finance-panel #primary-result,#late-fee-panel #total{font-size:21px;color:#193f39}
+#late-fee-panel .metric.wide{grid-column:1/-1}
+:is(#finance-panel,#late-fee-panel) .output-label{gap:12px;align-items:baseline}
+:is(#finance-panel,#late-fee-panel) .output-label strong{font-size:14px;font-weight:600}
+:is(#finance-panel,#late-fee-panel) .tip{color:#5d7082;font-size:12px;line-height:1.6}
+:is(#finance-panel,#late-fee-panel) textarea{display:block;min-height:240px;padding:16px;border:1px solid #8494a3;border-radius:6px;background:#fbfcfd;color:#293e4e;font-family:inherit;font-size:14px;line-height:1.8}
+:is(#finance-panel,#late-fee-panel) .note{color:#5d7082;text-align:left;font-size:12px;line-height:1.65}
+:is(#finance-panel,#late-fee-panel) .error{color:#943e2e;line-height:1.65}
+:is(#finance-panel,#late-fee-panel)>.warning{margin-top:16px;padding:14px 16px;border:0;border-left:2px solid #c1b18b;border-radius:0;background:#f7f5ef;color:#6d5c3d;font-size:12px;line-height:1.7}
+.hoku-rate-note{margin:20px 0 0;padding:12px 14px;background:#f7f9fa;color:#4c6273;font-size:12px;line-height:1.75;border-left:2px solid #a6b4bf}
+#finance-panel #rental-results{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 12px}
+#finance-panel #rental-results>:not(button){grid-column:1/-1}
+#finance-panel .rental-summary{padding:20px 0 0;border:0;border-top:1px solid #d9e2e7;border-radius:0;background:transparent}
+#finance-panel .rental-summary h3{font-size:15px;margin-bottom:16px}
+#finance-panel .rental-meta{gap:12px 24px;color:#344b5d;font-size:13px}
+#finance-panel .rental-meta>div{gap:8px;align-items:baseline}
+#finance-panel .rental-meta span{color:#5d7082}
+#finance-panel .rental-meta strong{overflow-wrap:anywhere}
+#finance-panel .rental-schedule{margin:0}
+#finance-panel .rental-schedule summary{font-size:13px;color:#3b5c6c;min-height:44px;line-height:1.6}
+#finance-panel .rental-explanation{font-size:12px;line-height:1.7;color:#5d7082;overflow-wrap:anywhere}
+#finance-panel .rental-scroll{border:1px solid #d4dee5;border-radius:0}
+#finance-panel .rental-table th,#finance-panel .rental-table td{border-color:#dce4e9;height:32px;padding:6px 8px;line-height:1.5;color:#354e60}
+#finance-panel .rental-table th{background:#f3f6f8}
+#finance-panel .rental-subheading{font-size:15px;font-weight:600;margin-top:24px}
+#finance-panel #rental-results .rental-subheading{margin:0}
+#finance-panel #finance-copy{grid-column:1;grid-row:5;margin:0;border-color:#8494a3;background:#fff;color:#3d5968}
+#finance-panel #rental-confirm{grid-column:2;grid-row:5;margin:0}
+#finance-panel #finance-status{grid-column:1/-1;grid-row:6;margin:0}
+#finance-panel .rental-scroll::after{content:"付款计划可横向滑动查看全部列";display:block;padding:8px 12px;background:#f7f9fa;color:#5d7082;font-size:12px}
+#rental-dialog{border:1px solid #d7e0e6;border-radius:10px;box-shadow:0 24px 80px #14202e26}
+#rental-dialog .rental-preview-tools button{min-height:44px;font-size:13px;border-radius:6px;background:#263541;color:white;box-shadow:none}
+body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;background:#edf6f3;font-weight:600}
+@media(max-width:1099px){body:has(#late-fee-panel.active) .nav [data-panel=finance]{background:#fff}body:has(#late-fee-panel.active) .nav [data-panel=finance]::after{content:"";position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:#188376}}
+@media(max-width:620px){
+ :is(#finance-panel,#late-fee-panel)>.hoku-calculator-intro{padding:20px 0 16px}
+ .hoku-calculator-intro .section-heading-row{gap:12px;flex-direction:column}
+ .hoku-calculator-intro .section-title{font-size:24px}
+ :is(#finance-panel,#late-fee-panel)>section:not(.hoku-calculator-intro){padding:20px 16px;border-radius:8px}
+ :is(#finance-panel,#late-fee-panel) .inputs{grid-template-columns:minmax(0,1fr);gap:16px}
+ :is(#finance-panel,#late-fee-panel) .summary{grid-template-columns:minmax(0,1fr);gap:0}
+ :is(#finance-panel,#late-fee-panel) .metric{display:grid;grid-template-columns:minmax(0,1fr) max-content;align-items:baseline;gap:12px;min-height:56px;padding:14px 0}
+ :is(#finance-panel,#late-fee-panel) .metric strong{font-size:16px;margin:0;white-space:nowrap;overflow-wrap:normal}
+ #finance-panel #primary-result,#late-fee-panel #total{font-size:19px}
+ :is(#finance-panel,#late-fee-panel) .output-label{flex-wrap:wrap;gap:4px}
+ :is(#finance-panel,#late-fee-panel) .tip{text-align:left}
+ #finance-panel .rental-meta{grid-template-columns:minmax(0,1fr)}
+ #rental-calculate{width:100%}
+ #finance-panel #finance-copy,#finance-panel #rental-confirm{padding:10px 8px}
+}
+#rental-preview{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#rental-preview::before{content:"方案单保留完整纸张布局，可横向滑动核对";display:block;margin:0 0 10px;color:#5d7082;font-size:12px;line-height:1.6}
+#rental-dialog .rental-preview-tools{position:sticky;top:0;z-index:1;background:#fff;padding:8px 0;gap:8px}
+:is(#finance-panel,#late-fee-panel) :is(input,button,summary,textarea){scroll-margin-top:80px}
+:is(#finance-panel,#late-fee-panel) .compact-tool:hover{background:#edf2f4;color:#344b5b}
+#finance-panel .mode-tabs button:not(.active):hover{background:#f3f6f7;color:#344b5b}
+#finance-panel #finance-copy:hover{background:#f3f6f7}
+.nav button:focus-visible,#reminders-panel button:focus-visible{outline:2px solid var(--hoku-focus);outline-offset:-3px}
+</style>
 </head>
 <body>
 <main><div class="card">
-  <header><h1>大进车贷助手</h1><p>售前测算 · 以租代购履约 · 车辆出租</p></header>
+  <header class="hoku-header"><div class="hoku-brand" aria-label="HOKU 好车库"><span class="hoku-brand-en">HOKU</span><span class="hoku-brand-cn">好车库</span></div><div class="hoku-product"><h1>车贷工具箱</h1><p>售前测算 · 以租代购履约 · 车辆出租</p></div></header>
   <nav class="nav" aria-label="业务导航">
-    <button class="active" type="button" data-panel="reminders">首页</button>
-    <button type="button" data-panel="finance">售前方案</button>
-    <button type="button" data-panel="customers">以租代购</button>
-    <button type="button" data-panel="rental-ledger">车辆出租</button>
-    <button type="button" data-panel="settings">更多 / 设置</button>
+    <button class="active" type="button" data-panel="reminders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>工作台</span></button>
+    <button type="button" data-panel="finance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 11h2m4 0h2m-8 4h2m4 0h2m-8 4h2m4 0h2"/></svg><span>售前方案</span></button>
+    <button type="button" data-panel="customers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 5"/></svg><span>以租代购</span></button>
+    <button type="button" data-panel="rental-ledger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10 2-6h12l2 6M3 10h18v8H3zM5 18v3m14-3v3M6 14h2m8 0h2"/></svg><span>车辆出租</span></button>
+    <button type="button" data-panel="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="18" r="2" fill="currentColor"/></svg><span>更多 / 设置</span></button>
   </nav>
   <div class="wechat-notice" id="wechat-notice" hidden><strong>当前在微信内打开</strong>微信可能限制文件下载，并且网页缓存可能被微信清理。正式客户数据建议使用手机系统浏览器管理。请通过微信右上角菜单选择“在浏览器打开”。</div>
   <div class="recovery-alert" id="recovery-alert" hidden><strong>客户数据保护已启动</strong><span id="recovery-alert-message">系统已停止写入，请先检查并备份原始数据。</span><button type="button" id="open-storage-diagnostics">立即检查原始数据</button></div>
 
   <div class="panel active" id="reminders-panel">
     <div class="backup-reminder" id="backup-reminder" hidden><button type="button" id="backup-reminder-action"><span>备份状态未知 · 查看详情</span></button></div>
-    <section><h2 class="section-title">今日工作台</h2><p class="section-help">先处理应还、逾期与还车待办。</p><div class="section-tools"><button class="compact-tool" type="button" data-panel="finance">算一个新方案</button><button class="compact-tool" type="button" data-panel="customers">正式客户</button><button class="compact-tool" type="button" id="home-new-rental">新增车辆出租</button></div></section>
-    <section><h2 class="section-title">还车提醒</h2><p class="section-help">打开页面时检查约定还车日；延期可修改日期，时间不确定可清除日期。</p><div id="ledger-reminders-home"></div></section>
-    <section>
-      <h2 class="section-title">今日还款提醒</h2>
-      <p class="section-help" id="today-label">打开页面后，系统按当天日期自动列出需要处理的客户。</p>
-      <div class="reminder-summary">
+    <section class="workbench-intro"><div><p class="hoku-eyebrow">业务管理</p><h2 class="section-title">今日工作台</h2><p class="section-help">先处理应还、逾期与还车待办。</p></div><div class="section-tools"><button class="compact-tool" type="button" data-panel="finance">方案测算</button><button class="compact-tool" type="button" data-panel="customers">客户管理</button><button class="compact-tool primary" type="button" id="home-new-rental"><span aria-hidden="true">＋</span> 新增出租</button></div></section>
+    <div class="reminder-summary">
         <button type="button" data-scroll="today-group"><strong id="today-total">0</strong><span>今日应还</span></button>
         <button class="overdue" type="button" data-scroll="overdue-group"><strong id="overdue-total">0</strong><span>已逾期</span></button>
         <button class="upcoming" type="button" data-scroll="upcoming-group"><strong id="upcoming-total">0</strong><span>未来3天</span></button>
       </div>
+    <section class="workbench-returns"><h2 class="section-title">还车提醒</h2><p class="section-help">打开页面时检查约定还车日；延期可修改日期，时间不确定可清除日期。</p><div id="ledger-reminders-home"></div></section>
+    <section class="workbench-payments">
+      <h2 class="section-title">还款待办</h2>
+      <p class="section-help" id="today-label">打开页面后，系统按当天日期自动列出需要处理的客户。</p>
       <div class="reminder-group" id="today-group"><div class="group-head"><h3>今日应还</h3><span class="count" id="today-count">0</span></div><div class="reminder-list" id="today-list"></div></div>
       <div class="reminder-group" id="overdue-group"><div class="group-head"><h3>已逾期</h3><span class="count" id="overdue-count">0</span></div><div class="reminder-list" id="overdue-list"></div></div>
       <div class="reminder-group" id="upcoming-group"><div class="group-head"><h3>未来3天即将到期</h3><span class="count" id="upcoming-count">0</span></div><div class="reminder-list" id="upcoming-list"></div></div>
@@ -122,7 +406,7 @@
     </section>
   </div>
 
-  <div class="panel" id="finance-panel"><section><h2 class="section-title">售前方案</h2><p class="section-help">用于询价、测算及方案展示，不自动进入正式客户。成交后请在“以租代购”登记已确认的合同；预付抵扣及最终期尾差须按合同核对。</p></section>
+  <div class="panel" id="finance-panel"><section class="hoku-calculator-intro"><div class="section-heading-row"><div><h2 class="section-title">售前方案</h2><p class="section-help">用于询价、测算及方案展示，不自动进入正式客户。成交后请在“以租代购”登记已确认的合同；预付抵扣及最终期尾差须按合同核对。</p></div><button class="compact-tool" type="button" data-panel="late-fee">滞纳金测算</button></div></section>
     <section>
       <h2 class="section-title">车辆租赁方案测算</h2>
       <p class="section-help">按车辆方案全额测算固定月租。预付租金抵扣前几期，不降低固定月租；押金单独列示。本页方案仅在当前页面保留，刷新后需重新录入。</p>
@@ -167,15 +451,18 @@
   </div>
 
   <div class="panel" id="late-fee-panel">
-    <section>
+    <section class="hoku-calculator-intro"><div class="section-heading-row"><div>
       <h2 class="section-title">滞纳金计算器</h2>
       <p class="section-help">填写四项，自动计算并生成可直接发送的纯文字。</p>
+    </div><button class="compact-tool" type="button" data-panel="finance">返回售前方案</button></div></section>
+    <section>
       <div class="inputs">
         <div class="field"><label for="due">应付日期</label><input id="due" type="date" value="2026-06-05"></div>
         <div class="field"><label for="pay">实际付款日期</label><input id="pay" type="date" value="2026-07-15"></div>
         <div class="field"><label for="amount">应付金额（元）</label><input id="amount" inputmode="decimal" type="number" min="0" step="0.01" value="8222.50"></div>
         <div class="field"><label for="rate">日滞纳金比例（%）</label><input id="rate" inputmode="decimal" type="number" min="0" step="0.001" value="0.5"></div>
       </div>
+      <p class="hoku-rate-note">费率核对：合同口径为 0.05%/日，不复利；0.5% 仅作临时测算。下方话术沿用原模板，发送前请核对合同费率与措辞。输入缺项时，旧汇总不可作为新测算使用。</p>
       <div class="summary">
         <div class="metric"><span>逾期天数</span><strong id="days">40 天</strong></div>
         <div class="metric"><span>滞纳金</span><strong id="fee">1,644.50 元</strong></div>
