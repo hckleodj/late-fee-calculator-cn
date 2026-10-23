@@ -24,13 +24,57 @@
     const n=BigInt(mantissa.replace('.','')),scale=digits-Number(exponent),den=10n**BigInt(Math.max(0,scale)),num=BigInt(weighted)*n*10n**BigInt(Math.max(0,-scale));
     return Number((num*2n+den)/(2n*den));
   }
-  function accrued(plan,index,asOf){
+  function simpleAccrued(plan,index,asOf){
     if(index<opening(plan))return {cents:0,segments:[]};
     const due=dueDay(plan,index);let cursor=due,left=cents(plan.amount)+battery(plan,index),weighted=0n;const segments=[];
     const events=(plan.payments||[]).map((p,order)=>({date:day(p.date),order,paid:(p.allocations||[]).filter(a=>Number(a.termIndex)===index).reduce((n,a)=>n+cents(a.principal||0)+cents(a.batteryRent||0),0)})).filter(e=>e.paid>0&&e.date<=asOf).sort((a,b)=>a.date-b.date||a.order-b.order);
     function charge(end){if(end>cursor&&left>0){const days=end-cursor;weighted+=BigInt(left)*BigInt(days);segments.push({fromDay:cursor,toDay:end,days,base: yuan(left)})}cursor=Math.max(cursor,end)}
     for(const e of events){charge(Math.max(due,e.date));left=Math.max(0,left-e.paid)}charge(asOf);
     return {cents:feeFromWeighted(weighted,Number(plan.rate)),segments};
+  }
+  // Explicit opt-in snapshot: old receipts are never replayed or relabelled.
+  // Snapshot amounts are the displayed cents accepted at the first compound receipt.
+  function compoundBasis(plan){return JSON.stringify([Number(plan.amount),plan.startDate,Number(plan.dueDay),Number(plan.totalTerms),opening(plan),Array.from({length:Number(plan.totalTerms)},(_,i)=>battery(plan,i))])}
+  function activateCompound(plan,date,rate,rows){
+    if(plan.compoundAccounting)throw Error('该客户已有复利收款口径，不能重复启用。');
+    day(date);if(!Number.isFinite(rate)||rate<=0||rate>1)throw Error('复利日费率须大于0且不超过100%。');
+    if((plan.payments||[]).some(p=>day(p.date)>day(date))||(plan.lateFeeWaivers||[]).some(w=>day(w.date)>day(date)||(w.reversedAt&&day(w.reversedAt)>day(date))))throw Error('启用日后已有收款或减免，请先核对后续记录，不能回溯切换口径。');
+    if(!Array.isArray(rows)||rows.length!==Number(plan.totalTerms)||rows.some((r,i)=>r.termIndex!==i||!amount(r.remainingLateFee)))throw Error('复利期初快照无效。');
+    const copy=JSON.parse(JSON.stringify(plan));freezeLegacyFees(copy);const originalRows=statement(copy,date);
+    copy.compoundAccounting={version:1,date,rate,basis:compoundBasis(copy),baselinePaymentIds:(copy.payments||[]).map(p=>p.id),rows:rows.map((r,i)=>{
+      const original=originalRows[i];
+      return {termIndex:i,remainingLateFee:r.remainingLateFee,paidLateFee:original.paidLateFee,waivedLateFee:original.waivedLateFee};
+    })};return copy;
+  }
+  function compoundAccrued(plan,index,asOf){
+    const cfg=plan.compoundAccounting,start=day(cfg.date),openingRow=cfg.rows[index];
+    if(asOf<start)return simpleAccrued(plan,index,asOf);
+    let cursor=Math.max(start,dueDay(plan,index)),balance=base({...plan,payments:(plan.payments||[]).filter(p=>cfg.baselinePaymentIds.includes(p.id))},index,start),left=balance.contractRemaining+balance.batteryRemaining;
+    let n=BigInt(cents(openingRow.remainingLateFee)),den=1n,paid=cents(openingRow.paidLateFee),discount=cents(openingRow.waivedLateFee);
+    const [m,e='0']=String(cfg.rate).toLowerCase().split('e'),scale=(m.split('.')[1]||'').length-Number(e),rn=BigInt(m.replace('.',''))*10n**BigInt(Math.max(0,-scale)),rd=10n**BigInt(Math.max(0,scale));
+    const dates=[...new Set([...(plan.payments||[]).filter(p=>!cfg.baselinePaymentIds.includes(p.id)).map(p=>p.date),...(plan.lateFeeWaivers||[]).flatMap(w=>[w.date,...(w.reversedAt?[w.reversedAt]:[])]),new Date(asOf*86400000).toISOString().slice(0,10)])].filter(d=>day(d)>=start&&day(d)<=asOf).sort();
+    const segments=[];
+    for(const date of dates){const at=day(date),days=Math.max(0,at-cursor);
+      if(at-start>36600)throw Error('复利超过100年，暂停计算。');
+      if(days&&left>0){const a=(rd+rn)**BigInt(days),b=rd**BigInt(days);n=(n+BigInt(left)*den)*a-BigInt(left)*den*b;den*=b;segments.push({fromDay:cursor,toDay:at,days,base:yuan(left)})}
+      cursor=Math.max(cursor,at);
+      const receipts=(plan.payments||[]).filter(p=>!cfg.baselinePaymentIds.includes(p.id)&&p.date===date);
+      for(const p of receipts)for(const a of p.allocations||[])if(a.termIndex===index){const fee=cents(a.lateFee||0);n-=BigInt(fee)*den;paid+=fee;left=Math.max(0,left-cents(a.principal||0)-cents(a.batteryRent||0))}
+      const nextDiscount=waived(plan,index,at);n-=BigInt(nextDiscount-discount)*den;discount=nextDiscount;
+      // A payment may clear a fee rounded up by less than half a cent.
+      if(n<0n&&(-n)*2n<=den)n=0n;
+      if(n<0n)throw Error('复利收款或减免超过应计费用，请核对记录。');
+    }
+    const net=Number((2n*n+den)/(2n*den));if(!Number.isSafeInteger(net+paid+discount))throw Error('复利金额超出精确范围。');
+    return {cents:net+paid+discount,segments};
+  }
+  function accrued(plan,index,asOf){return plan.compoundAccounting?compoundAccrued(plan,index,asOf):simpleAccrued(plan,index,asOf)}
+  function assertCompoundHistory(plan,id,date){
+    if(!plan.compoundAccounting)return;
+    const cfg=plan.compoundAccounting,active=(plan.payments||[]).filter(p=>!cfg.baselinePaymentIds.includes(p.id));
+    if(active.some(p=>p.id===id)&&active[active.length-1].id!==id)throw Error('请从最后一笔复利收款开始修改或撤销。');
+    if(cfg.baselinePaymentIds.includes(id))throw Error('该笔属于复利启用前历史，不允许重算；请先撤销启用后的复利收款。');
+    if(day(date)<day(cfg.date)||(plan.payments||[]).some(p=>p.id!==id&&!cfg.baselinePaymentIds.includes(p.id)&&day(p.date)>day(date)))throw Error('复利收款须按日期顺序登记；修改或撤销请从最后一笔开始。');
   }
   // Legacy receipts remain byte-for-byte unchanged. Their fee-only split is a read-time view,
   // oldest eligible term first at the receipt date; an excess stays as a credit on that term.
@@ -81,6 +125,12 @@
   function recompute(plan){let i=opening(plan);while(i<Number(plan.totalTerms)){const b=base(plan,i);if(b.contractRemaining||b.batteryRemaining)break;i++}plan.completedTerms=i;return i}
   function validate(plan){
     try{
+      if(plan.compoundAccounting){
+        const c=plan.compoundAccounting;day(c.date);
+        if(c.version!==1||c.basis!==compoundBasis(plan)||!Number.isFinite(c.rate)||c.rate<=0||c.rate>1||!Array.isArray(c.baselinePaymentIds)||new Set(c.baselinePaymentIds).size!==c.baselinePaymentIds.length||c.baselinePaymentIds.some(id=>!(plan.payments||[]).some(p=>p.id===id&&p.feeMode!=='compound'&&day(p.date)<=day(c.date)))||!Array.isArray(c.rows)||c.rows.length!==Number(plan.totalTerms)||c.rows.some((r,i)=>r.termIndex!==i||![r.remainingLateFee,r.paidLateFee,r.waivedLateFee].every(amount)))return false;
+        if(!(plan.payments||[]).some(p=>p.feeMode==='compound'))return false;
+        for(const p of plan.payments||[])if(!c.baselinePaymentIds.includes(p.id)&&(p.feeMode!=='compound'||p.feeRate!==c.rate||day(p.date)<day(c.date)))return false;
+      }else if((plan.payments||[]).some(p=>p.feeMode==='compound'))return false;
       if(plan.batteryMonthlyRent!==undefined&&!amount(plan.batteryMonthlyRent))return false;
       if(plan.batteryRentEffectiveTermIndex!==undefined&&(!Number.isInteger(plan.batteryRentEffectiveTermIndex)||plan.batteryRentEffectiveTermIndex<0||plan.batteryRentEffectiveTermIndex>=Number(plan.totalTerms)))return false;
       if(plan.batteryRentByTerm!==undefined&&(!Array.isArray(plan.batteryRentByTerm)||plan.batteryRentByTerm.length!==Number(plan.totalTerms)||!plan.batteryRentByTerm.every(amount)))return false;
@@ -138,9 +188,11 @@
   }
   function assertRateChange(existing,rate){
     if(!Number.isFinite(Number(rate))||Number(rate)<0)throw Error('参考日违约金比例须为非负数字。');
+    if(existing?.compoundAccounting&&Number(rate)!==Number(existing.rate))throw Error('已有复利收款，请保留历史费率。');
     if(existing&&Number(rate)!==Number(existing.rate)&&hasLateFeeHistory(existing))throw Error('已有滞纳金收款、分配或减免历史（含已撤销记录），不能直接修改参考日违约金比例，请先核对历史账务。');
   }
   function configure(plan,existing,rent,effective,asOf=localToday()){
+    if(existing?.compoundAccounting&&(Number(rent)!==Number(existing.batteryMonthlyRent||0)||(Number(rent)>0&&effective!==Number(existing.batteryRentEffectiveTermIndex||0))))throw Error('已有复利收款，不能修改租电费计费基础。');
     if(!amount(rent))throw Error('月租电费请输入非负金额，最多2位小数。');
     if(!Number.isInteger(effective)||effective<0||effective>=Number(plan.totalTerms))throw Error('租电费生效期须在合同期数内。');
     if(existing&&Number(existing.batteryMonthlyRent||0)===Number(rent)&&Number(existing.batteryRentEffectiveTermIndex||0)===effective&&Number(existing.totalTerms)===Number(plan.totalTerms))return;
@@ -162,6 +214,7 @@
   }
   function receive(plan,{id,date,total,lateFee=0,startTermIndex,automatic=true},asOf){
     if(!amount(total)||Number(total)<=0||!amount(lateFee)||Number(lateFee)>Number(total))throw Error('到账总额及滞纳金须为有效的非负两位小数金额。');
+    assertCompoundHistory(plan,id,date);
     if(day(date)>day(asOf))throw Error('实际收款日期不能晚于今天。');
     if(!Number.isInteger(startTermIndex)||startTermIndex<opening(plan)||startTermIndex>=Number(plan.totalTerms))throw Error('收款期数无效。');
     const copy=JSON.parse(JSON.stringify(plan));copy.openingCompletedTerms=opening(plan);freezeLegacyFees(copy);
@@ -190,6 +243,7 @@
     }
     if(left)throw Error(`有 ${yuan(left).toFixed(2)} 元基础款无法分配，请核对金额。`);
     const candidate={id,date,total:Number(total),lateFee:Number(lateFee),principal:0,batteryRent:0,startTermIndex,allocationVersion:2,allocations:[...entries.values()]};
+    if(copy.compoundAccounting){candidate.feeMode='compound';candidate.feeRate=copy.compoundAccounting.rate;}
     copy.payments.splice(oldIndex<0?copy.payments.length:oldIndex,0,candidate);
     const due=statement(copy,date);let feeLeft=automatic?0:cents(lateFee);
     for(let i=startTermIndex;i<due.length&&feeLeft>0;i++){const n=Math.min(feeLeft,cents(due[i].remainingLateFee));if(n){entry(i).lateFee=yuan(n);feeLeft-=n}}
@@ -206,10 +260,12 @@
     checkWaivers(copy);recompute(copy);return {copy,candidate,unallocated:0};
   }
   function undo(plan,id){
+    const receipt=(plan.payments||[]).find(p=>p.id===id);if(receipt)assertCompoundHistory(plan,id,receipt.date);
     const copy=JSON.parse(JSON.stringify(plan));copy.openingCompletedTerms=opening(plan);freezeLegacyFees(copy);
     copy.payments=(copy.payments||[]).filter(p=>p.id!==id);
     if(copy.legacyLateFeeAllocations)delete copy.legacyLateFeeAllocations[id];
+    if(copy.compoundAccounting&&!(copy.payments||[]).some(p=>p.feeMode==='compound'))delete copy.compoundAccounting;
     checkWaivers(copy);recompute(copy);return copy;
   }
-  return {hasLateFeeHistory,assertRateChange,paymentChannels,channelCost,validChannelCost,suggestedChannelFee,cents,yuan,amount,day,dueDay,opening,battery,base,accrued,statement,recompute,validate,configure,receive,freezeLegacyFees,undo,waive,reverseWaiver};
+  return {activateCompound,hasLateFeeHistory,assertRateChange,paymentChannels,channelCost,validChannelCost,suggestedChannelFee,cents,yuan,amount,day,dueDay,opening,battery,base,accrued,statement,recompute,validate,configure,receive,freezeLegacyFees,undo,waive,reverseWaiver};
 });

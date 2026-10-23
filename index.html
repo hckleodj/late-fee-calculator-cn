@@ -566,9 +566,12 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
       <div class="field"><label for="payment-total">客户本次付款金额（元）</label><input id="payment-total" type="number" min="0.01" step="0.01" required></div>
       <div class="field full"><div class="field-hint">自动按合同月租 → 当期租电费 → 当期滞纳金 → 下一期抵扣。</div></div>
     </div>
+    <div class="inputs"><div class="field"><label for="payment-fee-mode">本次收款计算方式</label><select id="payment-fee-mode"><option value="simple">单利收款（原口径）</option><option value="compound">复利收款（协商确认）</option></select></div><div class="field"><label for="payment-compound-rate">复利日费率（%）</label><input id="payment-compound-rate" type="number" min="0.000001" max="100" step="any" value="0.5"></div></div>
+    <p class="note" id="payment-mode-hint">旧记录保持原口径。复利收款须经双方确认，不代表原合同约定。</p>
     <div class="inputs"><div class="field"><label for="payment-channel">收款渠道</label><select id="payment-channel"><option value="CASH">现金类渠道</option><option value="CCB">建行收款码</option><option value="WECHAT">微信经营收款</option></select></div><div class="field"><label for="payment-channel-fee">实际渠道手续费（元）</label><input id="payment-channel-fee" type="number" min="0" step="0.01" required></div></div>
     <p class="note" id="payment-channel-hint"></p><div class="preview-row"><span>公司净到账</span><strong id="payment-net-received"></strong></div><p class="note">客户还款按付款金额认定，手续费仅为公司渠道成本。</p>
     <div class="payment-preview">
+      <div class="preview-row"><span>收款后当日到期欠款合计</span><strong id="preview-account-balance">待计算</strong></div>
       <div class="preview-row"><span>计入滞纳金</span><strong id="preview-fee">0.00 元</strong></div>
       <div class="preview-row"><span>冲抵合同月租及租电费</span><strong id="preview-principal">0.00 元</strong></div>
       <div class="preview-row total"><span>本期账单状态</span><strong id="preview-status">等待填写</strong></div>
@@ -689,7 +692,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
 <script src="./vendor/html2canvas-1.4.1.min.js?v=e87e55079432"></script>
 <script src="./vendor/jspdf-4.2.1.umd.min.js?v=e6551fcdc32f"></script>
 <script src="./rental-export.js?v=243adcc4072e"></script>
-<script src="./installment-ledger.js?v=499dcf657248"></script>
+<script src="./installment-ledger.js?v=b693d680ee96"></script>
 <script src="./rental-ledger.js?v=7588b0d80944"></script>
 <script src="./backup-state.js?v=ba49f5fa6455"></script>
 <script src="./local-snapshots.js?v=00871e97a3f7"></script>
@@ -1161,6 +1164,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     });
     const invalid=plans.filter(plan=>{try{window.InstallmentLedger.statement(plan,toISO(todayNoon()));return false}catch(e){return true}});
     if(invalid.length)$('overdue-list').innerHTML+=invalid.map(p=>{
+      if(p.compoundAccounting)return `<div class="warning">${escapeHtml(p.name)}：复利账单计算异常，已暂停收款及催款计算，请核对原始备份。不得视为结清。</div>`;
       if(!hasReminderRate(p))try{
         const view={...p,rate:0},statement=window.InstallmentLedger.statement(view,toISO(todayNoon()));
         if(statement.some((row,i)=>row.remaining>.005&&installmentItem(view,i,statement).delta<=0))return `<div class="warning">${escapeHtml(p.name)}：未设置有效参考费率。复制时可临时选择是否包含滞纳金。<button type="button" data-copy-overdue="${p.id}">复制总催款文案</button></div>`;
@@ -1185,15 +1189,16 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   }
   function paymentHistoryHtml(plan){
     const payments=[...(plan.payments||[])].reverse();if(!payments.length)return '';
-    return `<details class="payment-history"><summary>查看收款记录（${payments.length}笔）</summary>${payments.map(payment=>`<div class="history-row"><strong>${escapeHtml(payment.date)}</strong> 客户付款 ${money(payment.total)} 元<br>${payment.paymentChannel?`${escapeHtml(window.InstallmentLedger.paymentChannels[payment.paymentChannel])} · 手续费 ${money(payment.channelFee)} 元 · 公司净到账 ${money(payment.netReceived)} 元<br>`:'历史收款：渠道及手续费未登记<br>'}滞纳金 ${money(payment.lateFee)} 元 · 冲抵合同款 ${money(payment.principal)} 元${Number(payment.batteryRent)>0?` · 租电费 ${money(payment.batteryRent)} 元`:''}${payment.allocations?.length?` · ${payment.allocations.map(item=>`第${Number(item.termIndex)+1}期 合同款${money(item.principal)}元${Number(item.batteryRent)>0?` / 租电${money(item.batteryRent)}元`:''}${Number(item.lateFee)>0?` / 滞纳金${money(item.lateFee)}元`:''}`).join('，')}`:''}<div class="history-actions"><button class="secondary" type="button" data-edit-payment="${payment.id}" data-payment-plan="${plan.id}">修改</button><button class="undo" type="button" data-undo-payment="${payment.id}" data-payment-plan="${plan.id}">撤销此笔</button></div></div>`).join('')}</details>`;
+    return `<details class="payment-history"><summary>查看收款记录（${payments.length}笔）</summary>${payments.map(payment=>`<div class="history-row"><strong>${escapeHtml(payment.date)}</strong> 客户付款 ${money(payment.total)} 元<br>${payment.paymentChannel?`${escapeHtml(window.InstallmentLedger.paymentChannels[payment.paymentChannel])} · 手续费 ${money(payment.channelFee)} 元 · 公司净到账 ${money(payment.netReceived)} 元<br>`:'历史收款：渠道及手续费未登记<br>'}${payment.feeMode==='compound'?`复利收款 · 日费率 ${reminderRatePercent(payment.feeRate)}%<br>`:''}滞纳金 ${money(payment.lateFee)} 元 · 冲抵合同款 ${money(payment.principal)} 元${Number(payment.batteryRent)>0?` · 租电费 ${money(payment.batteryRent)} 元`:''}${payment.allocations?.length?` · ${payment.allocations.map(item=>`第${Number(item.termIndex)+1}期 合同款${money(item.principal)}元${Number(item.batteryRent)>0?` / 租电${money(item.batteryRent)}元`:''}${Number(item.lateFee)>0?` / 滞纳金${money(item.lateFee)}元`:''}`).join('，')}`:''}<div class="history-actions"><button class="secondary" type="button" data-edit-payment="${payment.id}" data-payment-plan="${plan.id}">修改</button><button class="undo" type="button" data-undo-payment="${payment.id}" data-payment-plan="${plan.id}">撤销此笔</button></div></div>`).join('')}</details>`;
   }
   function renderPlans(){
     if(!plans.length){$('plans-list').innerHTML='<div class="empty">还没有客户计划，请点击“新增客户”录入。</div>';return}
     $('plans-list').innerHTML=plans.map(plan=>{
-      const pending=openInstallments(plan),item=pending[0]||null,nextStatus=item?(item.delta<0?`已逾期 ${item.daysOverdue} 天`:item.delta===0?'今天到期':`${item.delta} 天后到期`):'',next=item?`${fullCnDate(item.dueDate)} · 第 ${item.termIndex+1} 期 · ${nextStatus}`:((plan.payments||[]).some(p=>{try{window.InstallmentLedger.day(p.date);return false}catch(e){return true}})?'历史收款日期待核对':'已全部完成');
+      let calculationError='';if(plan.compoundAccounting)try{window.InstallmentLedger.statement(plan,toISO(todayNoon()))}catch(e){calculationError='复利账单计算异常，暂停收款及催款，请核对原始备份。'}
+      const pending=openInstallments(plan),item=pending[0]||null,nextStatus=item?(item.delta<0?`已逾期 ${item.daysOverdue} 天`:item.delta===0?'今天到期':`${item.delta} 天后到期`):'',next=calculationError?'账单待核对（计算暂停）':item?`${fullCnDate(item.dueDate)} · 第 ${item.termIndex+1} 期 · ${nextStatus}`:((plan.payments||[]).some(p=>{try{window.InstallmentLedger.day(p.date);return false}catch(e){return true}})?'历史收款日期待核对':'已全部完成');
       const overdueCount=pending.filter(entry=>entry.delta<0).length,contract=contractData(plan);
       const contractMeta=contract?`<span>合同贷款 <strong>${money(contract.loan)} 元</strong></span><span>押金 <strong>${Number(plan.depositMonths)||0} 个月</strong></span><span>固定月息 <strong>${shortMoney(contract.monthlyRatePct)}%</strong></span>`:'<span><strong>合同金融资料待补充</strong></span>';
-      return `<article class="plan-item"><div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta">${contractMeta}<span>合同月供 <strong>${money(plan.amount)} 元</strong></span>${Number(plan.batteryMonthlyRent)>0?`<span>月租电费 <strong>${money(plan.batteryMonthlyRent)} 元</strong> · 第${Number(plan.batteryRentEffectiveTermIndex)+1}期起</span>`:''}<span>每月 <strong>${plan.dueDay} 日</strong></span><span>逾期 <strong>${overdueCount} 期</strong></span><span>下一期 <strong>${next}</strong></span></div>${paymentSummaryHtml(plan)}<details class="rental-schedule customer-bills"><summary>应还账单 / 收款 / 逾期滞纳金</summary>${pending.filter(r=>r.delta<=3||r.termIndex===item?.termIndex).map(r=>reminderCard(r,r.delta<0?'overdue':r.delta===0?'today':'upcoming')).join('')||'<p class="note">近期无待处理账单。</p>'}</details>${paymentHistoryHtml(plan)}${waiverHistoryHtml(plan)}${(plan.payments||[]).some(p=>p.allocationVersion!==2&&Number(p.lateFee)>0)?'<p class="note">历史滞纳金仅有总额：按收款日从起始期顺序抵扣，逐期归属需核对原始凭证。</p>':''}<div class="plan-actions"><button type="button" data-settle-plan="${plan.id}">结清核算</button><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑合同</button></div><details class="danger-zone"><summary>更多管理操作</summary><button type="button" data-delete-plan="${plan.id}">删除客户资料</button></details></article>`;
+      return `<article class="plan-item">${calculationError?`<p class="warning" role="alert">${escapeHtml(calculationError)}</p>`:''}<div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta">${contractMeta}<span>合同月供 <strong>${money(plan.amount)} 元</strong></span>${Number(plan.batteryMonthlyRent)>0?`<span>月租电费 <strong>${money(plan.batteryMonthlyRent)} 元</strong> · 第${Number(plan.batteryRentEffectiveTermIndex)+1}期起</span>`:''}<span>每月 <strong>${plan.dueDay} 日</strong></span><span>逾期 <strong>${overdueCount} 期</strong></span><span>下一期 <strong>${next}</strong></span></div>${paymentSummaryHtml(plan)}<details class="rental-schedule customer-bills"><summary>应还账单 / 收款 / 逾期滞纳金</summary>${pending.filter(r=>r.delta<=3||r.termIndex===item?.termIndex).map(r=>reminderCard(r,r.delta<0?'overdue':r.delta===0?'today':'upcoming')).join('')||'<p class="note">近期无待处理账单。</p>'}</details>${paymentHistoryHtml(plan)}${waiverHistoryHtml(plan)}${(plan.payments||[]).some(p=>p.allocationVersion!==2&&Number(p.lateFee)>0)?'<p class="note">历史滞纳金仅有总额：按收款日从起始期顺序抵扣，逐期归属需核对原始凭证。</p>':''}<div class="plan-actions"><button type="button" data-settle-plan="${plan.id}">结清核算</button><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑合同</button></div><details class="danger-zone"><summary>更多管理操作</summary><button type="button" data-delete-plan="${plan.id}">删除客户资料</button></details></article>`;
     }).join('');
   }
   function renderPlanModule(){renderReminders();renderPlans()}
@@ -1237,14 +1242,21 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     return conciseReminderMessage(plan,items.map(item=>({termIndex:item.termIndex,dueDate:fullCnDate(item.dueDate),days:-item.delta,base:money(item.remaining),fee:money(item.fee)})),money(round2(items.reduce((sum,item)=>sum+(includeLateFee?item.total:item.remaining),0))),includeLateFee,type==='upcoming');
   }
   // Independent, exact rational trial. No ledger mutation, persistence or receipt allocation.
-  function reminderCompoundTrial(plan,rate){
+  function reminderCompoundTrial(plan,rate,asOfDate=null){
     if(!Number.isFinite(Number(rate))||Number(rate)<=0)throw Error('请选择有效的本次试算费率。');
-    const asOf=toISO(todayNoon()),day=value=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('试算日期无效。');const n=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(n)||new Date(n).toISOString().slice(0,10)!==value)throw Error('试算日期无效。');return n/86400000},end=day(asOf);
+    const asOf=asOfDate||toISO(todayNoon()),day=value=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('试算日期无效。');const n=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(n)||new Date(n).toISOString().slice(0,10)!==value)throw Error('试算日期无效。');return n/86400000},end=day(asOf);
     const toCents=value=>{const n=Math.round(Number(value)*100);if(!Number.isSafeInteger(n))throw Error('金额超出精确试算范围。');return BigInt(n)};
     const gcd=(a,b)=>{a=a<0n?-a:a;while(b){[a,b]=[b,a%b]}return a};
     const fraction=(n,d)=>{const g=gcd(n,d);return {n:n/g,d:d/g}};
     const [mantissa,exponent='0']=String(Number(rate)).toLowerCase().split('e'),scale=(mantissa.split('.')[1]||'').length-Number(exponent);
     const r=fraction(BigInt(mantissa.replace('.',''))*10n**BigInt(Math.max(0,-scale)),10n**BigInt(Math.max(0,scale)));
+    if(plan.compoundAccounting){
+      if(Number(rate)!==plan.compoundAccounting.rate)throw Error('已有复利收款，催款须使用已锁定日费率，不能另换费率重算历史。');
+      const statement=window.InstallmentLedger.statement(plan,asOf),rows=statement.flatMap((row,i)=>{
+        const dueDate=toISO(getDueDate(plan,i));if(dueDate>asOf||row.totalDue<=.005)return [];
+        return [{termIndex:i,dueDate,base:toCents(row.remaining),fee:toCents(row.remainingLateFee),total:toCents(row.totalDue),paid:toCents(row.paidLateFee),waived:toCents(row.waivedLateFee),days:Math.max(0,end-day(dueDate))}];
+      });return {rows,base:rows.reduce((n,r)=>n+r.base,0n),fee:rows.reduce((n,r)=>n+r.fee,0n),total:rows.reduce((n,r)=>n+r.total,0n)};
+    }
     // Obtain fee attribution with the ORIGINAL rate, including legacy read-time splits.
     // The trial rate must never reassign any historical receipt.
     const unsetRate=plan.rate==null||(typeof plan.rate==='string'&&!plan.rate.trim())||((typeof plan.rate==='number'||typeof plan.rate==='string')&&Number(plan.rate)===0);
@@ -1304,7 +1316,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     const pending=pendingReminderCopy,plan=plans.find(p=>p.id===pending?.planId);if(!plan)return;
     try{
       if(pending.type==='upcoming')throw Error('未来未到期期次不进入催款复利试算，可复制原到期提醒。');
-      const value=$('reminder-compound-rate').value,rate=value==='saved'?plan.rate:value,source=value==='saved'?'客户已有参考费率，仅本次复利试算':value==='0.0005'?'合同条款日费率参考，合同本身不复利':'临时测算日费率，非合同约定';
+      const value=$('reminder-compound-rate').value,rate=value==='saved'?(plan.compoundAccounting?.rate||plan.rate):value,source=value==='saved'?'客户已有参考费率，仅本次复利试算':value==='0.0005'?'合同条款日费率参考，合同本身不复利':'临时测算日费率，非合同约定';
       const trial=reminderCompoundTrial(plan,rate);
       $('reminder-compound-preview').textContent=reminderCompoundMessage(plan,rate,source,trial);$('reminder-compound-summary').textContent=`复利试算合计：${trialMoney(trial.total)}元\n仅供协商参考`; $('copy-reminder-compound').disabled=false;
       return reminderCompoundCopyMessage(plan,trial);
@@ -1312,12 +1324,12 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   }
   function startReminderCopy(plan,button,termIndex=null,type=null){
     pendingReminderCopy={planId:plan.id,button,termIndex,type};$('reminder-copy-error').hidden=true;$('reminder-copy-error').textContent='';
-    const saved=hasReminderRate(plan),defaultButton=saved?'copy-reminder-with-fee':'copy-reminder-without-fee';
-    $('reminder-copy-context').textContent=saved?`默认沿用客户已有每日${reminderRatePercent(plan.rate)}%参考费率，按现有规则分段单利；不代表已核验合同费率。`:'默认不包含违约金；选择按现有规则计算时，缺失/零费率仅本次使用临时每日0.5%（非合同约定）。异常费率须先核对。';
+    const saved=Boolean(plan.compoundAccounting)||hasReminderRate(plan),savedRate=plan.compoundAccounting?.rate||plan.rate,defaultButton=saved?'copy-reminder-with-fee':'copy-reminder-without-fee';
+    $('reminder-copy-context').textContent=plan.compoundAccounting?`当前客户已登记复利收款，日费率${reminderRatePercent(savedRate)}%，默认催款与账本保持同一复利口径。`:saved?`默认沿用客户已有每日${reminderRatePercent(plan.rate)}%参考费率，按现有规则分段单利；不代表已核验合同费率。`:'默认不包含违约金；选择按现有规则计算时，缺失/零费率仅本次使用临时每日0.5%（非合同约定）。异常费率须先核对。';
     $('copy-reminder-without-fee').textContent='不包含违约金'+(saved?'':'（默认）');$('copy-reminder-with-fee').textContent='按现有规则计算违约金'+(saved?'（默认）':'');
     $('copy-reminder-without-fee').classList.toggle('secondary',saved);$('copy-reminder-with-fee').classList.toggle('secondary',!saved);
     $('reminder-compound-panel').hidden=true;$('reminder-compound-preview').textContent='';$('reminder-compound-summary').textContent='';$('copy-reminder-compound').disabled=true;
-    $('reminder-compound-rate').innerHTML=(saved?`<option value="saved">已有参考日费率：${escapeHtml(reminderRatePercent(plan.rate))}%</option>`:'')+'<option value="0.0005">每日0.05% · 合同不复利</option><option value="0.005">每日0.5% · 临时测算</option>';
+    $('reminder-compound-rate').innerHTML=(saved?`<option value="saved">已有参考日费率：${escapeHtml(reminderRatePercent(savedRate))}%</option>`:'')+'<option value="0.0005">每日0.05% · 合同不复利</option><option value="0.005">每日0.5% · 临时测算</option>';
     $('reminder-compound-rate').value=saved?'saved':'0.005';
     $('reminder-copy-dialog').showModal();$(defaultButton).focus();
   }
@@ -1360,18 +1372,30 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   }
   function recomputeCompletedTerms(plan){window.InstallmentLedger.recompute(plan)}
   function previewPaymentChange(plan,paymentId,termIndex,draft){
-    const original=(plan.payments||[]).find(payment=>payment.id===paymentId);
+    const original=(plan.payments||[]).find(payment=>payment.id===paymentId),mode=$('payment-fee-mode').value||'simple',rate=Number($('payment-compound-rate').value)/100;
     // Channel costs are company expenses; unchanged customer accounting keeps its historical split.
-    if(original&&window.InstallmentLedger.amount($('payment-total').value)
+    if(original&&mode===(original.feeMode||'simple')&&(!plan.compoundAccounting||rate===plan.compoundAccounting.rate)&&window.InstallmentLedger.amount($('payment-total').value)
       &&window.InstallmentLedger.cents(draft.total)===window.InstallmentLedger.cents(original.total)
       &&$('payment-date').value===original.date
       &&termIndex===Number(original.startTermIndex??original.allocations?.[0]?.termIndex??plan.completedTerms)){
       const copy=JSON.parse(JSON.stringify(plan)),candidate=copy.payments.find(payment=>payment.id===paymentId);
       return {copy,candidate,unallocated:0,unchangedAccounting:true};
     }
-    try{return window.InstallmentLedger.receive(plan,{id:paymentId||'__payment_draft__',date:$('payment-date').value,total:draft.total,lateFee:0,automatic:true,startTermIndex:termIndex},toISO(todayNoon()))}
+    try{
+      let source=plan;const date=$('payment-date').value;
+      if(plan.compoundAccounting&&mode!=='compound')throw Error('已有复利收款，该客户后续收款沿用复利，不能交叉切回单利。');
+      if(plan.compoundAccounting&&rate!==plan.compoundAccounting.rate)throw Error('已有复利收款，费率已锁定。');
+      if(!plan.compoundAccounting&&mode==='compound'){
+        if(original)throw Error('历史单利收款不能直接改为复利；请先核对并撤销原记录，再重新登记。');
+        const trial=reminderCompoundTrial(plan,rate,date),statement=window.InstallmentLedger.statement(plan,date);
+        const rows=statement.map((row,i)=>({...row,remainingLateFee:Number(trial.rows.find(r=>r.termIndex===i)?.fee||0n)/100}));
+        source=window.InstallmentLedger.activateCompound(plan,date,rate,rows);
+      }
+      return window.InstallmentLedger.receive(source,{id:paymentId||'__payment_draft__',date,total:draft.total,lateFee:0,automatic:true,startTermIndex:termIndex},toISO(todayNoon()));
+    }
     catch(error){return {copy:plan,candidate:null,unallocated:0,error:error.message}}
   }
+  for(const id of ['payment-fee-mode','payment-compound-rate'])$(id).addEventListener('change',updatePaymentPreview);
   let channelFeeManual=false;
   function suggestPaymentFee(){
     const channel=$('payment-channel').value,fee=window.InstallmentLedger.suggestedChannelFee($('payment-total').value,channel,paymentSettings);
@@ -1388,6 +1412,12 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     const plan=plans.find(item=>item.id===$('payment-plan-id').value),termIndex=Number($('payment-term-index').value),draft=paymentDraft();if(!plan)return;
     $('payment-net-received').textContent=draft.cost?money(draft.cost.netReceived)+' 元':'待填写手续费';
     const result=draft.principal>=0?previewPaymentChange(plan,$('payment-id').value,termIndex,draft):null,item=result?installmentItem(result.copy,termIndex):installmentItem(plan,termIndex);
+    const mode=$('payment-fee-mode').value||'simple',rate=Number($('payment-compound-rate').value)/100;
+    if(mode==='simple')$('payment-context').textContent=`${plan.name} · 第 ${termIndex+1} 期 · 单利收款（原口径）`;
+    if(mode==='compound')$('payment-context').textContent=`${plan.name} · 复利收款 · 日费率 ${reminderRatePercent(rate)}% · 按实际收款日锁定并核销；原合同费率不改写。`;
+    $('payment-compound-rate').disabled=mode!=='compound';
+    const balance=result?.candidate?window.InstallmentLedger.statement(result.copy,$('payment-date').value).reduce((sum,row,i)=>toISO(getDueDate(result.copy,i))<=$('payment-date').value?sum+Math.round(row.totalDue*100):sum,0):null;
+    $('preview-account-balance').textContent=balance===null?'待计算':money(balance/100)+' 元';
     $('preview-fee').textContent=money(result?.candidate?.lateFee||0)+' 元';$('preview-principal').textContent=money((result?.candidate?.principal||0)+(result?.candidate?.batteryRent||0))+' 元';
     $('preview-status').textContent=draft.total<=0?'等待填写':draft.lateFee>draft.total?'滞纳金不能超过客户付款金额':item.remaining<=.005?(item.fee>.005?`基础款已清，仍有滞纳金 ${money(item.fee)} 元`:'本期账单已还清'):`部分还款，本期仍欠 ${money(item.remaining)} 元`;
     const allocations=result?.candidate?.allocations||[];$('allocation-preview').innerHTML=allocations.length?`收款冲抵明细：<br>${allocations.map(entry=>`第 ${entry.termIndex+1} 期：合同款 ${money(entry.principal)} 元${entry.batteryRent>0?` · 租电费 ${money(entry.batteryRent)} 元`:''}${entry.lateFee>0?` · 滞纳金 ${money(entry.lateFee)} 元`:''}`).join('<br>')}${result.unallocated>.005?`<br>未分配金额：${money(result.unallocated)} 元`:''}`:'';
@@ -1398,6 +1428,10 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     const plan=plans.find(item=>item.id===planId),payment=paymentId&&(plan?.payments||[]).find(item=>item.id===paymentId),resolvedTerm=payment?Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??termIndex):(plan?openInstallments(plan)[0]?.termIndex:undefined),item=plan&&Number.isInteger(resolvedTerm)&&installmentItem(plan,resolvedTerm);if(!item)return;
     $('payment-plan-id').value=planId;$('payment-term-index').value=resolvedTerm;$('payment-id').value=paymentId;$('payment-date').value=payment?.date||toISO(todayNoon());$('payment-total').value=payment?shortMoney(payment.total):shortMoney(item.total);
     $('payment-dialog-title').textContent=payment?'修改收款记录':'登记本期收款';$('save-payment').textContent=payment?'保存修改':'保存收款记录';$('payment-context').textContent=`${plan.name} · 第 ${resolvedTerm+1} 期 · 本期剩余应付款 ${money(item.remaining)} 元 · 待收滞纳金 ${money(item.fee)} 元`;
+    $('payment-fee-mode').value=payment?.feeMode||(plan.compoundAccounting?'compound':'simple');
+    $('payment-fee-mode').disabled=Boolean(plan.compoundAccounting)||Boolean(payment);
+    $('payment-compound-rate').value=String((plan.compoundAccounting?.rate||Number(plan.rate)||.005)*100);$('payment-compound-rate').readOnly=Boolean(plan.compoundAccounting)||Boolean(payment);
+    $('payment-mode-hint').textContent=plan.compoundAccounting?'复利口径及费率已锁定，后续催款和收款保持一致；撤销或修改从最后一笔开始。':payment?'历史收款保持原计算方式；不能直接改写历史分配。':'复利须经双方协商确认；首次保存锁定当日费用，后续本客户收款和催款沿用同一复利口径，不能随笔交叉切换。';
     channelFeeManual=Boolean(payment);$('payment-channel').value=payment?.paymentChannel||'CASH';
     if(payment?.paymentChannel){$('payment-channel-fee').value=payment.channelFee.toFixed(2);$('payment-channel-fee').readOnly=payment.paymentChannel==='CASH';$('payment-channel-hint').textContent='保留此笔已登记手续费，修改默认费率不会重算。'}else if(payment){$('payment-channel').value='';$('payment-channel-fee').value='';$('payment-channel-fee').readOnly=false;$('payment-channel-hint').textContent='历史收款渠道未知，修改时请明确选择渠道及实际手续费。'}else suggestPaymentFee();
     updatePaymentPreview();$('payment-dialog').showModal();
@@ -1529,6 +1563,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     const plan={...JSON.parse(JSON.stringify(existing||{})),id,name:$('customer-name').value.trim(),plate:$('plate').value.trim(),vehicle:$('vehicle').value.trim(),vehiclePrice:contract.price,downPaymentRate:contract.downRate,depositMonths,monthlyRate:contract.monthlyRatePct,loanAmount:contract.loan,amount:round2(contract.monthlyPayment),dueDay,rate:existing&&Number($('plan-rate').value)===Number(existing.rate)*100?existing.rate:Number($('plan-rate').value)/100,startDate:$('start-date').value,totalTerms,completedTerms,openingCompletedTerms:existing?.payments?.length?openingCompletedTerms(existing):completedTerms,notes:$('plan-notes').value.trim(),payments:JSON.parse(JSON.stringify(existing?.payments||[]))};
     try{
       window.InstallmentLedger.assertRateChange(existing,plan.rate);
+      if(existing?.compoundAccounting&&['amount','startDate','dueDay','totalTerms','completedTerms','batteryMonthlyRent','batteryRentEffectiveTermIndex'].some(k=>String(plan[k])!==String(existing[k])))throw Error('已有复利收款，不能修改计费基础；请先核对并撤销复利收款。');
       if(existing?.payments?.length){
         const financialKeys=['vehiclePrice','downPaymentRate','monthlyRate','loanAmount'];
         const missing=value=>value===undefined||value===null||value==='';
@@ -1579,8 +1614,10 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     if(draft.principal>.005&&!result.candidate?.allocations.length){error.textContent='当前没有可冲抵的剩余合同应付款。';return}
     Object.assign(result.candidate,draft.cost);
     if(!paymentId)result.candidate.id=`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    if(!validBackupPlan(result.copy)){error.textContent='收款数据校验失败，未保存；请核对计算方式及历史记录。';return}
     const previousPlan=JSON.parse(JSON.stringify(plan)),previousRaw=planStorageState.raw;
     plan.payments=result.copy.payments;
+    if(result.copy.compoundAccounting)plan.compoundAccounting=result.copy.compoundAccounting;
     if(!result.unchangedAccounting){if(result.copy.legacyLateFeeAllocations)plan.legacyLateFeeAllocations=result.copy.legacyLateFeeAllocations;plan.openingCompletedTerms=result.copy.openingCompletedTerms;plan.completedTerms=result.copy.completedTerms;}
     try{if(!savePlans()){plans[plans.indexOf(plan)]=previousPlan;return}}catch(writeError){if(planStorageState.raw===previousRaw){plans[plans.indexOf(plan)]=previousPlan;error.textContent='收款未保存，浏览器存储写入失败：'+writeError.message;return}renderPlanModule();$('payment-dialog').close();alert('收款已写入，但备份状态记录异常，请立即导出完整备份：'+writeError.message);return}renderPlanModule();$('payment-dialog').close();
   });
@@ -1595,7 +1632,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     if(button.dataset.reverseWaiver){const plan=plans.find(p=>p.id===button.dataset.waiverPlan);if(plan&&ensureStorageWritable()&&confirm('撤销这笔减免后，对应滞纳金将恢复待收，是否继续？')){try{Object.assign(plan,window.InstallmentLedger.reverseWaiver(plan,button.dataset.reverseWaiver,toISO(todayNoon())));savePlans();renderPlanModule()}catch(error){alert(error.message)}}}
     if(button.dataset.receive)openPaymentDialog(button.dataset.receive,Number(button.dataset.termIndex));
     if(button.dataset.editPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.editPayment);if(payment)openPaymentDialog(plan.id,Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??plan.completedTerms),payment.id)}
-    if(button.dataset.undoPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.undoPayment);if(plan&&payment&&confirm(`确定撤销 ${payment.date} 收到的 ${money(payment.total)} 元记录吗？撤销后各期欠款会自动恢复。`)){try{Object.assign(plan,window.InstallmentLedger.undo(plan,payment.id));savePlans();renderPlanModule()}catch(error){alert(error.message)}}}
+    if(button.dataset.undoPayment){const plan=plans.find(item=>item.id===button.dataset.paymentPlan),payment=plan?.payments?.find(item=>item.id===button.dataset.undoPayment);if(plan&&payment&&confirm(`确定撤销 ${payment.date} 收到的 ${money(payment.total)} 元记录吗？撤销后各期欠款会自动恢复。`)){try{const next=window.InstallmentLedger.undo(plan,payment.id);Object.assign(plan,next);if(!next.compoundAccounting)delete plan.compoundAccounting;savePlans();renderPlanModule()}catch(error){alert(error.message)}}}
     if(button.dataset.copyOverdue){const plan=plans.find(item=>item.id===button.dataset.copyOverdue);if(plan)startReminderCopy(plan,button)}
     if(button.dataset.copyReminder){const plan=plans.find(item=>item.id===button.dataset.copyReminder);if(plan)startReminderCopy(plan,button,Number(button.dataset.termIndex),button.dataset.reminderType)}
   });
