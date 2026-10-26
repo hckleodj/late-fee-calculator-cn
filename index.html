@@ -331,6 +331,211 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
 #finance-panel #finance-copy:hover{background:#f3f6f7}
 .nav button:focus-visible,#reminders-panel button:focus-visible{outline:2px solid var(--hoku-focus);outline-offset:-3px}
 </style>
+<style id="hoku-business-presentation">
+/* TOOL-011 / DESIGN-UI-001. Presentation only; no business or storage hooks. */
+:root{--hoku-business-ink:#243846;--hoku-business-muted:#526879;--hoku-business-action:#263541;--hoku-business-risk:#943e2e;--hoku-business-success:#176e64}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel),:is(dialog,#payment-dialog,#reminder-copy-dialog){--blue:#176e64;--blue-dark:#234b46;--green:#176e64;--text:#243846;--muted:#526879;--line:#e3e8ed;--light:#f3f6f8;--danger:#943e2e;font-variant-numeric:tabular-nums lining-nums;color:var(--text)}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel)>section{padding:30px 0 24px;min-width:0;background:transparent}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) .section-title{font-size:24px;line-height:1.4;font-weight:650;letter-spacing:-.35px;margin:0 0 8px}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) .section-help{font-size:13px;line-height:1.7;color:var(--muted);max-width:78ch}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) :is(h3,h4){line-height:1.55;overflow-wrap:anywhere}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) :is(.field,.grid,.inputs,.item-top>div,.ledger-card-top>div){min-width:0}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) :is(.inputs,.grid),:is(dialog,#payment-dialog,#reminder-copy-dialog) .inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 16px;align-items:start}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) .field label,:is(dialog,#payment-dialog,#reminder-copy-dialog) .field label,#cloud-login label{display:block;margin:0 0 8px;color:#344858;font-size:13px;font-weight:550;line-height:1.5}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) .field :is(input:not([type=checkbox]):not([type=file]),select),:is(dialog,#payment-dialog,#reminder-copy-dialog) .field :is(input,select),#cloud-login input{display:block;width:100%;min-width:0;max-width:100%;height:44px;padding:0 12px;border:1px solid #8494a3;border-radius:6px;background:#fff;color:#21313f;font-family:inherit;font-size:16px;line-height:normal}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) input[type=number],:is(dialog,#payment-dialog,#reminder-copy-dialog) input[type=number]{text-align:right;font-variant-numeric:tabular-nums lining-nums}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) input[readonly],:is(dialog,#payment-dialog,#reminder-copy-dialog) input[readonly]{background:#f3f5f7!important;color:#4c6172!important}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) :is(input,textarea)::placeholder,:is(dialog,#payment-dialog,#reminder-copy-dialog) input::placeholder{color:#657483;opacity:1}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) :is(.note,.field-hint,.local-note,.item-sub,.ledger-secondary-money,.snapshot-meta),:is(dialog,#payment-dialog,#reminder-copy-dialog) :is(.note,.field-hint,.backup-warning,.backup-section-help,.snapshot-meta){color:var(--muted);font-size:12px;line-height:1.7;text-align:left;overflow-wrap:anywhere}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) button,:is(dialog,#payment-dialog,#reminder-copy-dialog) button{min-width:0;min-height:44px;height:auto;padding:10px 14px;border:1px solid var(--hoku-business-action);border-radius:6px;background:var(--hoku-business-action);color:#fff;font-family:inherit;font-size:13px;line-height:1.6;font-weight:550;box-shadow:none;transform:none;white-space:normal;overflow-wrap:anywhere}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) button:hover,:is(dialog,#payment-dialog,#reminder-copy-dialog) button:hover{filter:none;background:#344755}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) button.secondary,:is(dialog,#payment-dialog,#reminder-copy-dialog) button.secondary{background:#fff;border-color:#8494a3;color:#3d5968}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) button.danger,:is(dialog,#payment-dialog,#reminder-copy-dialog) button.danger,:is(dialog,#payment-dialog,#reminder-copy-dialog) button.undo{background:#fff3ef;border-color:#b78a7d;color:#943e2e}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) button.ok,:is(dialog,#payment-dialog,#reminder-copy-dialog) button.ok{background:#176e64;color:#fff;border-color:#176e64}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) button:disabled,:is(dialog,#payment-dialog,#reminder-copy-dialog) button:disabled{opacity:1;color:#526575;background:#eef1f4;border-color:#d3dce3;cursor:not-allowed}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) :is(button,input,select,textarea,summary):focus-visible,:is(dialog,#payment-dialog,#reminder-copy-dialog) :is(button,input,select,textarea,summary):focus-visible{outline:2px solid #08796e;outline-offset:3px}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) summary,:is(dialog,#payment-dialog,#reminder-copy-dialog) summary{min-height:44px;display:list-item;align-content:center;padding:10px 0;line-height:1.6;cursor:pointer;color:#3b5c6c;font-size:13px}
+:is(#customers-panel,#rental-ledger-panel,#settings-panel) :is(.empty,.ledger-empty){padding:32px 20px;border:0;border-left:2px solid #a5b6bf;border-radius:0;background:#fff;color:#526879;text-align:left;font-size:13px;line-height:1.8}
+/* Customers: readable account rows, local markers and consistent money columns. */
+#customers-panel .plans-list{gap:20px}
+#customers-panel .plan-item{position:relative;padding:24px;border:0;border-radius:0;background:#fff;box-shadow:none;min-width:0}
+#customers-panel .plan-item:not(:last-child)::after{content:"";position:absolute;bottom:-10px;left:24px;width:48px;height:1px;background:#cbd5dc}
+#customers-panel .item-top{gap:12px;flex-wrap:wrap}
+#customers-panel .item-top>div{padding-left:12px;border-left:2px solid #829d96;flex:1 1 180px}
+#customers-panel .item-top h4{font-size:16px;font-weight:650;margin:0}
+#customers-panel .badge{padding:2px 0;background:transparent;color:#3f6b61;font-size:12px;border-radius:0}
+#customers-panel .plan-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 24px;margin:20px 0;font-size:12px;color:#526879;line-height:1.7}
+#customers-panel .plan-meta>span{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 8px;min-width:0}
+#customers-panel .plan-meta strong{margin-left:auto;text-align:right;color:#243846;font-size:13px;font-weight:600;overflow-wrap:anywhere}
+#customers-panel .item-money{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 24px;margin:16px 0;padding:16px 0;border-top:1px solid #e7ecef;border-bottom:1px solid #e7ecef;font-size:12px;color:#526879;line-height:1.6}
+#customers-panel .item-money>span{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 8px;min-width:0}
+#customers-panel .item-money strong{margin-left:auto;text-align:right;overflow-wrap:anywhere;font-size:15px;font-weight:600;color:#243846}
+#customers-panel .customer-bills{margin-top:16px}
+#customers-panel .reminder-item{margin:12px 0;padding:18px 16px;border:0;border-radius:0;background:#f6f8fa}
+#customers-panel .reminder-item.overdue{border-left:2px solid #af9186}
+#customers-panel .reminder-item.today{border-left:2px solid #829d96}
+#customers-panel .reminder-item.upcoming{border-left:2px solid #aca085}
+#customers-panel .reminder-item .item-money{grid-template-columns:repeat(2,minmax(0,1fr));border:0;padding:0}
+#customers-panel .overdue-installment{border-bottom-color:#dce4e9}
+#customers-panel .overdue-installment-line{justify-content:space-between;align-items:baseline}
+#customers-panel .overdue-installment-line strong{margin-left:auto;text-align:right}
+#customers-panel :is(.plan-actions,.item-actions,.history-actions){display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+#customers-panel :is(.plan-actions,.item-actions,.history-actions) button{width:auto;margin:0}
+#customers-panel .history-row{border-bottom:1px solid #e7ecef;padding:14px 0;line-height:1.8;overflow-wrap:anywhere;color:#526879}
+#customers-panel .payment-history{border-top:1px solid #e7ecef;padding-top:4px}
+#customers-panel .danger-zone{margin-top:12px}
+#customers-panel .danger-zone summary{display:inline-block;color:#526879}
+#customers-panel #plan-form-section{padding:24px;background:#fff;margin-top:24px;scroll-margin-top:120px}
+#customers-panel #plan-form-title{font-size:19px}
+#customers-panel .plan-form{padding:0;border:0;border-radius:0;background:transparent}
+#customers-panel .form-actions{grid-template-columns:minmax(0,1fr) minmax(100px,.4fr);max-width:480px;margin-top:24px}
+/* Rental registry and the inline receipt/adjustment flows share the same form grid. */
+#rental-ledger-panel{background:transparent}
+#rental-ledger-panel .ledger-heading{align-items:flex-start;margin-bottom:24px}
+#rental-ledger-panel #ledger-new{min-height:44px;height:auto;margin:0;background:#263541;font-size:13px;padding:10px 16px}
+#rental-ledger-panel .ledger-tabs{display:flex;gap:8px;padding:0;margin:24px 0 20px;border:0;border-radius:0;background:transparent}
+#rental-ledger-panel .ledger-tabs button{flex:0 1 auto;width:auto;margin:0;background:#fff;color:#4a6070;border-color:#8494a3;padding:10px 16px}
+#rental-ledger-panel .ledger-tabs button.active{background:#edf5f2;color:#17665c;border-color:#08796e}
+#rental-ledger-panel .ledger-list{gap:20px}
+#rental-ledger-panel .ledger-card{position:relative;border:0;border-radius:0;padding:24px;background:#fff;box-shadow:none;min-width:0}
+#rental-ledger-panel .ledger-card:not(:last-child)::after{content:"";position:absolute;bottom:-10px;left:24px;width:48px;height:1px;background:#cbd5dc}
+#rental-ledger-panel .ledger-card-top{gap:12px;flex-wrap:wrap}
+#rental-ledger-panel .ledger-card-top>div{flex:1 1 180px;padding-left:12px;border-left:2px solid #829d96}
+#rental-ledger-panel .ledger-card-top h3{font-size:16px;font-weight:650;color:#243846}
+#rental-ledger-panel .ledger-state-badge{padding:3px 0;border-radius:0;background:transparent;color:#176e64;font-size:12px;line-height:1.6}
+#rental-ledger-panel .ledger-state-badge.returned{color:#806039}
+#rental-ledger-panel .ledger-state-badge.settled{color:#526879}
+#rental-ledger-panel .ledger-plate{background:transparent;color:#526879;padding:0;font-size:12px;line-height:1.6}
+#rental-ledger-panel .ledger-contact-line{color:#526879;overflow-wrap:anywhere}
+#rental-ledger-panel .ledger-money{gap:24px;padding:18px 0;border-top:1px solid #e7ecef}
+#rental-ledger-panel .ledger-money>div+div{padding:0;border:0}
+#rental-ledger-panel .ledger-money :is(span,strong){text-align:right}
+#rental-ledger-panel .ledger-money span{color:#526879;font-size:12px;line-height:1.6}
+#rental-ledger-panel .ledger-money strong{font-size:24px;line-height:1.4;letter-spacing:0;font-weight:600;color:#243846}
+#rental-ledger-panel .ledger-money strong.unpaid{color:#943e2e}
+#rental-ledger-panel .ledger-money strong.paid{color:#176e64}
+#rental-ledger-panel .ledger-secondary-money{justify-content:flex-end;overflow-wrap:anywhere}
+#rental-ledger-panel .ledger-dates{padding-top:16px;border-color:#e7ecef;color:#526879;font-size:12px}
+#rental-ledger-panel .ledger-dates strong{color:#344b5d;overflow-wrap:anywhere}
+#rental-ledger-panel .ledger-more{border-color:#e7ecef;color:#526879;padding-top:4px}
+#rental-ledger-panel .ledger-record{border-color:#e7ecef;min-width:0;overflow-wrap:anywhere}
+#rental-ledger-panel .ledger-record .ledger-card-top>div{padding-left:0;border:0}
+#rental-ledger-panel .ledger-actions button{flex:0 1 auto;min-height:44px;height:auto;padding:10px 14px;margin:0;background:#263541;border-color:#263541;color:white;font-size:13px}
+#rental-ledger-panel .ledger-actions .secondary{background:#fff;color:#3d5968;border-color:#8494a3}
+#rental-ledger-panel .ledger-actions .ledger-subaction{background:#f3f6f8;color:#526879;border-color:transparent}
+#rental-ledger-panel .ledger-return-alert{padding:16px 20px;margin:0 0 16px;border:0;border-left:2px solid #b59c76;border-radius:0;background:#f9f6ef}
+#rental-ledger-panel .ledger-return-alert p{color:#6d5c3d;overflow-wrap:anywhere}
+#rental-ledger-panel :is(#ledger-form,#ledger-payment-form,#ledger-adjustment-form){padding:24px 24px 0;margin:24px 0;background:#fff;scroll-margin-top:120px;min-width:0}
+#rental-ledger-panel :is(#ledger-form,#ledger-payment-form,#ledger-adjustment-form)>h3{margin:0 0 20px;font-size:19px;color:#243846}
+#ledger-form fieldset{padding:16px 0 24px;border:0;border-top:1px solid #e3e8ed;border-radius:0;margin:20px 0 0;background:transparent}
+#ledger-form legend{padding:0 12px 0 0;color:#3b5c52;font-size:14px;font-weight:650}
+#ledger-form .grid{gap:20px 16px}
+#ledger-form :is(.ledger-boundary-toggle,.ledger-manual-toggle){display:flex;align-items:center;gap:8px;min-height:44px;font-size:12px;color:#526879;margin:6px 0 0}
+#ledger-form .ledger-boundary-toggle input{display:inline-block;width:18px;height:18px;padding:0;flex:0 0 18px;accent-color:#176e64}
+#ledger-form #ledger-identity-details{padding:0 14px;background:#f6f8fa;margin-top:20px;border-radius:6px}
+#rental-ledger-panel .ledger-savebar{position:sticky;bottom:0;left:auto;transform:none;width:100%;z-index:4;display:grid;grid-template-columns:minmax(88px,1fr) minmax(0,2fr);gap:12px;padding:16px 0 calc(16px + env(safe-area-inset-bottom,0px));margin-top:24px;border-top:1px solid #e3e8ed;background:#fff;box-shadow:none}
+#rental-ledger-panel .ledger-savebar button{height:auto;min-height:44px;margin:0}
+#rental-ledger-panel :is(#ledger-payment-form,#ledger-adjustment-form) .grid+.grid{margin-top:20px}
+#rental-ledger-panel :is(#ledger-payment-error,#ledger-adjustment-error){color:#943e2e}
+#rental-ledger-panel #ledger-status{color:#176e64;font-size:13px}
+/* Settings: preserve every safety statement, confirmation and restore boundary. */
+#settings-panel>section{max-width:900px}
+#settings-panel .data-safety{border:0;border-left:2px solid #93aaa4;border-radius:0;padding:16px 20px;background:#fff;color:#526879}
+#settings-panel .data-safety strong{color:#176e64;font-size:14px}
+#settings-panel .data-safety.required{border-left-color:#b58173;background:#fff3ef}
+#settings-panel .data-safety.required strong{color:#943e2e}
+#settings-panel .data-safety.pending strong{color:#806039}
+#settings-panel #open-backup{width:auto;margin:16px 0 12px}
+#settings-panel h3{margin:28px 0 8px;padding-top:24px;border-top:1px solid #dce4e9;font-size:17px;font-weight:650}
+#channel-settings-form{margin-top:20px;padding:24px;background:#fff}
+#channel-settings-form button{width:auto;margin-top:24px}
+/* All native dialogs: one scale, visible keyboard focus and one scroll owner. */
+:is(dialog,#payment-dialog,#reminder-copy-dialog){width:min(640px,calc(100% - 32px));max-width:calc(100% - 24px);max-height:calc(100dvh - 32px);border:1px solid #d7e0e6;border-radius:10px;padding:0;background:#fff;box-shadow:0 24px 80px #14202e33;overflow:hidden}
+:is(dialog,#payment-dialog,#reminder-copy-dialog)::backdrop{background:#172b3b80}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-body,:is(dialog,#payment-dialog,#reminder-copy-dialog).required-dialog .dialog-body{margin:0;padding:24px;max-height:calc(100dvh - 34px);overflow:auto;overscroll-behavior:contain;scroll-padding:16px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-body h2{margin:0 0 8px;font-size:21px;line-height:1.45;font-weight:650;color:#243846;overflow-wrap:anywhere}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-body h3{font-size:16px;line-height:1.5;margin:0 0 8px;color:#344b5d}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-context{font-size:13px;line-height:1.75;color:#526879;margin:0 0 20px;overflow-wrap:anywhere}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .field+.field:not(.inputs .field){margin-top:20px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .inputs+.inputs{margin-top:20px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .preview-row{align-items:baseline;gap:6px 16px;min-width:0;line-height:1.7;font-size:13px;flex-wrap:wrap}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .preview-row>span{flex:1 1 160px;min-width:0}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .preview-row strong{flex:0 1 auto;margin-left:auto;text-align:right;font-weight:600;overflow-wrap:anywhere;min-width:0}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .payment-preview{padding:16px;background:#f3f6f8;border:0;border-radius:6px;margin-top:20px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .preview-row.total{border-color:#d5dfe5}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .allocation-preview{font-size:12px;line-height:1.8;color:#526879;overflow-wrap:anywhere}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) :is(.payment-error,.restore-danger){color:#943e2e;line-height:1.7;overflow-wrap:anywhere}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .payment-error:not(:empty){border-left:2px solid #b58173;background:#fff3ef;padding:10px 12px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) textarea{max-width:100%;min-height:180px;border:1px solid #8494a3;border-radius:6px;background:#fbfcfd;color:#293e4e;font-family:inherit;font-size:13px;line-height:1.8;padding:14px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px;padding-top:16px;border-top:1px solid #e3e8ed}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-actions button{margin:0}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;margin:20px 0 24px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .metric{min-width:0;min-height:80px;padding:14px 0;text-align:left;border-radius:0;background:transparent;border-bottom:1px solid #e7ecef}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .metric span{color:#526879;font-size:12px;line-height:1.6}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .metric strong{font-size:18px;text-align:right;color:#243846;line-height:1.5;margin-top:6px;font-weight:600;overflow-wrap:anywhere}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-box{padding:0;border:0;border-radius:0;background:transparent}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-primary>.backup-box{padding:16px;margin-bottom:24px;background:#f6f8fa;border-left:2px solid #93aaa4}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-actions button{margin:0}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-primary>.backup-box .backup-actions{margin-top:16px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) #cloud-status{font-size:13px;line-height:1.7;color:#526879;overflow-wrap:anywhere}
+#cloud-login{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px;align-items:start}
+#cloud-login input{margin-top:8px}
+#cloud-login button{grid-column:1/-1;margin:0}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) :is(.snapshot-item,.restore-preview,.recovery-report){border:0;border-radius:0;padding:14px 0;border-bottom:1px solid #e3e8ed;background:transparent;color:#344b5d;line-height:1.8;overflow-wrap:anywhere}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .snapshot-item button{margin-top:12px}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-confirm-step{border-radius:0;border-left:2px solid #b59c76;background:#f9f6ef;color:#6d5c3d;line-height:1.8}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) .migration-progress{background:#f3f6f8;color:#344b5d;font-size:13px;overflow-wrap:anywhere}
+:is(dialog,#payment-dialog,#reminder-copy-dialog) :is(.migration-summary,.migration-complete){background:#edf5f2;color:#245d50;line-height:1.8;overflow-wrap:anywhere}
+#rental-dialog{width:min(900px,calc(100% - 24px));max-height:calc(100dvh - 24px)}
+#rental-dialog .dialog-body{padding:24px;max-height:calc(100dvh - 26px)}
+#rental-dialog .rental-preview-tools{gap:10px;margin:16px 0;flex-wrap:wrap}
+#rental-dialog .rental-preview-tools button{margin:0;flex:1 1 120px;height:auto;min-height:44px}
+#rental-dialog #rental-close{background:#fff;color:#3d5968;border-color:#8494a3}
+#rental-dialog #rental-preview{border-top:1px solid #dce4e9;max-width:100%}
+/* The printable proposal remains fixed-size and complete inside its scroll region. */
+@media(min-width:1200px){#customers-panel .plan-meta{grid-template-columns:repeat(4,minmax(0,1fr))}#rental-ledger-panel .ledger-money{grid-template-columns:repeat(2,minmax(0,1fr));max-width:720px;margin-left:auto}}
+@media(max-width:1099px){#customers-panel #plan-form-section,#rental-ledger-panel :is(#ledger-form,#ledger-payment-form,#ledger-adjustment-form){scroll-margin-top:160px}}
+@media(max-width:620px){
+ :is(#customers-panel,#rental-ledger-panel,#settings-panel)>section{padding:20px 0}
+ :is(#customers-panel,#rental-ledger-panel,#settings-panel) .section-title{font-size:22px}
+ :is(#customers-panel,#rental-ledger-panel,#settings-panel) :is(.inputs,.grid),:is(dialog,#payment-dialog,#reminder-copy-dialog) .inputs{grid-template-columns:minmax(0,1fr)}
+ :is(#customers-panel,#rental-ledger-panel,#settings-panel) .field.full{grid-column:1/-1}
+ #customers-panel :is(.plan-item,#plan-form-section),#rental-ledger-panel .ledger-card{padding:20px 0}
+ #customers-panel .plan-item:not(:last-child)::after,#rental-ledger-panel .ledger-card:not(:last-child)::after{left:0}
+ #customers-panel .plan-meta{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+ #customers-panel .plan-meta>span{display:grid;grid-template-columns:minmax(0,1fr)}
+ #customers-panel .plan-meta strong{width:100%}
+ #customers-panel .item-money,#customers-panel .reminder-item .item-money{grid-template-columns:minmax(0,1fr);gap:8px}
+ #customers-panel .reminder-item{padding:16px 12px}
+ #customers-panel :is(.plan-actions,.item-actions,.history-actions) button{flex:1 1 auto}
+ #customers-panel .form-actions{grid-template-columns:minmax(0,1fr);width:100%;max-width:none}
+ #rental-ledger-panel .ledger-heading{gap:12px;flex-wrap:wrap}
+ #rental-ledger-panel .ledger-heading>div{flex:1 1 170px}
+ #rental-ledger-panel .ledger-tabs{gap:6px}
+ #rental-ledger-panel .ledger-tabs button{flex:1 1 0;padding:10px 6px;font-size:12px}
+ #rental-ledger-panel .ledger-money{gap:16px}
+ #rental-ledger-panel .ledger-money strong{font-size:20px}
+ #rental-ledger-panel .ledger-actions button{flex:1 1 40%;padding:10px 8px;font-size:12px}
+ #rental-ledger-panel :is(#ledger-form,#ledger-payment-form,#ledger-adjustment-form){padding:20px 0 0}
+ #ledger-form .grid{grid-template-columns:minmax(0,1fr)}
+ #channel-settings-form{padding:20px 0}
+ #settings-panel #open-backup,#channel-settings-form button{width:100%}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog){width:calc(100% - 24px);max-height:calc(100dvh - 24px);border-radius:8px}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-body,:is(dialog,#payment-dialog,#reminder-copy-dialog).required-dialog .dialog-body,#payment-dialog .dialog-body,#reminder-copy-dialog .dialog-body,#rental-dialog .dialog-body{padding:20px 16px;max-height:calc(100dvh - 26px)}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-body h2{font-size:20px}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog) .summary{gap:0 16px}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog) .metric strong{font-size:16px}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog) .dialog-actions{gap:10px}
+ #cloud-login{grid-template-columns:minmax(0,1fr)}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-primary>.backup-box{padding:14px 12px}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-actions{grid-template-columns:minmax(0,1fr)}
+ :is(dialog,#payment-dialog,#reminder-copy-dialog) .backup-primary>.backup-box .backup-actions{grid-template-columns:minmax(0,1fr)}
+ #reminder-copy-dialog button{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){:is(#customers-panel,#rental-ledger-panel,#settings-panel,:is(dialog,#payment-dialog,#reminder-copy-dialog)) *{scroll-behavior:auto;transition:none}}
+
+</style>
 </head>
 <body>
 <main><div class="card">
@@ -557,7 +762,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   </div>
   <button type="button" id="cancel-reminder-copy" class="secondary">取消</button>
 </div></dialog>
-<dialog id="payment-dialog">
+<dialog aria-labelledby="payment-dialog-title" id="payment-dialog">
   <form class="dialog-body" id="payment-form">
     <input id="payment-plan-id" type="hidden"><input id="payment-term-index" type="hidden"><input id="payment-id" type="hidden">
     <h2 id="payment-dialog-title">登记本期收款</h2><p class="dialog-context" id="payment-context"></p>
@@ -581,17 +786,17 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     <div class="dialog-actions"><button class="secondary" type="button" id="cancel-payment">取消</button><button type="submit" id="save-payment">保存收款记录</button></div>
   </form>
 </dialog>
-<dialog id="waiver-dialog"><form class="dialog-body" id="waiver-form">
-  <h2>滞纳金减免</h2><p id="waiver-context" class="dialog-context"></p>
+<dialog aria-labelledby="waiver-dialog-title" id="waiver-dialog"><form class="dialog-body" id="waiver-form">
+  <h2 id="waiver-dialog-title">滞纳金减免</h2><p id="waiver-context" class="dialog-context"></p>
   <input id="waiver-plan-id" type="hidden"><input id="waiver-term" type="hidden">
   <div class="field"><label for="waiver-amount">本次减免金额（元）</label><input id="waiver-amount" type="number" min="0.01" step="0.01" required></div>
   <div class="field"><label for="waiver-reason">减免原因</label><input id="waiver-reason" required placeholder="例如：协商减免"></div>
   <p class="note">仅限当期基础款全额付清后；减免单独留记录，不计入实收。</p><p id="waiver-error" class="payment-error"></p>
   <div class="dialog-actions"><button id="cancel-waiver" class="secondary" type="button">取消</button><button type="submit">保存减免</button></div>
 </form></dialog>
-<dialog id="settlement-dialog">
+<dialog aria-labelledby="settlement-dialog-title" id="settlement-dialog">
   <div class="dialog-body">
-    <h2>合同结清核算</h2><p class="dialog-context" id="settlement-context"></p>
+    <h2 id="settlement-dialog-title">合同结清核算</h2><p class="dialog-context" id="settlement-context"></p>
     <div class="summary" aria-live="polite">
       <div class="metric"><span>合同贷款金额</span><strong id="settlement-loan-result">0.00 元</strong></div>
       <div class="metric"><span>合同总利息</span><strong id="settlement-total-interest">0.00 元</strong></div>
@@ -606,12 +811,12 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     <div class="dialog-actions"><button class="secondary" type="button" id="close-settlement">关闭</button><button type="button" id="copy-settlement">复制核算结果</button></div>
   </div>
 </dialog>
-<dialog id="backup-dialog">
+<dialog aria-labelledby="backup-dialog-title" id="backup-dialog">
   <div class="dialog-body">
-    <h2>数据备份与恢复</h2><p class="dialog-context">人工备份与恢复在当前浏览器完成；连接云账号后，完整快照会上传至配置的云项目。</p>
+    <h2 id="backup-dialog-title">数据备份与恢复</h2><p class="dialog-context">人工备份与恢复在当前浏览器完成；连接云账号后，完整快照会上传至配置的云项目。</p>
     <div class="backup-box">
       <div class="backup-primary">
-        <div class="backup-box"><h3>自动云备份</h3><p id="cloud-status">未连接；本地记账继续可用。</p><p class="note">仅在工具箱打开时自动备份；关闭后不会继续。人工 JSON 备份仍需独立确认。</p><form id="cloud-login"><label>邮箱<input id="cloud-email" type="email" autocomplete="username" required></label><label>密码<input id="cloud-password" type="password" autocomplete="off" required></label><button>连接云备份</button></form><div class="backup-actions"><button type="button" id="cloud-now">立即备份 / 重试</button><button type="button" id="cloud-list">查看云备份</button><button type="button" id="cloud-logout">退出云账号</button></div><div id="cloud-items"></div><p class="note">恢复：下载经校验的完整快照，再用本页 JSON 文件恢复，预览并明确确认完整替换。</p></div><h3 class="backup-section-title">完整 JSON 文件备份</h3>
+        <div class="backup-box"><h3>自动云备份</h3><p id="cloud-status">未连接；本地记账继续可用。</p><p class="note">仅在工具箱打开时自动备份；关闭后不会继续。人工 JSON 备份仍需独立确认。</p><form id="cloud-login"><label>邮箱<input id="cloud-email" type="email" autocomplete="username" required></label><label>密码<input id="cloud-password" type="password" autocomplete="off" required></label><button>连接云备份</button></form><div class="backup-actions"><button class="secondary" type="button" id="cloud-now">立即备份 / 重试</button><button class="secondary" type="button" id="cloud-list">查看云备份</button><button class="secondary" type="button" id="cloud-logout">退出云账号</button></div><div id="cloud-items"></div><p class="note">恢复：下载经校验的完整快照，再用本页 JSON 文件恢复，预览并明确确认完整替换。</p></div><h3 class="backup-section-title">完整 JSON 文件备份</h3>
         <p class="backup-section-help">请在 OPPO 系统浏览器中下载完整文件。下载动作不代表备份完成，还需要到“文件管理 / 下载”确认文件存在。</p>
         <button type="button" id="export-backup">立即下载完整备份</button>
       </div>
@@ -628,32 +833,32 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     <div class="dialog-actions"><button class="secondary" type="button" id="close-backup">关闭</button></div>
   </div>
 </dialog>
-<dialog id="backup-confirm-dialog">
+<dialog aria-labelledby="backup-confirm-dialog-title" id="backup-confirm-dialog">
   <div class="dialog-body">
-    <h2>确认备份文件已保存？</h2>
+    <h2 id="backup-confirm-dialog-title">确认备份文件已保存？</h2>
     <p class="dialog-context">请确认你已经在手机“文件管理 / 下载”中看到本次完整 JSON 备份文件。仅触发下载但没有看到文件，不算完成备份。</p>
     <div class="dialog-actions"><button class="secondary" type="button" id="continue-saving-backup">返回继续检查</button><button type="button" id="finish-backup-confirmation">确认文件已保存</button></div>
   </div>
 </dialog>
-<dialog id="snapshots-dialog">
+<dialog aria-labelledby="snapshots-dialog-title" id="snapshots-dialog">
   <div class="dialog-body">
-    <h2>本地历史版本</h2>
+    <h2 id="snapshots-dialog-title">本地历史版本</h2>
     <p class="snapshot-notice">仅用于当前浏览器内误删、误改后的应急恢复，不能替代外部备份。最多保留最近10个版本。</p>
     <div class="snapshot-list" id="snapshot-list"></div>
     <div class="dialog-actions"><button class="secondary" type="button" id="close-snapshots">关闭</button></div>
   </div>
 </dialog>
-<dialog id="snapshot-preview-dialog">
+<dialog aria-labelledby="snapshot-preview-dialog-title" id="snapshot-preview-dialog">
   <div class="dialog-body">
-    <h2>恢复预览</h2>
+    <h2 id="snapshot-preview-dialog-title">恢复预览</h2>
     <div class="restore-preview" id="snapshot-preview"></div>
     <p class="restore-danger">恢复会覆盖当前客户数据。恢复前系统会先自动保存一份“恢复前快照”。</p>
     <div class="dialog-actions"><button class="secondary" type="button" id="cancel-snapshot-restore">取消</button><button class="danger" type="button" id="restore-snapshot">确认恢复此版本</button></div>
   </div>
 </dialog>
-<dialog id="recovery-dialog">
+<dialog aria-labelledby="recovery-dialog-title" id="recovery-dialog">
   <div class="dialog-body">
-    <h2>客户数据只读诊断</h2>
+    <h2 id="recovery-dialog-title">客户数据只读诊断</h2>
     <p class="dialog-context">只读取当前网页可访问的本地数据，不初始化、不迁移、不删除，也不会上传客户资料。</p>
     <p class="recovery-status" id="recovery-status">准备检查原始数据。</p>
     <pre class="recovery-report" id="recovery-report"></pre>
@@ -665,9 +870,9 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     <div class="dialog-actions"><button class="secondary" type="button" id="close-recovery">关闭</button></div>
   </div>
 </dialog>
-<dialog id="migration-import-dialog">
+<dialog aria-labelledby="migration-import-dialog-title" id="migration-import-dialog">
   <div class="dialog-body">
-    <h2>恢复历史分段文件</h2>
+    <h2 id="migration-import-dialog-title">恢复历史分段文件</h2>
     <p class="dialog-context">可以一次粘贴一段或多段，顺序可以打乱。系统会逐段校验，全部完整后才允许导入。</p>
     <textarea class="backup-textarea" id="migration-import-text" placeholder="粘贴一个或多个迁移分段"></textarea>
     <button type="button" id="add-migration-segments">加入这些分段</button>
