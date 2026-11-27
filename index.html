@@ -573,7 +573,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     <h2 class="section-title">更多 / 设置</h2><p class="section-help">自动云备份、完整 JSON 备份与恢复、本地历史快照集中在这里。</p>
   <div class="data-safety safety-status" id="backup-safety-status"><strong id="backup-safety-title">数据安全 · 正在检查</strong><span id="backup-safety-detail">正在核对本地备份状态。</span></div>
     <p class="note" id="backup-last-success">最近成功备份：尚无已确认记录</p>
-  <details class="data-safety data-safety-help"><summary>本机数据 · 备份与使用说明</summary><p>正式经营数据请固定在 OPPO 系统浏览器中使用。本地数据是记账依据；连接云账号后备份完整快照。换浏览器后仍需明确恢复文件，不会自动覆盖本地数据。完整 JSON 可作为独立备用。</p></details>
+  <details class="data-safety data-safety-help" data-workspace-detail="settings-help"><summary>本机数据 · 备份与使用说明</summary><p>正式经营数据请固定在 OPPO 系统浏览器中使用。本地数据是记账依据；连接云账号后备份完整快照。换浏览器后仍需明确恢复文件，不会自动覆盖本地数据。完整 JSON 可作为独立备用。</p></details>
     <button type="button" id="open-backup">数据备份 / 恢复 / 历史快照</button>
     <h3>收款渠道默认手续费率</h3><p class="note">以百分比填写；留空代表未配置。仅供新收款计算，不重算历史手续费。现金类固定为 0。单笔可人工填写实际手续费。</p>
     <form id="channel-settings-form"><div class="inputs"><div class="field"><label for="channel-rate-ccb">建行收款码默认费率（%）</label><input id="channel-rate-ccb" type="number" min="0" max="100" step="any" placeholder="未配置"></div><div class="field"><label for="channel-rate-wechat">微信经营收款默认费率（%）</label><input id="channel-rate-wechat" type="number" min="0" max="100" step="any" placeholder="未配置"></div></div><button type="submit">保存费率设置</button><p class="note" id="channel-settings-status"></p></form>
@@ -645,7 +645,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
       </div>
       <div id="rental-results" hidden>
         <div class="rental-summary"><h3>车辆租赁方案</h3><div id="rental-summary-content"></div></div>
-        <details class="rental-schedule"><summary>查看付款计划</summary><div id="rental-schedule-content" class="rental-scroll"></div><p class="rental-explanation" id="rental-schedule-note"></p></details>
+        <details class="rental-schedule" data-workspace-detail="finance-schedule"><summary>查看付款计划</summary><div id="rental-schedule-content" class="rental-scroll"></div><p class="rental-explanation" id="rental-schedule-note"></p></details>
         <div class="output-label rental-subheading"><strong id="finance-output-title">客户方案文字</strong><span class="tip">与方案单使用同一份结果</span></div>
         <textarea id="finance-message" readonly aria-label="客户方案文字"></textarea>
         <button id="finance-copy" type="button">复制客户方案</button>
@@ -894,6 +894,39 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   <p id="rental-export-status" class="note" role="status"></p>
   <div id="rental-preview" class="rental-scroll"></div>
 </div></dialog>
+<script>
+  // Select the previous page before loading the business scripts. The route contains only navigation names.
+  window.HokuWorkspaceNavigation=(()=>{
+    const prefix='#workspace=',standaloneKey='hokuWorkspaceNavigationV1';
+    const views={reminders:[],finance:['quote','reverse'],customers:[],'late-fee':[],'rental-ledger':['current','history','sold'],settings:[]};
+    function parse(hash){
+      if(!hash?.startsWith(prefix))return null;
+      const [panel,view,...extra]=hash.slice(prefix.length).split('/');
+      if(!Object.hasOwn(views,panel)||extra.length||(view&&!views[panel].includes(view)))return null;
+      return {panel,view:view||views[panel][0]};
+    }
+    function standalone(){return window.matchMedia?.('(display-mode: standalone)').matches===true}
+    function read(){
+      const route=parse(location.hash);
+      if(route)return route;
+      if(standalone())try{return parse(localStorage.getItem(standaloneKey+location.pathname))}catch(error){}
+      return null;
+    }
+    function select(panel){
+      document.querySelectorAll('.nav [data-panel]').forEach(item=>item.classList.toggle('active',item.dataset.panel===panel));
+      document.querySelectorAll('.panel').forEach(item=>item.classList.toggle('active',item.id===panel+'-panel'));
+    }
+    function write(panel,view){
+      const hash=prefix+[panel,view].filter(Boolean).join('/');
+      if(!parse(hash))return;
+      try{if(location.hash!==hash)history.replaceState(history.state,'',hash)}catch(error){}
+      if(standalone())try{localStorage.setItem(standaloneKey+location.pathname,hash)}catch(error){}
+    }
+    return {read,select,write};
+  })();
+  const initialWorkspaceRoute=window.HokuWorkspaceNavigation.read();
+  if(initialWorkspaceRoute)window.HokuWorkspaceNavigation.select(initialWorkspaceRoute.panel);
+</script>
 <script src="./rental-calculation.js?v=d8c6d37e2075"></script>
 <script src="./rental-document.js?v=6d39c262aba3"></script>
 <script src="./vendor/html2canvas-1.4.1.min.js?v=e87e55079432"></script>
@@ -915,7 +948,9 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   const shortMoney=n=>String(Math.round(Number(n)*100)/100);
   const cnDate=value=>{const d=value instanceof Date?value:parseLocalDate(value);return `${d.getMonth()+1}月${d.getDate()}日`};
   const round2=n=>Math.round((n+Number.EPSILON)*100)/100;
-  let financeMode='quote';
+  const workspaceNavigation=window.HokuWorkspaceNavigation;
+  const workspaceRoute=workspaceNavigation?.read();
+  let financeMode=workspaceRoute?.panel==='finance'?workspaceRoute.view:'quote';
   const PLAN_STORAGE_KEY='lateFeePaymentPlansV1';
   const BACKUP_DIRTY_KEY='lateFeeBackupDirtyV1';
   const BACKUP_STATE_KEY='dajinBackupStateV1';
@@ -1382,7 +1417,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   }
   function waiverHistoryHtml(plan){
     const records=plan.lateFeeWaivers||[];
-    return `<details class="payment-history"><summary>滞纳金调整 / 减免</summary>${openInstallments(plan).filter(r=>r.remaining===0&&r.fee>0).map(r=>`<p>第${r.termIndex+1}期待收滞纳金 ${money(r.fee)} 元 <button class="secondary" type="button" data-waive-plan="${plan.id}" data-term-index="${r.termIndex}">减免</button></p>`).join('')}${records.map(w=>`<div class="history-row">第${w.termIndex+1}期 · ${escapeHtml(w.date)} · 减免 ${money(w.amount)} 元 · ${escapeHtml(w.reason)}${w.reversedAt?` · 已于${escapeHtml(w.reversedAt)}撤销`:`<button type="button" class="secondary" data-reverse-waiver="${w.id}" data-waiver-plan="${plan.id}">撤销减免</button>`}</div>`).join('')}<p class="note">当期合同月租及租电费必须全额付清后才能减免。</p></details>`;
+    return `<details class="payment-history" data-workspace-detail="plan-waivers:${escapeHtml(plan.id)}"><summary>滞纳金调整 / 减免</summary>${openInstallments(plan).filter(r=>r.remaining===0&&r.fee>0).map(r=>`<p>第${r.termIndex+1}期待收滞纳金 ${money(r.fee)} 元 <button class="secondary" type="button" data-waive-plan="${plan.id}" data-term-index="${r.termIndex}">减免</button></p>`).join('')}${records.map(w=>`<div class="history-row">第${w.termIndex+1}期 · ${escapeHtml(w.date)} · 减免 ${money(w.amount)} 元 · ${escapeHtml(w.reason)}${w.reversedAt?` · 已于${escapeHtml(w.reversedAt)}撤销`:`<button type="button" class="secondary" data-reverse-waiver="${w.id}" data-waiver-plan="${plan.id}">撤销减免</button>`}</div>`).join('')}<p class="note">当期合同月租及租电费必须全额付清后才能减免。</p></details>`;
   }
   function openWaiverDialog(planId,index){
     const plan=plans.find(p=>p.id===planId);if(!plan)return;
@@ -1396,7 +1431,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   }
   function paymentHistoryHtml(plan){
     const payments=[...(plan.payments||[])].reverse();if(!payments.length)return '';
-    return `<details class="payment-history"><summary>查看收款记录（${payments.length}笔）</summary>${payments.map(payment=>`<div class="history-row"><strong>${escapeHtml(payment.date)}</strong> 客户付款 ${money(payment.total)} 元<br>${payment.paymentChannel?`${escapeHtml(window.InstallmentLedger.paymentChannels[payment.paymentChannel])} · 手续费 ${money(payment.channelFee)} 元 · 公司净到账 ${money(payment.netReceived)} 元<br>`:'历史收款：渠道及手续费未登记<br>'}${payment.feeMode==='compound'?`复利收款 · 日费率 ${reminderRatePercent(payment.feeRate)}%<br>`:''}滞纳金 ${money(payment.lateFee)} 元 · 冲抵合同款 ${money(payment.principal)} 元${Number(payment.batteryRent)>0?` · 租电费 ${money(payment.batteryRent)} 元`:''}${payment.allocations?.length?` · ${payment.allocations.map(item=>`第${Number(item.termIndex)+1}期 合同款${money(item.principal)}元${Number(item.batteryRent)>0?` / 租电${money(item.batteryRent)}元`:''}${Number(item.lateFee)>0?` / 滞纳金${money(item.lateFee)}元`:''}`).join('，')}`:''}<div class="history-actions"><button class="secondary" type="button" data-edit-payment="${payment.id}" data-payment-plan="${plan.id}">修改</button><button class="undo" type="button" data-undo-payment="${payment.id}" data-payment-plan="${plan.id}">撤销此笔</button></div></div>`).join('')}</details>`;
+    return `<details class="payment-history" data-workspace-detail="plan-payments:${escapeHtml(plan.id)}"><summary>查看收款记录（${payments.length}笔）</summary>${payments.map(payment=>`<div class="history-row"><strong>${escapeHtml(payment.date)}</strong> 客户付款 ${money(payment.total)} 元<br>${payment.paymentChannel?`${escapeHtml(window.InstallmentLedger.paymentChannels[payment.paymentChannel])} · 手续费 ${money(payment.channelFee)} 元 · 公司净到账 ${money(payment.netReceived)} 元<br>`:'历史收款：渠道及手续费未登记<br>'}${payment.feeMode==='compound'?`复利收款 · 日费率 ${reminderRatePercent(payment.feeRate)}%<br>`:''}滞纳金 ${money(payment.lateFee)} 元 · 冲抵合同款 ${money(payment.principal)} 元${Number(payment.batteryRent)>0?` · 租电费 ${money(payment.batteryRent)} 元`:''}${payment.allocations?.length?` · ${payment.allocations.map(item=>`第${Number(item.termIndex)+1}期 合同款${money(item.principal)}元${Number(item.batteryRent)>0?` / 租电${money(item.batteryRent)}元`:''}${Number(item.lateFee)>0?` / 滞纳金${money(item.lateFee)}元`:''}`).join('，')}`:''}<div class="history-actions"><button class="secondary" type="button" data-edit-payment="${payment.id}" data-payment-plan="${plan.id}">修改</button><button class="undo" type="button" data-undo-payment="${payment.id}" data-payment-plan="${plan.id}">撤销此笔</button></div></div>`).join('')}</details>`;
   }
   function renderPlans(){
     if(!plans.length){$('plans-list').innerHTML='<div class="empty">还没有客户计划，请点击“新增客户”录入。</div>';return}
@@ -1405,7 +1440,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
       const pending=openInstallments(plan),item=pending[0]||null,nextStatus=item?(item.delta<0?`已逾期 ${item.daysOverdue} 天`:item.delta===0?'今天到期':`${item.delta} 天后到期`):'',next=calculationError?'账单待核对（计算暂停）':item?`${fullCnDate(item.dueDate)} · 第 ${item.termIndex+1} 期 · ${nextStatus}`:((plan.payments||[]).some(p=>{try{window.InstallmentLedger.day(p.date);return false}catch(e){return true}})?'历史收款日期待核对':'已全部完成');
       const overdueCount=pending.filter(entry=>entry.delta<0).length,contract=contractData(plan);
       const contractMeta=contract?`<span>合同贷款 <strong>${money(contract.loan)} 元</strong></span><span>押金 <strong>${Number(plan.depositMonths)||0} 个月</strong></span><span>固定月息 <strong>${shortMoney(contract.monthlyRatePct)}%</strong></span>`:'<span><strong>合同金融资料待补充</strong></span>';
-      return `<article class="plan-item">${calculationError?`<p class="warning" role="alert">${escapeHtml(calculationError)}</p>`:''}<div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta">${contractMeta}<span>合同月供 <strong>${money(plan.amount)} 元</strong></span>${Number(plan.batteryMonthlyRent)>0?`<span>月租电费 <strong>${money(plan.batteryMonthlyRent)} 元</strong> · 第${Number(plan.batteryRentEffectiveTermIndex)+1}期起</span>`:''}<span>每月 <strong>${plan.dueDay} 日</strong></span><span>逾期 <strong>${overdueCount} 期</strong></span><span>下一期 <strong>${next}</strong></span></div>${paymentSummaryHtml(plan)}<details class="rental-schedule customer-bills"><summary>应还账单 / 收款 / 逾期滞纳金</summary>${pending.filter(r=>r.delta<=3||r.termIndex===item?.termIndex).map(r=>reminderCard(r,r.delta<0?'overdue':r.delta===0?'today':'upcoming')).join('')||'<p class="note">近期无待处理账单。</p>'}</details>${paymentHistoryHtml(plan)}${waiverHistoryHtml(plan)}${(plan.payments||[]).some(p=>p.allocationVersion!==2&&Number(p.lateFee)>0)?'<p class="note">历史滞纳金仅有总额：按收款日从起始期顺序抵扣，逐期归属需核对原始凭证。</p>':''}<div class="plan-actions"><button type="button" data-settle-plan="${plan.id}">结清核算</button><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑合同</button></div><details class="danger-zone"><summary>更多管理操作</summary><button type="button" data-delete-plan="${plan.id}">删除客户资料</button></details></article>`;
+      return `<article class="plan-item">${calculationError?`<p class="warning" role="alert">${escapeHtml(calculationError)}</p>`:''}<div class="item-top"><div><h4>${escapeHtml(plan.name)}</h4><div class="item-sub">${escapeHtml(planIdentity(plan))}${plan.notes?`<br>${escapeHtml(plan.notes)}`:''}</div></div><span class="badge">${plan.completedTerms}/${plan.totalTerms} 期</span></div><div class="plan-meta">${contractMeta}<span>合同月供 <strong>${money(plan.amount)} 元</strong></span>${Number(plan.batteryMonthlyRent)>0?`<span>月租电费 <strong>${money(plan.batteryMonthlyRent)} 元</strong> · 第${Number(plan.batteryRentEffectiveTermIndex)+1}期起</span>`:''}<span>每月 <strong>${plan.dueDay} 日</strong></span><span>逾期 <strong>${overdueCount} 期</strong></span><span>下一期 <strong>${next}</strong></span></div>${paymentSummaryHtml(plan)}<details class="rental-schedule customer-bills" data-workspace-detail="plan-bills:${escapeHtml(plan.id)}"><summary>应还账单 / 收款 / 逾期滞纳金</summary>${pending.filter(r=>r.delta<=3||r.termIndex===item?.termIndex).map(r=>reminderCard(r,r.delta<0?'overdue':r.delta===0?'today':'upcoming')).join('')||'<p class="note">近期无待处理账单。</p>'}</details>${paymentHistoryHtml(plan)}${waiverHistoryHtml(plan)}${(plan.payments||[]).some(p=>p.allocationVersion!==2&&Number(p.lateFee)>0)?'<p class="note">历史滞纳金仅有总额：按收款日从起始期顺序抵扣，逐期归属需核对原始凭证。</p>':''}<div class="plan-actions"><button type="button" data-settle-plan="${plan.id}">结清核算</button><button class="secondary" type="button" data-edit-plan="${plan.id}">编辑合同</button></div><details class="danger-zone"><summary>更多管理操作</summary><button type="button" data-delete-plan="${plan.id}">删除客户资料</button></details></article>`;
     }).join('');
   }
   function renderPlanModule(){renderReminders();renderPlans()}
@@ -1741,9 +1776,11 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     else{box.focus();box.select();$(statusId).textContent='浏览器阻止了自动复制，请手动复制选中的文字。'}
   }
 
-  function selectPanel(name){
+  function selectPanel(name,saveRoute=true){
     document.querySelectorAll('.nav [data-panel]').forEach(item=>item.classList.toggle('active',item.dataset.panel===name));
-    document.querySelectorAll('.panel').forEach(panel=>panel.classList.toggle('active',panel.id===name+'-panel'));return true;
+    document.querySelectorAll('.panel').forEach(panel=>panel.classList.toggle('active',panel.id===name+'-panel'));
+    if(saveRoute)rememberWorkspaceRoute(name);
+    return true;
   }
   document.querySelectorAll('[data-panel]').forEach(button=>button.addEventListener('click',()=>selectPanel(button.dataset.panel)));
   function renderChannelSettings(){
@@ -1760,7 +1797,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     financeMode=mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item.dataset.mode===mode));
     document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');$('car-price').readOnly=financeMode==='reverse';$('rental-amount-hint').textContent=financeMode==='reverse'?'由月租预算倒推的车辆方案金额；预付租金不参与倒推':'固定月租的计算基础，不扣减预付租金';calculateFinance();
   }
-  document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>selectFinanceMode(button.dataset.mode)));
+  document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{selectFinanceMode(button.dataset.mode);rememberWorkspaceRoute('finance')}));
   $('plan-form').addEventListener('submit',event=>{
     event.preventDefault();
     if(!ensureStorageWritable())return;
@@ -1888,11 +1925,11 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   $('close-recovery').addEventListener('click',()=>$('recovery-dialog').close());
   $('wechat-notice').hidden=!/MicroMessenger/i.test(navigator.userAgent);
   $('rental-first-date').value=toISO(todayNoon());
-  $('start-date').value=toISO(todayNoon());updateContractPreview();renderPlanModule();renderBackupReminder();renderStorageProtection();refreshBackupAccess();calculateFinance();calculateLateFee();
+  $('start-date').value=toISO(todayNoon());updateContractPreview();renderPlanModule();renderBackupReminder();renderStorageProtection();refreshBackupAccess();selectFinanceMode(financeMode);calculateLateFee();
   function ledgerVehicleOptions(selected=''){
     $('ledger-vehicle').innerHTML='<option value="">新增车辆</option>'+vehicles.filter(v=>v.soldAt===undefined||v.id===selected).map(v=>`<option value="${escapeHtml(v.id)}">${escapeHtml([v.model,v.plateNumber,v.vin].filter(Boolean).join(' · '))}</option>`).join('');$('ledger-vehicle').value=selected;$('ledger-vehicle-fields').hidden=Boolean(selected);
   }
-  let ledgerView='current';
+  let ledgerView=workspaceRoute?.panel==='rental-ledger'?workspaceRoute.view:'current';
   let ledgerIdentityPhotos=[],ledgerPhotoBusy=false,ledgerPhotoSequence=0;
   function renderLedgerPhotos(){
     $('ledger-photo-preview').innerHTML=ledgerIdentityPhotos.map((photo,index)=>`<div style="display:inline-block;width:45%;margin:4px"><img src="${photo}" alt="证件照片 ${index+1}" style="width:100%;max-height:160px;object-fit:contain"><button type="button" class="secondary" data-ledger-remove-photo="${index}">移除照片 ${index+1}</button></div>`).join('');
@@ -1958,8 +1995,8 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
         ${c.discount>0?`<p class="note">原应收 ¥${money(c.baseReceivable)} · 减免 ¥${money(c.discount)} · 最终应收 ¥${money(c.receivable)}</p>`:''}
         ${c.overreceived>0?`<p class="note">多收 / 预收 ¥${money(c.overreceived)}</p>`:''}
         <p class="note">${(()=>{const x=window.VehicleRentalLedger.paymentChannelTotals(r);return '渠道已登记收款 ¥'+money(x.gross)+' · 手续费 ¥'+money(x.fees)+' · 净到账 ¥'+money(x.net)+(x.missing?'（另有'+x.missing+'笔旧收款未记录渠道）':'')})()}</p>
-        <details class="ledger-more"><summary>收款流水（${(r.rentalPayments||[]).length}笔，含撤销）</summary><p>历史已收基数 ¥${money(window.VehicleRentalLedger.paymentTotals(r).historicalReceivedBase)} · 逐笔明细未登记，无具体收款日期</p>${(r.rentalPayments||[]).map(p=>`<div class="history-row"><strong>${escapeHtml(p.date)}</strong> · ¥${money(p.amount)} · ${p.status==='REVOKED'?'已撤销':'有效'}${p.paymentChannel?'<br>渠道：'+escapeHtml(window.VehicleRentalLedger.paymentChannelLabel(p.paymentChannel))+' · 手续费 ¥'+money(p.channelFee)+' · 净到账 ¥'+money(p.netReceived):'<br>旧记录：未登记渠道和手续费'}${p.note?`<br>备注：${escapeHtml(p.note)}`:''}${p.status==='REVOKED'?`<br>撤销时间：${escapeHtml(p.revokedAt)}<br>原因：${escapeHtml(p.revokeReason)}`:`<br><button class="secondary" type="button" data-ledger-revoke="${p.id}" data-ledger-rental="${r.id}">撤销此笔</button>`}</div>`).join('')}</details>
-         ${r.rentalAdjustments?.length?`<details class="ledger-more"><summary>应收调整（${r.rentalAdjustments.length}笔）</summary>${r.rentalAdjustments.map(a=>`<div class="history-row"><strong>${escapeHtml(a.date)}</strong> · 减免 ¥${money(a.amount)} · ${a.status==='ACTIVE'?'生效':'已冲回'}<br>原因：${escapeHtml(a.reason)}${a.status==='REVERSED'?'<br>冲回原因：'+escapeHtml(a.reverseReason)+'<br>冲回时间：'+escapeHtml(a.reversedAt):'<br><button type="button" class="secondary" data-ledger-adjust-reverse="'+escapeHtml(a.id)+'" data-ledger-adjust-rental="'+escapeHtml(r.id)+'">冲回此笔减免</button>'}</div>`).join('')}</details>`:''}
+        <details class="ledger-more" data-workspace-detail="rental-payments:${escapeHtml(r.id)}"><summary>收款流水（${(r.rentalPayments||[]).length}笔，含撤销）</summary><p>历史已收基数 ¥${money(window.VehicleRentalLedger.paymentTotals(r).historicalReceivedBase)} · 逐笔明细未登记，无具体收款日期</p>${(r.rentalPayments||[]).map(p=>`<div class="history-row"><strong>${escapeHtml(p.date)}</strong> · ¥${money(p.amount)} · ${p.status==='REVOKED'?'已撤销':'有效'}${p.paymentChannel?'<br>渠道：'+escapeHtml(window.VehicleRentalLedger.paymentChannelLabel(p.paymentChannel))+' · 手续费 ¥'+money(p.channelFee)+' · 净到账 ¥'+money(p.netReceived):'<br>旧记录：未登记渠道和手续费'}${p.note?`<br>备注：${escapeHtml(p.note)}`:''}${p.status==='REVOKED'?`<br>撤销时间：${escapeHtml(p.revokedAt)}<br>原因：${escapeHtml(p.revokeReason)}`:`<br><button class="secondary" type="button" data-ledger-revoke="${p.id}" data-ledger-rental="${r.id}">撤销此笔</button>`}</div>`).join('')}</details>
+         ${r.rentalAdjustments?.length?`<details class="ledger-more" data-workspace-detail="rental-adjustments:${escapeHtml(r.id)}"><summary>应收调整（${r.rentalAdjustments.length}笔）</summary>${r.rentalAdjustments.map(a=>`<div class="history-row"><strong>${escapeHtml(a.date)}</strong> · 减免 ¥${money(a.amount)} · ${a.status==='ACTIVE'?'生效':'已冲回'}<br>原因：${escapeHtml(a.reason)}${a.status==='REVERSED'?'<br>冲回原因：'+escapeHtml(a.reverseReason)+'<br>冲回时间：'+escapeHtml(a.reversedAt):'<br><button type="button" class="secondary" data-ledger-adjust-reverse="'+escapeHtml(a.id)+'" data-ledger-adjust-rental="'+escapeHtml(r.id)+'">冲回此笔减免</button>'}</div>`).join('')}</details>`:''}
         <div class="ledger-dates"><div>放车日<strong>${escapeHtml(r.startDate)}</strong></div><div>${r.returnDate?'实际还车日':'约定还车日'}<strong>${r.returnDate?escapeHtml(r.returnDate):r.expectedReturnDate?escapeHtml(r.expectedReturnDate):'暂未确定'}</strong></div></div>
         ${r.manualReceivable!=null?`<p class="note">人工调整 · 系统计算 ¥${money(c.systemAmount)}</p>`:''}
         ${extra||r.renterIdPhotos?.length?`<details class="ledger-more"><summary>承租人资料与备注${r.renterIdPhotos?.length?' · 含证件照片':''}</summary>${extra?`<p>${extra}</p>`:''}${(r.renterIdPhotos||[]).map((photo,index)=>`<img class="ledger-photo" src="${photo}" alt="证件照片 ${index+1}" loading="lazy">`).join('')}</details>`:''}
@@ -1975,7 +2012,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     const sold=vehicles.filter(v=>v.soldAt!==undefined);
     function vehicleCard(v){
       const total=window.VehicleRentalLedger.vehicleSummary(v,rentals,toISO(todayNoon()));
-      return `<article class="ledger-card" data-ledger-vehicle="${v.id}"><details class="ledger-vehicle-history"><summary><div class="ledger-card-top"><div><h3>${escapeHtml(v.model)}</h3><span class="ledger-plate">${escapeHtml(v.plateNumber||v.vin)}</span></div><span class="ledger-state-badge">${v.soldAt!==undefined?'已售':current.includes(v)?'在租':'待出租'}</span></div><p>累计出租 ${total.count} 次 · 点击展开全部出租历史</p><div class="ledger-money"><div><span>累计应收租金</span><strong>¥${money(total.receivable)}</strong></div><div><span>累计未收</span><strong class="unpaid">¥${money(total.outstanding)}</strong></div></div><p>累计出租收入（已收） ¥${money(total.receivedAmount)}</p></summary>${v.soldAt!==undefined?`<p class="note">出售时间：${escapeHtml(cloudLocalTime(v.soldAt))} · 历史欠租可继续收款</p>`:''}${total.records.map(card).join('')||'<p>暂无出租历史</p>'}</details>${v.soldAt===undefined?`<div class="ledger-actions"><button type="button" class="secondary" data-ledger-sold="${v.id}">标记已售</button></div>`:''}</article>`;
+      return `<article class="ledger-card" data-ledger-vehicle="${v.id}"><details class="ledger-vehicle-history" data-workspace-detail="vehicle-history:${escapeHtml(v.id)}"><summary><div class="ledger-card-top"><div><h3>${escapeHtml(v.model)}</h3><span class="ledger-plate">${escapeHtml(v.plateNumber||v.vin)}</span></div><span class="ledger-state-badge">${v.soldAt!==undefined?'已售':current.includes(v)?'在租':'待出租'}</span></div><p>累计出租 ${total.count} 次 · 点击展开全部出租历史</p><div class="ledger-money"><div><span>累计应收租金</span><strong>¥${money(total.receivable)}</strong></div><div><span>累计未收</span><strong class="unpaid">¥${money(total.outstanding)}</strong></div></div><p>累计出租收入（已收） ¥${money(total.receivedAmount)}</p></summary>${v.soldAt!==undefined?`<p class="note">出售时间：${escapeHtml(cloudLocalTime(v.soldAt))} · 历史欠租可继续收款</p>`:''}${total.records.map(card).join('')||'<p>暂无出租历史</p>'}</details>${v.soldAt===undefined?`<div class="ledger-actions"><button type="button" class="secondary" data-ledger-sold="${v.id}">标记已售</button></div>`:''}</article>`;
     }
     for(const [view,list] of [['current',current],['history',history],['sold',sold]]){
       $('ledger-'+view).innerHTML=list.map(vehicleCard).join('')||'<div class="ledger-empty">暂无'+({current:'在租车辆',history:'历史车辆',sold:'已售车辆'}[view])+'</div>';
@@ -1987,7 +2024,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     ledgerView=view;
     for(const value of ['current','history','sold']){$('ledger-'+value).hidden=view!==value;const button=$('ledger-tab-'+value);button.classList.toggle('active',view===value);button.setAttribute?.('aria-pressed',String(view===value))}
   }
-  for(const view of ['current','history','sold'])$('ledger-tab-'+view).addEventListener('click',()=>setLedgerView(view));
+  for(const view of ['current','history','sold'])$('ledger-tab-'+view).addEventListener('click',()=>{setLedgerView(view);rememberWorkspaceRoute('rental-ledger')});
   function markLedgerSold(id){
     if(!ensureStorageWritable())return;
     const previous=vehicles,previousRaw=planStorageState.raw;
@@ -2116,7 +2153,8 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   function refreshDailyViews(){
     const date=toISO(todayNoon());
     if(document.hidden||date===dailyViewsDate)return;
-    renderRentalLedger();renderReminders();dailyViewsDate=date;
+    const expanded=expandedWorkspaceDetails();
+    renderRentalLedger();renderReminders();restoreWorkspaceDetails(expanded);dailyViewsDate=date;
   }
   function scheduleDailyRefresh(){
     const now=new Date(),next=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
@@ -2133,6 +2171,23 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   const paymentFields=[...paymentDetails,'payment-channel-fee'];
   let workspaceInteracted=false;
 
+  function rememberWorkspaceRoute(panel){
+    if(!workspaceNavigation)return;
+    const view=panel==='finance'?financeMode:panel==='rental-ledger'?ledgerView:undefined;
+    workspaceNavigation.write(panel,view);
+  }
+
+  function expandedWorkspaceDetails(){
+    return Array.from(document.querySelectorAll('details[data-workspace-detail][open]'),detail=>detail.dataset.workspaceDetail).slice(0,64);
+  }
+  function restoreWorkspaceDetails(expanded){
+    if(!Array.isArray(expanded))return;
+    const keys=new Set(expanded.slice(0,64));
+    document.querySelectorAll('details[data-workspace-detail]').forEach(detail=>{
+      if(keys.has(detail.dataset.workspaceDetail))detail.open=true;
+    });
+  }
+
   function captureFields(ids){return Object.fromEntries(ids.map(id=>[id,$(id).value]))}
   function restoreFields(ids,values){
     for(const id of ids){
@@ -2144,6 +2199,8 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   }
   function rememberWorkspace(){
     const state={page:location.pathname,panel:document.querySelector('.panel.active')?.id,financeMode,ledgerView,scroll:window.scrollY,fields:captureFields(calculationFields)};
+    state.expanded=expandedWorkspaceDetails();
+    state.backupOpen=state.panel==='settings-panel'&&$('backup-dialog').open;
     if($('payment-dialog').open&&!$('payment-id').value&&!planStorageState.locked&&paymentDraftSourceRaw===planStorageState.raw&&!document.querySelector('dialog[open]:not(#payment-dialog)')){
       const {currentDataHash,dataRevision}=backupStateManager.snapshot();
       if(currentDataHash){
@@ -2181,16 +2238,28 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     let state;
     try{state=JSON.parse(sessionStorage.getItem(workspaceSessionKey))}catch(error){return}
     if(!state||state.page!==location.pathname)return;
-    if(state.panel&&$(state.panel)?.classList.contains('panel'))selectPanel(state.panel.slice(0,-6));
-    if(['current','history','sold'].includes(state.ledgerView))setLedgerView(state.ledgerView);
+    const samePanel=!workspaceRoute||state.panel===workspaceRoute.panel+'-panel';
+    const sameView=!workspaceRoute?.view||workspaceRoute.view===(workspaceRoute.panel==='finance'?state.financeMode:state.ledgerView);
+    if(!workspaceRoute&&state.panel&&$(state.panel)?.classList.contains('panel')){
+      const previousPanel=state.panel.slice(0,-6);
+      selectPanel(previousPanel,false);
+      if(['current','history','sold'].includes(state.ledgerView))setLedgerView(state.ledgerView);
+      selectFinanceMode(state.financeMode==='reverse'?'reverse':'quote');
+      rememberWorkspaceRoute(previousPanel);
+    }
+    if(!samePanel||!sameView)return;
     restoreFields(calculationFields,state.fields);
-    selectFinanceMode(state.financeMode==='reverse'?'reverse':'quote');
+    calculateFinance();
     calculateLateFee();
+    restoreWorkspaceDetails(state.expanded);
     if(Number.isFinite(state.scroll)){
       window.history.scrollRestoration='manual';
       requestAnimationFrame(()=>{if(!workspaceInteracted)window.scrollTo({top:state.scroll,behavior:'instant'})});
     }
     if(state.payment)backupStateReady.then(()=>restorePaymentWorkspace(state.payment));
+    if(state.backupOpen&&state.panel==='settings-panel')requestAnimationFrame(()=>{
+      if(!workspaceInteracted&&!document.querySelector('dialog[open]'))openBackupDialog();
+    });
   }
   restoreWorkspace();
   for(const type of ['input','change'])document.addEventListener(type,event=>{
@@ -2201,9 +2270,13 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   document.addEventListener('pointerdown',()=>{workspaceInteracted=true});
   document.addEventListener('keydown',()=>{workspaceInteracted=true});
   document.addEventListener('click',event=>{
-    if(event.target.closest('[data-panel],[data-mode],.ledger-tabs button,[data-receive]'))rememberWorkspace();
+    if(event.target.closest('[data-panel],[data-mode],.ledger-tabs button,[data-receive],#open-backup,#backup-reminder-action'))rememberWorkspace();
   });
+  document.addEventListener('toggle',event=>{
+    if(workspaceInteracted&&event.target.matches?.('details[data-workspace-detail]'))rememberWorkspace();
+  },true);
   $('payment-dialog').addEventListener('close',rememberWorkspace);
+  $('backup-dialog').addEventListener('close',rememberWorkspace);
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)rememberWorkspace();else refreshDailyViews();
   });
