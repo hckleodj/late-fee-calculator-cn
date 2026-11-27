@@ -615,7 +615,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   <div class="panel" id="finance-panel"><section class="hoku-calculator-intro"><div class="section-heading-row"><div><h2 class="section-title">售前方案</h2><p class="section-help">用于询价、测算及方案展示，不自动进入正式客户。成交后请在“以租代购”登记已确认的合同；预付抵扣及最终期尾差须按合同核对。</p></div><button class="compact-tool" type="button" data-panel="late-fee">滞纳金测算</button></div></section>
     <section>
       <h2 class="section-title">车辆租赁方案测算</h2>
-      <p class="section-help">按车辆方案全额测算固定月租。预付租金抵扣前几期，不降低固定月租；押金单独列示。本页方案仅在当前页面保留，刷新后需重新录入。</p>
+      <p class="section-help">按车辆方案全额测算固定月租。预付租金抵扣前几期，不降低固定月租；押金单独列示。当前标签页重新加载后可恢复测算参数，客户姓名、电话及车辆名称需重新录入。</p>
       <div class="mode-tabs" aria-label="计算模式">
         <button class="active" type="button" data-mode="quote">客户方案测算</button>
         <button type="button" data-mode="reverse">按月租倒推</button>
@@ -764,9 +764,10 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   <button type="button" id="cancel-reminder-copy" class="secondary">取消</button>
 </div></dialog>
 <dialog aria-labelledby="payment-dialog-title" id="payment-dialog">
-  <form class="dialog-body" id="payment-form">
+  <form class="dialog-body" id="payment-form" autocomplete="off">
     <input id="payment-plan-id" type="hidden"><input id="payment-term-index" type="hidden"><input id="payment-id" type="hidden">
     <h2 id="payment-dialog-title">登记本期收款</h2><p class="dialog-context" id="payment-context"></p>
+    <p class="note" id="payment-resumed" role="status" hidden>已恢复未提交的收款草稿，请核对后保存。</p>
     <div class="inputs">
       <div class="field"><label for="payment-date">实际收款日期</label><input id="payment-date" type="date" required></div>
       <div class="field"><label for="payment-total">客户本次付款金额（元）</label><input id="payment-total" type="number" min="0.01" step="0.01" required></div>
@@ -1603,6 +1604,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   }
   for(const id of ['payment-fee-mode','payment-compound-rate'])$(id).addEventListener('change',updatePaymentPreview);
   let channelFeeManual=false;
+  let paymentDraftSourceRaw=null,paymentDraftDay='',paymentFormEdited=false;
   function suggestPaymentFee(){
     const channel=$('payment-channel').value,fee=window.InstallmentLedger.suggestedChannelFee($('payment-total').value,channel,paymentSettings);
     $('payment-channel-fee').value=fee===null?'':fee.toFixed(2);$('payment-channel-fee').readOnly=channel==='CASH';
@@ -1632,6 +1634,7 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   function openPaymentDialog(planId,termIndex,paymentId=''){
     try{const current=plans.find(p=>p.id===planId);if(current)window.InstallmentLedger.statement(current,toISO(todayNoon()))}catch(error){alert(error.message+' 当前账单暂停收款计算；请先核对原始备份中的日期。');return}
     const plan=plans.find(item=>item.id===planId),payment=paymentId&&(plan?.payments||[]).find(item=>item.id===paymentId),resolvedTerm=payment?Number(payment.startTermIndex??payment.allocations?.[0]?.termIndex??termIndex):(plan?openInstallments(plan)[0]?.termIndex:undefined),item=plan&&Number.isInteger(resolvedTerm)&&installmentItem(plan,resolvedTerm);if(!item)return;
+    paymentDraftSourceRaw=planStorageState.raw;paymentDraftDay=toISO(todayNoon());paymentFormEdited=false;$('payment-resumed').hidden=true;
     $('payment-plan-id').value=planId;$('payment-term-index').value=resolvedTerm;$('payment-id').value=paymentId;$('payment-date').value=payment?.date||toISO(todayNoon());$('payment-total').value=payment?shortMoney(payment.total):shortMoney(item.total);
     $('payment-dialog-title').textContent=payment?'修改收款记录':'登记本期收款';$('save-payment').textContent=payment?'保存修改':'保存收款记录';$('payment-context').textContent=`${plan.name} · 第 ${resolvedTerm+1} 期 · 本期剩余应付款 ${money(item.remaining)} 元 · 待收滞纳金 ${money(item.fee)} 元`;
     $('payment-fee-mode').value=payment?.feeMode||(plan.compoundAccounting?'compound':'simple');
@@ -1753,10 +1756,11 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
   });
   $('home-new-rental').addEventListener('click',()=>openLedgerForm());
   renderChannelSettings();
-  document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{
-    financeMode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item===button));
+  function selectFinanceMode(mode){
+    financeMode=mode;document.querySelectorAll('[data-mode]').forEach(item=>item.classList.toggle('active',item.dataset.mode===mode));
     document.querySelectorAll('.reverse-field').forEach(item=>item.hidden=financeMode!=='reverse');$('car-price').readOnly=financeMode==='reverse';$('rental-amount-hint').textContent=financeMode==='reverse'?'由月租预算倒推的车辆方案金额；预付租金不参与倒推':'固定月租的计算基础，不扣减预付租金';calculateFinance();
-  }));
+  }
+  document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>selectFinanceMode(button.dataset.mode)));
   $('plan-form').addEventListener('submit',event=>{
     event.preventDefault();
     if(!ensureStorageWritable())return;
@@ -2105,12 +2109,105 @@ body:has(#late-fee-panel.active) .nav [data-panel=finance]{color:#156f64;backgro
     }catch(error){if(planStorageState.raw===previousRaw){({vehicles,rentals}=old);$('ledger-status').textContent=error.message}else{recoverRentalBackupTracking();$('ledger-form').hidden=true;renderRentalLedger();rentalBackupWarning(error)}}
   });
   document.addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;if(button.dataset.ledgerRemovePhoto!==undefined){if(ledgerPhotoBusy){$('ledger-status').textContent='照片正在处理，请稍候';return}ledgerIdentityPhotos.splice(Number(button.dataset.ledgerRemovePhoto),1);renderLedgerPhotos();return}if(button.dataset.ledgerSold)markLedgerSold(button.dataset.ledgerSold);if(button.dataset.ledgerReceive)openLedgerPayment(button.dataset.ledgerReceive);if(button.dataset.ledgerAdjust)openLedgerAdjustment(button.dataset.ledgerAdjust);if(button.dataset.ledgerAdjustReverse)openLedgerAdjustment(button.dataset.ledgerAdjustRental,button.dataset.ledgerAdjustReverse);if(button.dataset.ledgerRevoke)openLedgerPayment(button.dataset.ledgerRental,button.dataset.ledgerRevoke);if(button.dataset.ledgerExtend)openLedgerForm(button.dataset.ledgerExtend,'extend');if(button.dataset.ledgerClear)clearExpectedReturn(button.dataset.ledgerClear);if(button.dataset.ledgerEdit)openLedgerForm(button.dataset.ledgerEdit);if(button.dataset.ledgerReturn)openLedgerForm(button.dataset.ledgerReturn,'return');if(button.dataset.ledgerSettle)openLedgerForm(button.dataset.ledgerSettle,'settle')});
-  window.addEventListener('focus',renderRentalLedger);window.addEventListener('pageshow',renderRentalLedger);document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderRentalLedger()});
-  function scheduleLedgerRefresh(){const now=new Date(),next=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);const timer=setTimeout(()=>{renderRentalLedger();scheduleLedgerRefresh()},next-now+100);timer?.unref?.()}
-  renderRentalLedger();scheduleLedgerRefresh();
-
+  renderRentalLedger();
   backupStateReady.then(refreshBackupAccess);
-  window.addEventListener('focus',renderReminders);
+
+  let dailyViewsDate=toISO(todayNoon());
+  function refreshDailyViews(){
+    const date=toISO(todayNoon());
+    if(document.hidden||date===dailyViewsDate)return;
+    renderRentalLedger();renderReminders();dailyViewsDate=date;
+  }
+  function scheduleDailyRefresh(){
+    const now=new Date(),next=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
+    const timer=setTimeout(()=>{refreshDailyViews();scheduleDailyRefresh()},next-now+100);
+    timer?.unref?.();
+  }
+  window.addEventListener('focus',refreshDailyViews);
+  window.addEventListener('pageshow',refreshDailyViews);
+  scheduleDailyRefresh();
+
+  const workspaceSessionKey='hoku-workspace-v1';
+  const calculationFields=['car-price','target-payment','term','prepaid-months','rental-deposit-months','monthly-rate','rental-battery-rent','rental-first-date','due','pay','amount','rate'];
+  const paymentDetails=['payment-date','payment-total','payment-fee-mode','payment-compound-rate','payment-channel'];
+  const paymentFields=[...paymentDetails,'payment-channel-fee'];
+  let workspaceInteracted=false;
+
+  function captureFields(ids){return Object.fromEntries(ids.map(id=>[id,$(id).value]))}
+  function restoreFields(ids,values){
+    for(const id of ids){
+      const field=$(id),value=values?.[id];
+      if(field.disabled||field.readOnly||typeof value!=='string'||value.length>80)continue;
+      if(field instanceof HTMLSelectElement&&![...field.options].some(option=>option.value===value))continue;
+      field.value=value;
+    }
+  }
+  function rememberWorkspace(){
+    const state={page:location.pathname,panel:document.querySelector('.panel.active')?.id,financeMode,ledgerView,scroll:window.scrollY,fields:captureFields(calculationFields)};
+    if($('payment-dialog').open&&!$('payment-id').value&&!planStorageState.locked&&paymentDraftSourceRaw===planStorageState.raw&&!document.querySelector('dialog[open]:not(#payment-dialog)')){
+      const {currentDataHash,dataRevision}=backupStateManager.snapshot();
+      if(currentDataHash){
+        state.payment={hash:currentDataHash,revision:dataRevision,day:paymentDraftDay,plan:$('payment-plan-id').value,term:Number($('payment-term-index').value),scroll:$('payment-form').scrollTop};
+        if(paymentFormEdited){state.payment.fields=captureFields(paymentFields);state.payment.manualFee=channelFeeManual}
+      }
+    }
+    try{
+      sessionStorage.setItem(workspaceSessionKey,JSON.stringify(state));
+      if(window.history&&!window.history.state?.hokuWorkspace)window.history.replaceState({...window.history.state,hokuWorkspace:true},'');
+    }catch(error){/* Recovery is optional when tab storage is unavailable. */}
+  }
+  function restorePaymentWorkspace(payment){
+    if(workspaceInteracted||document.querySelector('dialog[open]')||planStorageState.locked||payment.day!==toISO(todayNoon()))return;
+    const {currentDataHash,dataRevision}=backupStateManager.snapshot();
+    if(!payment.hash||payment.hash!==currentDataHash||payment.revision!==dataRevision)return;
+    const plan=plans.find(item=>item.id===payment.plan);
+    if(!plan||!Number.isInteger(payment.term)||openInstallments(plan)[0]?.termIndex!==payment.term)return;
+    try{if(localStorage.getItem(PLAN_STORAGE_KEY)!==planStorageState.raw)return}catch(error){return}
+    openPaymentDialog(plan.id,payment.term);
+    if(!$('payment-dialog').open)return;
+    if(payment.fields){
+      restoreFields(paymentDetails,payment.fields);
+      channelFeeManual=payment.manualFee===true;
+      suggestPaymentFee();
+      if(channelFeeManual)restoreFields(['payment-channel-fee'],payment.fields);
+      updatePaymentPreview();
+      paymentFormEdited=true;$('payment-resumed').hidden=false;
+    }
+    if(Number.isFinite(payment.scroll))$('payment-form').scrollTop=payment.scroll;
+  }
+  function restoreWorkspace(){
+    const navigation=window.performance?.getEntriesByType('navigation')[0];
+    if(!document.wasDiscarded&&navigation?.type!=='reload'&&!window.history?.state?.hokuWorkspace)return;
+    let state;
+    try{state=JSON.parse(sessionStorage.getItem(workspaceSessionKey))}catch(error){return}
+    if(!state||state.page!==location.pathname)return;
+    if(state.panel&&$(state.panel)?.classList.contains('panel'))selectPanel(state.panel.slice(0,-6));
+    if(['current','history','sold'].includes(state.ledgerView))setLedgerView(state.ledgerView);
+    restoreFields(calculationFields,state.fields);
+    selectFinanceMode(state.financeMode==='reverse'?'reverse':'quote');
+    calculateLateFee();
+    if(Number.isFinite(state.scroll)){
+      window.history.scrollRestoration='manual';
+      requestAnimationFrame(()=>{if(!workspaceInteracted)window.scrollTo({top:state.scroll,behavior:'instant'})});
+    }
+    if(state.payment)backupStateReady.then(()=>restorePaymentWorkspace(state.payment));
+  }
+  restoreWorkspace();
+  for(const type of ['input','change'])document.addEventListener(type,event=>{
+    workspaceInteracted=true;
+    if(paymentFields.includes(event.target.id))paymentFormEdited=true;
+    if(paymentFields.includes(event.target.id)||calculationFields.includes(event.target.id))rememberWorkspace();
+  });
+  document.addEventListener('pointerdown',()=>{workspaceInteracted=true});
+  document.addEventListener('keydown',()=>{workspaceInteracted=true});
+  document.addEventListener('click',event=>{
+    if(event.target.closest('[data-panel],[data-mode],.ledger-tabs button,[data-receive]'))rememberWorkspace();
+  });
+  $('payment-dialog').addEventListener('close',rememberWorkspace);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)rememberWorkspace();else refreshDailyViews();
+  });
+  window.addEventListener('pagehide',rememberWorkspace);
 
   function cloudLocalTime(value,fileName=false){
     if(!value)return '无';const d=new Date(value);if(!Number.isFinite(d.getTime()))return '时间未知';
